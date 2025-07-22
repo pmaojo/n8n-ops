@@ -1,153 +1,133 @@
-# n8n OPS - Collaborative Workflow Management Tool
+# n8n-ops CLI Tool - Replit Documentation
 
 ## Overview
 
-This project is a command-line tool built in Go for managing n8n workflows across multiple environments. It provides automation for deploying, syncing, validating, and rolling back workflows with GitLab CI/CD integration. The tool supports multi-environment workflow management (development, staging, production) with local SQLite tracking and comprehensive logging capabilities.
-
-**Status**: PRODUCTION-READY - CLI fully functional and tested! Core workflow sync working with real n8n API integration, comprehensive credential management for 19 services, multi-environment support, professional CLI interface, and branch tracking for GitOps workflows. Ready for VPS deployment and enterprise usage. Mock components can be safely removed when connecting to real n8n instances.
+n8n-ops is a comprehensive command-line tool built in Go for managing n8n workflows across multiple environments. It provides enterprise-grade automation, version control, and multi-environment orchestration for n8n workflows with GitLab CI/CD integration.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
-Project purpose: Operations tool for COMPILING and managing n8n workflows (not for deployment to hosting platforms)
-VPS Deployment: User interested in VPS deployment for backup/monitoring - tool perfect for enterprise backup scenarios
-Custom ASCII art: User-provided "n8n deploy" ASCII art integrated into welcome screens
-Versioning: Revolutionary intelligent branch naming system with automatic semantic versioning
-Team Collaboration: Git-native approach eliminates deploy/rollback complexity - Git handles versioning naturally
-Branch Management: Interactive workflow creation with DevOps naming conventions (feature/, hotfix/, release/, experiment/)
-Branch Tracking: Precise identification of active workflows per GitLab branch with automated environment detection and workflow comparison
-Change Detection: Git status monitoring detects uncommitted workflows, Web UI warnings prevent data loss, sync operations blocked until changes committed
-Zero-Downtime Deployments: API-first approach that updates workflows without stopping n8n instances or touching infrastructure
-Git Provider: Only GitLab active - other providers (GitHub, Bitbucket) commented for future use
-No UI Components: Daemon and CLI only, web interface removed per user preference
 
 ## System Architecture
 
-### Core Architecture
-- **Language**: Go (Golang) for the CLI tool
-- **Local Storage**: SQLite database for tracking workflow states and deployments
+### Core Technology Stack
+- **Language**: Go 1.19+ with Cobra CLI framework
+- **Configuration**: YAML-based configuration with environment variables
+- **Database**: SQLite for local tracking and metadata
 - **Version Control**: Git with GitLab integration
-- **CI/CD**: GitLab CI/CD pipelines for automated deployment
-- **Multi-Environment**: Support for development, staging, and production environments
+- **API Integration**: n8n REST API for workflow management
 
-### Project Structure
-The repository follows a standard Go project layout with additional directories for workflow management:
-- `/workflows/` - Environment-specific workflow files (development, staging, production)
-- `/scripts/` - JavaScript automation scripts for deployment operations
-- `/docs/` - Documentation including architecture and API references
-- `/tests/` - Automated testing suite with unit, integration, and fixture tests
-- `/config/` - Environment configurations and workflow templates
+### CLI Architecture
+The application follows a modular CLI structure using the Cobra framework:
+- Command hierarchy with subcommands (`sync`, `deploy`, `validate`, `check`, `status`, etc.)
+- Environment-based operations (development, staging, production)
+- Configuration management through YAML files and environment variables
+- Structured logging with different levels (info, debug, error)
 
 ## Key Components
 
-### 1. CLI Application (Go)
-- **Purpose**: Main command-line interface for workflow management
-- **Features**: Multi-environment sync, deployment, validation, rollback, daemon mode
-- **Architecture**: Single binary application with modular command structure
-- **Daemon Mode**: File watcher for automatic workflow synchronization
-- **Rationale**: Go provides excellent cross-platform support and fast execution for CLI tools
+### 1. Command Structure
+- **Core Commands**: `sync`, `deploy`, `validate`, `check`, `status`, `branch`, `init`, `rollback`
+- **Utility Commands**: `welcome`, `help`, `version`
+- **Environment Support**: All commands support `--env` flag for multi-environment operations
 
-### 2. Git Provider Adapter Pattern
-- **Purpose**: Unified interface for Git providers (currently GitLab only)
-- **Architecture**: GitProvider interface with GitLab implementation active
-- **Current Provider**: GitLab with PRIVATE-TOKEN authentication
-- **Future Extensibility**: GitHub, Bitbucket providers commented for future use
+### 2. Workflow Management
+- **Sync Engine**: Bidirectional synchronization between n8n instances and local JSON files
+- **Validation System**: JSON schema validation for workflow files
+- **Template System**: Pre-built workflow templates (basic-webhook, data-processing, scheduled-task)
+- **Metadata Tracking**: Git commit tracking and sync timestamps
 
-### 2. Local Database (SQLite)
-- **Purpose**: Track workflow states, deployment history, and metadata
-- **Choice**: SQLite for local storage without external dependencies
-- **Benefits**: Zero-configuration, portable, sufficient for CLI tool requirements
+### 3. Multi-Environment Support
+- **Environment Isolation**: Separate directories for development, staging, and production workflows
+- **Branch Mapping**: Git branch to environment mapping system
+- **Configuration Separation**: Environment-specific API keys and URLs
+- **Deployment Gates**: Manual approval gates for staging and production deployments
 
-### 3. GitLab Integration
-- **Purpose**: Version control and automated CI/CD workflows
-- **Components**: GitLab CI/CD pipelines, environment variables, automated deployment
-- **Benefits**: Seamless integration with existing GitLab infrastructure
-
-### 4. Multi-Environment Support
-- **Environments**: Development, staging, production
-- **Structure**: Separate directories for each environment's workflows
-- **Validation**: Environment-specific validation rules and deployment strategies
+### 4. Security Layer
+- **API Key Management**: Environment variable-based credential storage
+- **No Secrets in Code**: All sensitive data externalized to environment variables
+- **Input Validation**: Comprehensive validation for all user inputs
+- **Secure CI/CD**: GitLab CI/CD variables for secure deployment
 
 ## Data Flow
 
-### Workflow Deployment Process
-1. Developer creates/modifies workflow in development environment
-2. Changes are committed to Git and pushed to GitLab
-3. GitLab CI/CD pipeline triggers validation
-4. If validation passes, workflow is deployed to target environment
-5. Deployment state is tracked in local SQLite database
-6. Rollback capability available for failed deployments
+### 1. Workflow Synchronization Flow
+```
+n8n Instance → n8n REST API → n8n-ops CLI → Local JSON Files → Git Repository
+```
 
-### Sync Process
-1. CLI tool connects to n8n API endpoints
-2. Downloads workflows from source environment
-3. Validates workflow compatibility
-4. Uploads to target environment
-5. Updates local tracking database
+### 2. Deployment Flow
+```
+Git Repository → GitLab CI/CD → n8n-ops CLI → n8n REST API → n8n Instance
+```
+
+### 3. File Structure
+```
+workflows/
+├── development/     # Development environment workflows
+├── staging/         # Staging environment workflows
+├── production/      # Production environment workflows
+└── README.md        # Documentation
+```
+
+### 4. Metadata Management
+- **Sync Metadata**: Tracks sync timestamps, Git commits, and environment information
+- **Local Database**: SQLite database for deployment tracking and rollback capabilities
+- **Git Integration**: Automatic detection of uncommitted workflow changes
 
 ## External Dependencies
 
-### n8n API Integration
-- **Purpose**: Connect to n8n instances for workflow management
-- **Authentication**: API key-based authentication using `X-N8N-API-KEY` header
-- **Endpoints**: `/api/v1/workflows` for CRUD operations
-- **Operations**: Download, upload, validate, and manage workflows
-- **Compliance**: 100% compatible with official n8n API documentation
+### 1. n8n API Integration
+- **REST API**: Full CRUD operations for workflows via n8n REST API
+- **Authentication**: API key-based authentication for each environment
+- **Real-time Updates**: Hot deployment without service interruption
 
-### GitLab CI/CD Integration  
-- **Authentication**: Personal Access Tokens using `PRIVATE-TOKEN` header
-- **API Version**: v4 (`/api/v4/` endpoints)
-- **Operations**: Project management, pipeline triggers, commit tracking
-- **Variables**: Environment-specific URLs and tokens for automated deployment
-- **Pipelines**: Automated deployment and validation workflows
-- **Integration**: Git hooks and merge request automation
+### 2. GitLab Integration
+- **CI/CD Pipeline**: 6-stage pipeline (build, validate, test, deploy)
+- **Branch Protection**: Protected branches with manual approval gates
+- **Issue Templates**: Bug report and feature request templates
+- **Merge Request Templates**: Standardized PR process
 
-### Third-party Libraries
-- **Go Modules**: Standard Go dependency management
-- **Logging**: Structured logging with configurable levels
-- **CLI Framework**: Command-line interface framework for Go
+### 3. Version Control
+- **Git Flow**: Standard Git flow with feature branches
+- **Branch Strategy**: Main (production), staging, develop branches
+- **Semantic Versioning**: SemVer compliance for releases
+
+### 4. Configuration Management
+- **Environment Variables**: API keys, URLs, and credentials
+- **YAML Configuration**: User preferences and default settings
+- **Template System**: Workflow templates with variable substitution
 
 ## Deployment Strategy
 
-### Local Development
-- SQLite database for local state tracking
-- Direct API connections to development n8n instance
-- Local validation and testing capabilities
+### 1. Zero-Downtime Architecture
+- **Hot Updates**: API-based workflow updates without service interruption
+- **Non-invasive**: Only manages workflows, doesn't touch n8n infrastructure
+- **Instant Rollback**: Quick reversion to previous workflow versions
 
-### CI/CD Pipeline
-- GitLab CI/CD for automated deployment
-- Environment-specific validation rules
-- Rollback capabilities for failed deployments
-- Multi-stage deployment (dev → staging → production)
+### 2. Multi-Environment Pipeline
+- **Development**: Automatic deployment on `develop` branch
+- **Staging**: Manual deployment with approval on `staging` branch
+- **Production**: Manual deployment with approval on `main` branch
 
-### Environment Management
-- Separate configuration for each environment
-- API key management through GitLab CI/CD variables
-- Environment-specific workflow validation
-- Deployment history tracking and rollback support
+### 3. CI/CD Pipeline Stages
+1. **Build**: Compile Go binary and validate syntax
+2. **Validate**: JSON schema validation and workflow checks
+3. **Test**: Run automated tests and CLI functionality checks
+4. **Deploy**: Environment-specific deployment with API calls
+5. **Backup**: Automatic backup before production deployments
+6. **Monitor**: Post-deployment validation and health checks
 
-### Binary Distribution
-- Pre-built binaries available for download
-- Cross-platform support (built with Go)
-- Single binary deployment with no external dependencies
-- Source code available for custom builds
+### 4. Security Considerations
+- **API Key Rotation**: Support for rotating API keys across environments
+- **Audit Trail**: Complete deployment history and change tracking
+- **Access Control**: Environment-based access restrictions
+- **Credential Isolation**: Separate credentials for each environment
 
-## Development Setup
+### 5. Monitoring and Alerting
+- **Status Monitoring**: Real-time workflow status across environments
+- **Change Detection**: Automatic detection of uncommitted workflow changes
+- **Web UI**: Dashboard for monitoring and management (planned feature)
+- **Notification System**: Integration with Slack/Discord for alerts
 
-### Local Development
-1. Clone repository: `git clone https://gitlab.com/your-org/n8n-ops.git`
-2. Build CLI: `go build -o n8n-ops main.go`
-3. Configure environments in `~/.n8n-ops.yaml`
-4. Set environment variables for n8n API keys
-
-### GitLab CI/CD Integration
-- Automated validation and deployment pipeline
-- Environment-specific deployments (dev, staging, production)
-- Manual approval gates for production
-- Rollback capabilities
-
-### Key Configuration Files
-- `DEVELOPMENT.md` - Complete development guide
-- `config.example.yaml` - Configuration template
-- `.gitlab-ci.yml` - GitLab CI/CD pipeline
-- Environment variables for n8n API keys and GitLab tokens
+The system is designed to be enterprise-ready with comprehensive error handling, logging, and operational tooling for managing n8n workflows at scale.
