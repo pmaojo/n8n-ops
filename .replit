@@ -23,6 +23,10 @@ args = "n8n-ops Version"
 task = "workflow.run"
 args = "Mock n8n Server"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "n8n-ops UI"
+
 [[workflows.workflow]]
 name = "Go CLI Server"
 author = "agent"
@@ -48,9 +52,22 @@ task = "shell.exec"
 args = "cd mock-n8n-server && go run main.go"
 waitForPort = 3001
 
+[[workflows.workflow]]
+name = "n8n-ops UI"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "./n8n-ops ui --port 5000"
+waitForPort = 5000
+
 [deployment]
 deploymentTarget = "cloudrun"
 
 [[ports]]
 localPort = 3001
 externalPort = 80
+
+[[ports]]
+localPort = 5000
+externalPort = 5000
