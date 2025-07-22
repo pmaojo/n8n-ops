@@ -26,8 +26,8 @@ A clear and concise description of what you want to happen.
 **Command Interface** (if applicable):
 ```bash
 # Example of how the new CLI command would work
-./n8n-cli new-command --flag value
-./n8n-cli enhanced-command --new-option
+./n8n-ops new-command --flag value
+./n8n-ops enhanced-command --new-option
 ```
 
 **Configuration Changes** (if applicable):
@@ -79,9 +79,9 @@ Describe the main scenario where this feature would be used.
 **Example Workflow**:
 ```bash
 # Step-by-step example of how the feature would be used
-./n8n-cli init-project my-workflows
-./n8n-cli add-template webhook-handler
-./n8n-cli deploy --env development
+./n8n-ops init-project my-workflows
+./n8n-ops add-template webhook-handler
+./n8n-ops deploy --env development
 ```
 
 **Benefits**:

@@ -41,7 +41,7 @@ jobs:
       run: go mod download
     
     - name: Build CLI
-      run: go build -o n8n-cli main.go
+      run: go build -o n8n-ops main.go
     
     - name: Run tests
       run: |
@@ -50,13 +50,13 @@ jobs:
         
     - name: Test CLI functionality
       run: |
-        chmod +x n8n-cli
-        ./n8n-cli --help
-        ./n8n-cli welcome
-        ./n8n-cli --lang es welcome
+        chmod +x n8n-ops
+        ./n8n-ops --help
+        ./n8n-ops welcome
+        ./n8n-ops --lang es welcome
     
     - name: Validate workflows
-      run: ./n8n-cli validate ./workflows/ || true
+      run: ./n8n-ops validate ./workflows/ || true
 
   # Cross-platform builds
   build:
@@ -79,7 +79,7 @@ jobs:
     - name: Upload build artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: n8n-cli-binaries
+        name: n8n-ops-binaries
         path: dist/
         retention-days: 30
 
@@ -95,14 +95,14 @@ jobs:
     - name: Download build artifacts
       uses: actions/download-artifact@v3
       with:
-        name: n8n-cli-binaries
+        name: n8n-ops-binaries
         path: dist/
     
     - name: Upload release assets
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          dist/n8n-cli-*
+          dist/n8n-ops-*
           dist/checksums.txt
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

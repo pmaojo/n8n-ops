@@ -12,13 +12,13 @@ We welcome contributions! This guide explains how to set up your development env
 ### Quick Setup
 ```bash
 # Clone and setup
-git clone https://gitlab.com/your-org/n8n-cli.git
-cd n8n-cli
+git clone https://gitlab.com/your-org/n8n-ops.git
+cd n8n-ops
 ./scripts/setup-dev.sh
 
 # Build and test
-go build -o n8n-cli main.go
-./n8n-cli welcome
+go build -o n8n-ops main.go
+./n8n-ops welcome
 ```
 
 ## Branch Strategy
@@ -66,14 +66,14 @@ refactor: simplify n8n client interface
 ### Validate Changes
 ```bash
 # Validate workflow files
-./n8n-cli validate ./workflows/
+./n8n-ops validate ./workflows/
 
 # Test CLI compilation
-go build -o n8n-cli main.go
+go build -o n8n-ops main.go
 
 # Test basic functionality  
-./n8n-cli --help
-./n8n-cli welcome --lang es
+./n8n-ops --help
+./n8n-ops welcome --lang es
 
 # Run Go tests
 go test ./...
@@ -83,9 +83,9 @@ go test ./...
 
 ### Adding New Workflows
 1. Create workflow in development n8n instance
-2. Sync to local: `./n8n-cli sync --env development`
-3. Validate: `./n8n-cli validate ./workflows/development/`
-4. Test deployment: `./n8n-cli deploy --env development --dry-run`
+2. Sync to local: `./n8n-ops sync --env development`
+3. Validate: `./n8n-ops validate ./workflows/development/`
+4. Test deployment: `./n8n-ops deploy --env development --dry-run`
 5. Commit changes to git
 
 ### Workflow Templates
@@ -153,7 +153,7 @@ go test ./...
 
 ### Local Development
 ```yaml
-# ~/.n8n-cli.yaml
+# ~/.n8n-ops.yaml
 environments:
   development:
     url: "https://n8n-dev.yourcompany.com"

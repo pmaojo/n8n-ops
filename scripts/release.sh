@@ -63,16 +63,16 @@ echo -e "${YELLOW}Creating release packages...${NC}"
 cd dist
 
 # Create tar.gz for Unix systems
-tar -czf n8n-cli-v${VERSION}-linux-amd64.tar.gz n8n-cli-linux-amd64 ../README.md ../QUICK_START.md ../config.example.yaml
-tar -czf n8n-cli-v${VERSION}-linux-arm64.tar.gz n8n-cli-linux-arm64 ../README.md ../QUICK_START.md ../config.example.yaml
-tar -czf n8n-cli-v${VERSION}-darwin-amd64.tar.gz n8n-cli-darwin-amd64 ../README.md ../QUICK_START.md ../config.example.yaml
-tar -czf n8n-cli-v${VERSION}-darwin-arm64.tar.gz n8n-cli-darwin-arm64 ../README.md ../QUICK_START.md ../config.example.yaml
+tar -czf n8n-ops-v${VERSION}-linux-amd64.tar.gz n8n-ops-linux-amd64 ../README.md ../QUICK_START.md ../config.example.yaml
+tar -czf n8n-ops-v${VERSION}-linux-arm64.tar.gz n8n-ops-linux-arm64 ../README.md ../QUICK_START.md ../config.example.yaml
+tar -czf n8n-ops-v${VERSION}-darwin-amd64.tar.gz n8n-ops-darwin-amd64 ../README.md ../QUICK_START.md ../config.example.yaml
+tar -czf n8n-ops-v${VERSION}-darwin-arm64.tar.gz n8n-ops-darwin-arm64 ../README.md ../QUICK_START.md ../config.example.yaml
 
 # Create zip for Windows
-zip n8n-cli-v${VERSION}-windows-amd64.zip n8n-cli-windows-amd64.exe ../README.md ../QUICK_START.md ../config.example.yaml
+zip n8n-ops-v${VERSION}-windows-amd64.zip n8n-ops-windows-amd64.exe ../README.md ../QUICK_START.md ../config.example.yaml
 
 # Update checksums
-sha256sum n8n-cli-v${VERSION}-*.tar.gz n8n-cli-v${VERSION}-*.zip > n8n-cli-v${VERSION}-checksums.txt
+sha256sum n8n-ops-v${VERSION}-*.tar.gz n8n-ops-v${VERSION}-*.zip > n8n-ops-v${VERSION}-checksums.txt
 
 cd ..
 
@@ -102,26 +102,26 @@ $(sed -n "/## \[${VERSION}\]/,/## \[/p" CHANGELOG.md | head -n -1 | tail -n +2)
 
 Choose the appropriate binary for your system:
 
-- **Linux AMD64**: \`n8n-cli-v${VERSION}-linux-amd64.tar.gz\`
-- **Linux ARM64**: \`n8n-cli-v${VERSION}-linux-arm64.tar.gz\`
-- **macOS AMD64**: \`n8n-cli-v${VERSION}-darwin-amd64.tar.gz\`
-- **macOS ARM64**: \`n8n-cli-v${VERSION}-darwin-arm64.tar.gz\`
-- **Windows AMD64**: \`n8n-cli-v${VERSION}-windows-amd64.zip\`
+- **Linux AMD64**: \`n8n-ops-v${VERSION}-linux-amd64.tar.gz\`
+- **Linux ARM64**: \`n8n-ops-v${VERSION}-linux-arm64.tar.gz\`
+- **macOS AMD64**: \`n8n-ops-v${VERSION}-darwin-amd64.tar.gz\`
+- **macOS ARM64**: \`n8n-ops-v${VERSION}-darwin-arm64.tar.gz\`
+- **Windows AMD64**: \`n8n-ops-v${VERSION}-windows-amd64.zip\`
 
 ### Quick Install
 
 \`\`\`bash
 # Download and extract (Linux example)
-wget https://github.com/your-org/n8n-cli/releases/download/v${VERSION}/n8n-cli-v${VERSION}-linux-amd64.tar.gz
-tar -xzf n8n-cli-v${VERSION}-linux-amd64.tar.gz
-chmod +x n8n-cli-linux-amd64
-sudo mv n8n-cli-linux-amd64 /usr/local/bin/n8n-cli
+wget https://github.com/your-org/n8n-ops/releases/download/v${VERSION}/n8n-ops-v${VERSION}-linux-amd64.tar.gz
+tar -xzf n8n-ops-v${VERSION}-linux-amd64.tar.gz
+chmod +x n8n-ops-linux-amd64
+sudo mv n8n-ops-linux-amd64 /usr/local/bin/n8n-ops
 \`\`\`
 
 ### Verify Installation
 
 \`\`\`bash
-n8n-cli welcome
+n8n-ops welcome
 \`\`\`
 
 ## Checksums
@@ -129,12 +129,12 @@ n8n-cli welcome
 Verify your download with SHA256 checksums:
 
 \`\`\`
-$(cat dist/n8n-cli-v${VERSION}-checksums.txt)
+$(cat dist/n8n-ops-v${VERSION}-checksums.txt)
 \`\`\`
 
 ---
 
-**Full Changelog**: https://github.com/your-org/n8n-cli/compare/v$(git describe --tags --abbrev=0 HEAD^)...v${VERSION}
+**Full Changelog**: https://github.com/your-org/n8n-ops/compare/v$(git describe --tags --abbrev=0 HEAD^)...v${VERSION}
 EOF
 
 echo -e "${GREEN}✅ Release v${VERSION} created successfully!${NC}"
@@ -142,7 +142,7 @@ echo -e "${BLUE}Next steps:${NC}"
 echo -e "1. Go to GitLab/GitHub releases page"
 echo -e "2. Create new release with tag v${VERSION}"
 echo -e "3. Upload files from dist/ directory:"
-ls -la dist/n8n-cli-v${VERSION}-*
+ls -la dist/n8n-ops-v${VERSION}-*
 echo -e "4. Use release-notes.md content as release description"
 echo -e ""
 echo -e "${GREEN}🎉 Release completed!${NC}"

@@ -7,8 +7,8 @@ import (
         "strings"
 
         "github.com/spf13/cobra"
-        "github.com/n8n-workflows/cli/internal/utils"
-        "github.com/n8n-workflows/cli/internal/workflow"
+        "github.com/n8n-workflows/n8n-ops/internal/utils"
+        "github.com/n8n-workflows/n8n-ops/internal/workflow"
 )
 
 var validateCmd = &cobra.Command{
@@ -18,9 +18,9 @@ var validateCmd = &cobra.Command{
 If no arguments are provided, validates all workflow files in the current directory.
 
 Examples:
-  n8n-cli validate workflow.json         # Validate single file
-  n8n-cli validate workflows/            # Validate directory
-  n8n-cli validate --strict              # Enable strict validation mode`,
+  n8n-ops validate workflow.json         # Validate single file
+  n8n-ops validate workflows/            # Validate directory
+  n8n-ops validate --strict              # Enable strict validation mode`,
         RunE: runValidate,
 }
 

@@ -24,7 +24,7 @@ echo -e "${BLUE}🚀 Post-deployment verification for: ${ENVIRONMENT}${NC}"
 
 # Verify deployment by syncing back from n8n
 echo -e "${YELLOW}🔄 Syncing workflows to verify deployment...${NC}"
-./n8n-cli sync --env "$ENVIRONMENT" --verbose
+./n8n-ops sync --env "$ENVIRONMENT" --verbose
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✅ Workflows successfully synced back from n8n${NC}"
@@ -41,7 +41,7 @@ fi
 
 # Log deployment timestamp
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
-echo "${TIMESTAMP} - Deployment to ${ENVIRONMENT} completed successfully" >> .n8n-cli/deployment.log
+echo "${TIMESTAMP} - Deployment to ${ENVIRONMENT} completed successfully" >> .n8n-ops/deployment.log
 
 echo -e "${GREEN}🎉 Post-deployment verification completed successfully${NC}"
 

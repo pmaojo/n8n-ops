@@ -11,8 +11,8 @@ Brief description of the changes made in this merge request.
 
 ## Testing Completed
 - [ ] All workflow JSON files validate successfully
-- [ ] CLI builds without errors (`go build -o n8n-cli main.go`)
-- [ ] Basic CLI functionality tested (`./n8n-cli --help`)
+- [ ] CLI builds without errors (`go build -o n8n-ops main.go`)
+- [ ] Basic CLI functionality tested (`./n8n-ops --help`)
 - [ ] Tested in development environment
 - [ ] Manual testing completed for affected workflows
 - [ ] Integration tests pass (if applicable)

@@ -8,7 +8,7 @@ import (
         "net/http"
         "time"
 
-        "github.com/n8n-workflows/cli/internal/workflow"
+        "github.com/n8n-workflows/n8n-ops/internal/workflow"
 )
 
 type N8nClient struct {

@@ -6,11 +6,11 @@ import (
 
         "github.com/spf13/cobra"
         "github.com/spf13/viper"
-        "github.com/n8n-workflows/cli/internal/client"
-        "github.com/n8n-workflows/cli/internal/config"
-        "github.com/n8n-workflows/cli/internal/storage"
-        "github.com/n8n-workflows/cli/internal/utils"
-        "github.com/n8n-workflows/cli/internal/workflow"
+        "github.com/n8n-workflows/n8n-ops/internal/client"
+        "github.com/n8n-workflows/n8n-ops/internal/config"
+        "github.com/n8n-workflows/n8n-ops/internal/storage"
+        "github.com/n8n-workflows/n8n-ops/internal/utils"
+        "github.com/n8n-workflows/n8n-ops/internal/workflow"
 )
 
 var rollbackCmd = &cobra.Command{
@@ -20,9 +20,9 @@ var rollbackCmd = &cobra.Command{
 If no deployment ID is specified, rolls back to the most recent successful deployment.
 
 Examples:
-  n8n-cli rollback --env production                    # Rollback to last successful deployment
-  n8n-cli rollback deploy_production_1234567890        # Rollback to specific deployment
-  n8n-cli rollback --list                             # List available deployments`,
+  n8n-ops rollback --env production                    # Rollback to last successful deployment
+  n8n-ops rollback deploy_production_1234567890        # Rollback to specific deployment
+  n8n-ops rollback --list                             # List available deployments`,
         RunE: runRollback,
 }
 

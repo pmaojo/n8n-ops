@@ -9,11 +9,11 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/n8n-workflows/cli/internal/client"
-	"github.com/n8n-workflows/cli/internal/config"
-	"github.com/n8n-workflows/cli/internal/storage"
-	"github.com/n8n-workflows/cli/internal/utils"
-	"github.com/n8n-workflows/cli/internal/workflow"
+	"github.com/n8n-workflows/n8n-ops/internal/client"
+	"github.com/n8n-workflows/n8n-ops/internal/config"
+	"github.com/n8n-workflows/n8n-ops/internal/storage"
+	"github.com/n8n-workflows/n8n-ops/internal/utils"
+	"github.com/n8n-workflows/n8n-ops/internal/workflow"
 )
 
 var deployCmd = &cobra.Command{
@@ -24,9 +24,9 @@ If no files are specified, all workflows in the environment directory will be de
 The command validates workflows before deployment and provides rollback capability.
 
 Examples:
-  n8n-cli deploy --env staging                    # Deploy all workflows to staging
-  n8n-cli deploy workflow1.json --env production  # Deploy specific workflow
-  n8n-cli deploy --dry-run --env staging          # Preview deployment without executing`,
+  n8n-ops deploy --env staging                    # Deploy all workflows to staging
+  n8n-ops deploy workflow1.json --env production  # Deploy specific workflow
+  n8n-ops deploy --dry-run --env staging          # Preview deployment without executing`,
 	RunE: runDeploy,
 }
 

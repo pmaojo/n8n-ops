@@ -4,8 +4,8 @@ import (
         "fmt"
 
         "github.com/spf13/cobra"
-        "github.com/n8n-workflows/cli/internal/git"
-        "github.com/n8n-workflows/cli/internal/utils"
+        "github.com/n8n-workflows/n8n-ops/internal/git"
+        "github.com/n8n-workflows/n8n-ops/internal/utils"
 )
 
 var branchCmd = &cobra.Command{
@@ -16,11 +16,11 @@ This command helps you work with branches, switch between them, and understand
 how branches map to different n8n environments (development, staging, production).
 
 Examples:
-  n8n-cli branch list                    # List all branches
-  n8n-cli branch current                 # Show current branch  
-  n8n-cli branch create feature-auth     # Create new branch
-  n8n-cli branch switch staging          # Switch to staging branch
-  n8n-cli branch env                     # Show environment for current branch`,
+  n8n-ops branch list                    # List all branches
+  n8n-ops branch current                 # Show current branch  
+  n8n-ops branch create feature-auth     # Create new branch
+  n8n-ops branch switch staging          # Switch to staging branch
+  n8n-ops branch env                     # Show environment for current branch`,
 }
 
 var branchListCmd = &cobra.Command{

@@ -1,11 +1,11 @@
 version: '3.8'
 
 services:
-  n8n-cli:
+  n8n-ops:
     build: 
       context: ..
       dockerfile: docker/Dockerfile
-    container_name: n8n-cli
+    container_name: n8n-ops
     environment:
       # n8n API Keys - set these in your environment or .env file
       - N8N_DEV_API_KEY=${N8N_DEV_API_KEY}
@@ -24,19 +24,19 @@ services:
       - ../workflows:/home/n8ncli/workflows
       
       # Mount local CLI data directory
-      - ../.n8n-cli:/home/n8ncli/.n8n-cli
+      - ../.n8n-ops:/home/n8ncli/.n8n-ops
       
       # Mount configuration file
-      - ~/.n8n-cli.yaml:/home/n8ncli/.n8n-cli.yaml:ro
+      - ~/.n8n-ops.yaml:/home/n8ncli/.n8n-ops.yaml:ro
     working_dir: /home/n8ncli
     command: welcome
     
   # Development service - interactive shell
-  n8n-cli-dev:
+  n8n-ops-dev:
     build: 
       context: ..
       dockerfile: docker/Dockerfile
-    container_name: n8n-cli-dev
+    container_name: n8n-ops-dev
     environment:
       - N8N_DEV_API_KEY=${N8N_DEV_API_KEY}
       - N8N_STAGING_API_KEY=${N8N_STAGING_API_KEY}
@@ -47,8 +47,8 @@ services:
       - N8N_CLI_LANG=${N8N_CLI_LANG:-en}
     volumes:
       - ../workflows:/home/n8ncli/workflows
-      - ../.n8n-cli:/home/n8ncli/.n8n-cli
-      - ~/.n8n-cli.yaml:/home/n8ncli/.n8n-cli.yaml:ro
+      - ../.n8n-ops:/home/n8ncli/.n8n-ops
+      - ~/.n8n-ops.yaml:/home/n8ncli/.n8n-ops.yaml:ro
     working_dir: /home/n8ncli
     stdin_open: true
     tty: true

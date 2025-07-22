@@ -8,13 +8,13 @@ import (
 
         "github.com/spf13/cobra"
         "github.com/spf13/viper"
-        "github.com/n8n-workflows/cli/internal/ascii"
-        "github.com/n8n-workflows/cli/internal/client"
-        "github.com/n8n-workflows/cli/internal/config"
-        "github.com/n8n-workflows/cli/internal/git"
-        "github.com/n8n-workflows/cli/internal/storage"
-        "github.com/n8n-workflows/cli/internal/utils"
-        "github.com/n8n-workflows/cli/internal/workflow"
+        "github.com/n8n-workflows/n8n-ops/internal/ascii"
+        "github.com/n8n-workflows/n8n-ops/internal/client"
+        "github.com/n8n-workflows/n8n-ops/internal/config"
+        "github.com/n8n-workflows/n8n-ops/internal/git"
+        "github.com/n8n-workflows/n8n-ops/internal/storage"
+        "github.com/n8n-workflows/n8n-ops/internal/utils"
+        "github.com/n8n-workflows/n8n-ops/internal/workflow"
 )
 
 var syncCmd = &cobra.Command{
@@ -25,9 +25,9 @@ This command downloads all workflows from the target n8n instance and stores the
 in the appropriate environment directory with metadata for tracking changes.
 
 Examples:
-  n8n-cli sync --env development    # Sync from development environment
-  n8n-cli sync --env staging        # Sync from staging environment
-  n8n-cli sync --force              # Force sync, overwriting local changes`,
+  n8n-ops sync --env development    # Sync from development environment
+  n8n-ops sync --env staging        # Sync from staging environment
+  n8n-ops sync --force              # Force sync, overwriting local changes`,
         RunE: runSync,
 }
 

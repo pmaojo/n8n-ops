@@ -50,7 +50,7 @@ Impact:
 
 Steps to Reproduce:
 1. Configure n8n CLI with API key
-2. Check file permissions on ~/.n8n-cli.yaml
+2. Check file permissions on ~/.n8n-ops.yaml
 3. API key is readable by all processes
 
 Environment:
@@ -133,7 +133,7 @@ When using n8n CLI, follow these security practices:
 - Monitor API key usage
 
 #### Configuration Security
-- Restrict configuration file permissions: `chmod 600 ~/.n8n-cli.yaml`
+- Restrict configuration file permissions: `chmod 600 ~/.n8n-ops.yaml`
 - Don't commit configuration files to version control
 - Use separate API keys for each environment
 

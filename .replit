@@ -4,7 +4,7 @@ modules = ["go"]
 channel = "stable-24_05"
 
 [workflows]
-runButton = "Go CLI Server"
+runButton = "Project"
 
 [[workflows.workflow]]
 name = "Project"
@@ -17,7 +17,7 @@ args = "Go CLI Server"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "CLI Test"
+args = "OPS Test"
 
 [[workflows.workflow]]
 name = "Go CLI Server"
@@ -28,12 +28,12 @@ task = "shell.exec"
 args = "go run main.go --help"
 
 [[workflows.workflow]]
-name = "CLI Test"
+name = "OPS Test"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "./n8n-cli --help"
+args = "./n8n-ops --help"
 
 [deployment]
 deploymentTarget = "cloudrun"

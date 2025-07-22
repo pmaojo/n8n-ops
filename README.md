@@ -1,6 +1,6 @@
-# n8n CLI - Collaborative Workflow Management Tool
+# n8n OPS - Collaborative Workflow Management Tool
 
-A Go-based command-line tool for **compiling, managing, and deploying** n8n workflows across multiple environments with GitLab CI/CD integration. Features custom ASCII art, multilingual support (English/Spanish), and comprehensive workflow lifecycle management.
+A Go-based operations tool for **compiling, managing, and deploying** n8n workflows across multiple environments with GitLab CI/CD integration. Features custom ASCII art, multilingual support (English/Spanish), and comprehensive workflow lifecycle management.
 
 ## Features
 
@@ -26,14 +26,14 @@ Download the latest release from the [releases page](https://github.com/n8n-work
 
 ```bash
 # Clone the repository
-git clone https://gitlab.com/your-org/n8n-cli.git
-cd n8n-cli
+git clone https://gitlab.com/your-org/n8n-ops.git
+cd n8n-ops
 
-# Build the CLI tool
-go build -o n8n-cli main.go
+# Build the operations tool
+go build -o n8n-ops main.go
 
 # Make executable (Linux/macOS)  
-chmod +x n8n-cli
+chmod +x n8n-ops
 
 # Run setup script for development
 ./scripts/setup-dev.sh

@@ -15,8 +15,8 @@ var initCmd = &cobra.Command{
 and configuration files for collaborative development.
 
 Examples:
-  n8n-cli init my-workflows       # Initialize project in ./my-workflows
-  n8n-cli init .                  # Initialize project in current directory`,
+  n8n-ops init my-workflows       # Initialize project in ./my-workflows
+  n8n-ops init .                  # Initialize project in current directory`,
         RunE: runInit,
 }
 
@@ -45,7 +45,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 
         // Check if project already exists
         if !initForce {
-                configPath := filepath.Join(projectDir, ".n8n-cli.yaml")
+                configPath := filepath.Join(projectDir, ".n8n-ops.yaml")
                 if _, err := os.Stat(configPath); err == nil {
                         return fmt.Errorf("project already exists in %s (use --force to overwrite)", projectDir)
                 }
@@ -88,9 +88,9 @@ func runInit(cmd *cobra.Command, args []string) error {
         
         fmt.Printf("✅ n8n workflow project initialized successfully!\n\n")
         fmt.Printf("Next steps:\n")
-        fmt.Printf("1. Edit .n8n-cli.yaml to configure your n8n environments\n")
+        fmt.Printf("1. Edit .n8n-ops.yaml to configure your n8n environments\n")
         fmt.Printf("2. Set up environment variables for API keys\n")
-        fmt.Printf("3. Run 'n8n-cli sync --env development' to sync workflows\n")
+        fmt.Printf("3. Run 'n8n-ops sync --env development' to sync workflows\n")
         fmt.Printf("4. Start collaborating with your team!\n\n")
         fmt.Printf("Project structure:\n")
         fmt.Printf("  workflows/          # Environment-specific workflows\n")
@@ -135,10 +135,10 @@ defaults:
 logging:
   level: info
   format: json
-  file: logs/n8n-cli.log
+  file: logs/n8n-ops.log
 `
 
-        configPath := filepath.Join(projectDir, ".n8n-cli.yaml")
+        configPath := filepath.Join(projectDir, ".n8n-ops.yaml")
         if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
                 return err
         }
@@ -173,21 +173,21 @@ N8N_PROD_URL=https://n8n-prod.example.com
 func createDocumentationFiles(projectDir string) error {
         readmeContent := `# n8n Workflow Project
 
-This project contains n8n workflows managed with the n8n-cli tool for collaborative development.
+This project contains n8n workflows managed with the n8n-ops tool for collaborative development.
 
 ## Quick Start
 
-1. Install n8n-cli
-2. Configure your environments in ` + "`.n8n-cli.yaml`" + `
+1. Install n8n-ops
+2. Configure your environments in ` + "`.n8n-ops.yaml`" + `
 3. Set up environment variables (copy ` + "`.env.example`" + ` to ` + "`.env`" + `)
-4. Sync workflows: ` + "`n8n-cli sync --env development`" + `
+4. Sync workflows: ` + "`n8n-ops sync --env development`" + `
 
 ## Commands
 
-- ` + "`n8n-cli sync`" + ` - Sync workflows from n8n instance
-- ` + "`n8n-cli deploy`" + ` - Deploy workflows to n8n instance
-- ` + "`n8n-cli validate`" + ` - Validate workflow files
-- ` + "`n8n-cli rollback`" + ` - Rollback to previous deployment
+- ` + "`n8n-ops sync`" + ` - Sync workflows from n8n instance
+- ` + "`n8n-ops deploy`" + ` - Deploy workflows to n8n instance
+- ` + "`n8n-ops validate`" + ` - Validate workflow files
+- ` + "`n8n-ops rollback`" + ` - Rollback to previous deployment
 
 ## Directory Structure
 
@@ -207,8 +207,8 @@ This project contains n8n workflows managed with the n8n-cli tool for collaborat
 
 1. Create feature branch
 2. Make changes to workflows
-3. Validate: ` + "`n8n-cli validate`" + `
-4. Test deploy: ` + "`n8n-cli deploy --env development`" + `
+3. Validate: ` + "`n8n-ops validate`" + `
+4. Test deploy: ` + "`n8n-ops deploy --env development`" + `
 5. Create merge request
 
 ## GitLab CI/CD

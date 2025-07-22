@@ -1,5 +1,5 @@
 # n8n CLI Binary
-n8n-cli
+n8n-ops
 *.exe
 *.dll
 *.so
@@ -11,8 +11,8 @@ n8n-cli
 .env.*.local
 
 # CLI local data
-.n8n-cli/
-!.n8n-cli/.gitkeep
+.n8n-ops/
+!.n8n-ops/.gitkeep
 
 # Go build artifacts
 *.test

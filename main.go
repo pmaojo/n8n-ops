@@ -3,8 +3,8 @@ package main
 import (
         "os"
 
-        "github.com/n8n-workflows/cli/cmd"
-        "github.com/n8n-workflows/cli/internal/utils"
+        "github.com/n8n-workflows/n8n-ops/cmd"
+        "github.com/n8n-workflows/n8n-ops/internal/utils"
 )
 
 func main() {

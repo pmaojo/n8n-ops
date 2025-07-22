@@ -20,7 +20,7 @@ RUN go mod download
 COPY . .
 
 # Build the CLI binary
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o n8n-cli main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o n8n-ops main.go
 
 # Runtime stage
 FROM alpine:latest
@@ -36,14 +36,14 @@ RUN addgroup -g 1000 n8ncli && \
 WORKDIR /home/n8ncli
 
 # Copy binary from builder stage
-COPY --from=builder /app/n8n-cli /usr/local/bin/n8n-cli
+COPY --from=builder /app/n8n-ops /usr/local/bin/n8n-ops
 
 # Copy configuration examples
 COPY --from=builder /app/config.example.yaml /home/n8ncli/
 COPY --from=builder /app/QUICK_START.md /home/n8ncli/
 
 # Create necessary directories
-RUN mkdir -p /home/n8ncli/.n8n-cli/logs && \
+RUN mkdir -p /home/n8ncli/.n8n-ops/logs && \
     mkdir -p /home/n8ncli/workflows/{development,staging,production} && \
     chown -R n8ncli:n8ncli /home/n8ncli
 
@@ -51,7 +51,7 @@ RUN mkdir -p /home/n8ncli/.n8n-cli/logs && \
 USER n8ncli
 
 # Set entrypoint
-ENTRYPOINT ["n8n-cli"]
+ENTRYPOINT ["n8n-ops"]
 
 # Default command
 CMD ["welcome"]

@@ -12,14 +12,14 @@ Get up and running with the n8n CLI in 5 minutes!
 
 ```bash
 # Clone the repository
-git clone https://gitlab.com/your-org/n8n-cli.git
-cd n8n-cli
+git clone https://gitlab.com/your-org/n8n-ops.git
+cd n8n-ops
 
 # Build the CLI
-go build -o n8n-cli main.go
+go build -o n8n-ops main.go
 
 # Test it works
-./n8n-cli welcome
+./n8n-ops welcome
 ```
 
 ## Step 2: Get n8n API Keys
@@ -29,7 +29,7 @@ go build -o n8n-cli main.go
 1. **Login to your n8n instance** (e.g., https://n8n-dev.yourcompany.com)
 2. **Go to Settings → API Keys**
 3. **Click "Create API Key"**
-4. **Give it a name**: `n8n-cli-development` (or staging/production)
+4. **Give it a name**: `n8n-ops-development` (or staging/production)
 5. **Copy the generated key** (starts with `n8n_api_`)
 
 ### Environment URLs you need:
@@ -41,10 +41,10 @@ go build -o n8n-cli main.go
 
 ### Create config file:
 ```bash
-cp config.example.yaml ~/.n8n-cli.yaml
+cp config.example.yaml ~/.n8n-ops.yaml
 ```
 
-### Edit `~/.n8n-cli.yaml`:
+### Edit `~/.n8n-ops.yaml`:
 ```yaml
 environments:
   development:
@@ -73,7 +73,7 @@ source ~/.bashrc  # or ~/.zshrc
 
 ```bash
 # Test development connection
-./n8n-cli sync --env development --dry-run
+./n8n-ops sync --env development --dry-run
 
 # If successful, you should see:
 # ✅ Connected to n8n instance
@@ -84,15 +84,15 @@ source ~/.bashrc  # or ~/.zshrc
 
 ```bash
 # 1. Sync workflows from n8n to local files
-./n8n-cli sync --env development
+./n8n-ops sync --env development
 
 # 2. Validate local workflow files  
-./n8n-cli validate ./workflows/development/
+./n8n-ops validate ./workflows/development/
 
 # 3. Make changes to workflows (edit JSON files or via n8n UI)
 
 # 4. Deploy changes back to n8n
-./n8n-cli deploy --env development
+./n8n-ops deploy --env development
 ```
 
 ## GitLab CI/CD Setup
@@ -123,30 +123,30 @@ The included `.gitlab-ci.yml` will automatically:
 
 ```bash
 # Show beautiful welcome screen
-./n8n-cli welcome
+./n8n-ops welcome
 
 # Spanish welcome screen  
-./n8n-cli --lang es welcome
+./n8n-ops --lang es welcome
 
 # Sync FROM n8n TO local files
-./n8n-cli sync --env development
-./n8n-cli sync --env staging --force
+./n8n-ops sync --env development
+./n8n-ops sync --env staging --force
 
 # Deploy FROM local files TO n8n
-./n8n-cli deploy --env development
-./n8n-cli deploy workflow.json --env staging
+./n8n-ops deploy --env development
+./n8n-ops deploy workflow.json --env staging
 
 # Validate workflow files
-./n8n-cli validate ./workflows/
+./n8n-ops validate ./workflows/
 
 # Check current git branch mapping
-./n8n-cli branch current
+./n8n-ops branch current
 
 # Preview deployment (dry run)
-./n8n-cli deploy --env staging --dry-run
+./n8n-ops deploy --env staging --dry-run
 
 # Rollback if something goes wrong
-./n8n-cli rollback --env production
+./n8n-ops rollback --env production
 ```
 
 ## Development Workflow
@@ -156,16 +156,16 @@ The included `.gitlab-ci.yml` will automatically:
 git checkout -b feature/new-payment-flow
 
 # 2. Sync current workflows
-./n8n-cli sync --env development
+./n8n-ops sync --env development
 
 # 3. Make changes in n8n UI or edit JSON files
 
 # 4. Validate changes
-./n8n-cli validate ./workflows/development/
+./n8n-ops validate ./workflows/development/
 
 # 5. Test deployment
-./n8n-cli deploy --env development --dry-run
-./n8n-cli deploy --env development
+./n8n-ops deploy --env development --dry-run
+./n8n-ops deploy --env development
 
 # 6. Commit and push
 git add workflows/development/
@@ -189,13 +189,13 @@ curl -H "X-N8N-API-KEY: your_api_key" \
 # Clean and rebuild
 go clean
 go mod tidy
-go build -o n8n-cli main.go
+go build -o n8n-ops main.go
 ```
 
 ### Configuration Issues
 ```bash
 # Check your config
-cat ~/.n8n-cli.yaml
+cat ~/.n8n-ops.yaml
 
 # Check environment variables
 echo $N8N_DEV_API_KEY
@@ -204,7 +204,7 @@ echo $N8N_DEV_API_KEY
 ## Next Steps
 
 - 📖 Read the complete [Development Guide](DEVELOPMENT.md)
-- 🔧 Explore all CLI commands with `./n8n-cli --help`
+- 🔧 Explore all CLI commands with `./n8n-ops --help`
 - 🌍 Try different languages with `--lang es`
 - 🎨 Enjoy the futuristic ASCII art interface!
 

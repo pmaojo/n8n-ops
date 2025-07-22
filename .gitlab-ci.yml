@@ -11,7 +11,7 @@ stages:
 
 variables:
   GO_VERSION: "1.19"
-  CLI_BINARY: "n8n-cli"
+  CLI_BINARY: "n8n-ops"
 
 # Build the CLI tool
 build-cli:

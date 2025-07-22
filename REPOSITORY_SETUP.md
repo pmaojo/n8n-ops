@@ -9,7 +9,7 @@ Complete guide to setting up the n8n CLI repository in GitLab for your team.
 ```bash
 # Create new GitLab project
 # Go to GitLab → New Project → Create blank project
-# Project name: n8n-cli
+# Project name: n8n-ops
 # Visibility: Private (recommended)
 # Initialize with README: No (we have our own)
 ```
@@ -19,10 +19,10 @@ Complete guide to setting up the n8n CLI repository in GitLab for your team.
 ```bash
 # Clone this repository and push to your GitLab
 git clone https://replit.com/your-replit-project
-cd n8n-cli
+cd n8n-ops
 
 # Add your GitLab remote
-git remote add origin https://gitlab.com/your-org/n8n-cli.git
+git remote add origin https://gitlab.com/your-org/n8n-ops.git
 
 # Push to GitLab
 git push -u origin main
@@ -152,7 +152,7 @@ Brief description of changes
 
 **CLI Version**: 
 ```bash
-./n8n-cli --version
+./n8n-ops --version
 ```
 
 **Expected Behavior**:
@@ -256,7 +256,7 @@ Configure webhooks for:
 After setup, your repository should have:
 
 ```
-n8n-cli/
+n8n-ops/
 ├── .gitlab-ci.yml                 ✅ CI/CD pipeline
 ├── .gitlab/
 │   ├── merge_request_templates/   ✅ MR templates

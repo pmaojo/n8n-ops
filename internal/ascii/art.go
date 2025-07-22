@@ -50,7 +50,7 @@ P"Y8888P" Y8    888P"Y888    PI8 YY88888P    8P'"Y88    P"Y8888P"        P""Y88P
                               I8                                            8, ,8I  
                               I8                                             Y8P"   
 %s
-             %s⚡ Workflow Automation CLI ⚡%s`, Cyan, Bold, Reset, Yellow, Reset)
+             %s⚡ n8n Operations Tool ⚡%s`, Cyan, Bold, Reset, Yellow, Reset)
 }
 
 // SmallLogo returns a compact version for headers
@@ -73,7 +73,7 @@ func Banner(env string) string {
         envColor := getEnvironmentColor(env)
         return fmt.Sprintf(`%s%s
 ╔══════════════════════════════════════════════════════════════════════╗
-║  %s⚡ N8N WORKFLOW AUTOMATION CLI ⚡%s                                  ║
+║  %s⚡ N8N WORKFLOW OPERATIONS TOOL ⚡%s                                 ║
 ║                                                                      ║
 ║  %sEnvironment: %s%s%-12s%s                                            ║
 ║  %sMode: %sFuturistic Workflow Management%s                           ║
@@ -209,6 +209,6 @@ func WelcomeScreen() string {
 ║                                                                      ║
 ╚══════════════════════════════════════════════════════════════════════╝%s
 
-%sType '%sn8n-cli --help%s' to begin your journey...%s
+%sType '%sn8n-ops --help%s' to begin your journey...%s
 `, MatrixEffect(), N8nLogo(), Purple, Bold, Cyan, Purple, Green, Purple, Blue, Purple, Yellow, Purple, Red, Purple, Reset, Dim, Cyan, Bold, Dim, Reset)
 }

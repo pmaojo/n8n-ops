@@ -13,8 +13,8 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 # Check if CLI binary exists
-if [ ! -f "./n8n-cli" ]; then
-    echo -e "${RED}❌ n8n-cli binary not found. Run 'go build -o n8n-cli main.go'${NC}"
+if [ ! -f "./n8n-ops" ]; then
+    echo -e "${RED}❌ n8n-ops binary not found. Run 'go build -o n8n-ops main.go'${NC}"
     exit 1
 fi
 
@@ -31,7 +31,7 @@ echo -e "${YELLOW}📋 Validating workflows for environment: ${ENVIRONMENT}${NC}
 # Validate workflow JSON files
 if [ -d "./workflows/${ENVIRONMENT}" ]; then
     echo -e "${YELLOW}🔧 Validating JSON syntax...${NC}"
-    ./n8n-cli validate "./workflows/${ENVIRONMENT}/" --verbose
+    ./n8n-ops validate "./workflows/${ENVIRONMENT}/" --verbose
     
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}✅ All workflow files are valid${NC}"
@@ -79,7 +79,7 @@ echo -e "${GREEN}✅ Environment variables are configured${NC}"
 
 # Test connection to n8n instance
 echo -e "${YELLOW}🌐 Testing connection to n8n instance...${NC}"
-./n8n-cli sync --env "$ENVIRONMENT" --dry-run --verbose
+./n8n-ops sync --env "$ENVIRONMENT" --dry-run --verbose
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✅ Successfully connected to n8n instance${NC}"
