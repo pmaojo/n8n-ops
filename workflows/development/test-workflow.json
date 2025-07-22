@@ -1,0 +1,44 @@
+{
+  "id": "test_workflow_001",
+  "name": "Test Workflow for Daemon - UPDATED AGAIN",
+  "active": true,
+  "nodes": [
+    {
+      "id": "start_node",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {}
+    },
+    {
+      "id": "http_node",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "parameters": {
+        "url": "https://jsonplaceholder.typicode.com/posts/2",
+        "method": "GET"
+      }
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["test", "daemon"],
+  "updatedAt": "2025-01-22T12:00:00.000Z"
+}

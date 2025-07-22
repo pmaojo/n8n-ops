@@ -81,6 +81,7 @@ func init() {
         viper.BindPFlag("environment", rootCmd.PersistentFlags().Lookup("env"))
         viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
         viper.BindPFlag("language", rootCmd.PersistentFlags().Lookup("lang"))
+        viper.BindPFlag("daemon", rootCmd.PersistentFlags().Lookup("daemon"))
 }
 
 // initConfig reads in config file and ENV variables if set.

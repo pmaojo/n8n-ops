@@ -397,7 +397,7 @@ func (c *N8nClient) GetNodeTypes() ([]map[string]interface{}, error) {
 
 // Health check for n8n instance
 func (c *N8nClient) HealthCheck() (map[string]interface{}, error) {
-        req, err := http.NewRequest("GET", c.baseURL+"/healthz", nil)
+        req, err := http.NewRequest("GET", c.baseURL+"/health", nil)
         if err != nil {
                 return nil, err
         }
@@ -408,7 +408,7 @@ func (c *N8nClient) HealthCheck() (map[string]interface{}, error) {
         }
         defer resp.Body.Close()
 
-        var health map[string]interface{}
+        health := make(map[string]interface{})
         if resp.StatusCode == http.StatusOK {
                 json.NewDecoder(resp.Body).Decode(&health)
         }

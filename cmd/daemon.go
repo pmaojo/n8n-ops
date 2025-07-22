@@ -13,21 +13,11 @@ import (
 
         "github.com/fsnotify/fsnotify"
         "github.com/n8n-workflows/n8n-ops/internal/client"
+        "github.com/n8n-workflows/n8n-ops/internal/workflow"
         "github.com/sirupsen/logrus"
-        "gopkg.in/yaml.v2"
 )
 
-// WorkflowYAML represents a workflow in YAML format
-type WorkflowYAML struct {
-        ID          string                 `yaml:"id" json:"id"`
-        Name        string                 `yaml:"name" json:"name"`
-        Active      bool                   `yaml:"active" json:"active"`
-        Nodes       []interface{}          `yaml:"nodes" json:"nodes"`
-        Connections map[string]interface{} `yaml:"connections" json:"connections"`
-        Settings    map[string]interface{} `yaml:"settings,omitempty" json:"settings,omitempty"`
-        Tags        []string               `yaml:"tags,omitempty" json:"tags,omitempty"`
-        UpdatedAt   string                 `yaml:"updatedAt,omitempty" json:"updatedAt,omitempty"`
-}
+
 
 // BackupInfo stores backup metadata
 type BackupInfo struct {
@@ -49,16 +39,33 @@ func runDaemonMode() {
 
         if language == "es" {
                 fmt.Printf("🤖 Modo daemon iniciado - %s\n", environment)
-                fmt.Printf("👁️ Monitoreando archivos YAML en ./workflows/%s/\n", environment)
+                fmt.Printf("👁️ Monitoreando archivos JSON en ./workflows/%s/\n", environment)
                 fmt.Printf("💾 Creando backups automáticos antes de actualizar workflows\n")
         } else {
                 fmt.Printf("🤖 Daemon mode started - %s environment\n", environment)
-                fmt.Printf("👁️ Watching YAML files in ./workflows/%s/\n", environment)
+                fmt.Printf("👁️ Watching JSON files in ./workflows/%s/\n", environment)
                 fmt.Printf("💾 Creating automatic backups before updating workflows\n")
         }
 
-        // Create n8n client
-        n8nClient, err := client.NewN8nClient(environment, "mock-api-key")
+        // Create n8n client with proper URL for demo mode
+        var n8nURL string
+        if demoMode {
+                n8nURL = "http://localhost:3001"
+        } else {
+                // Use environment-specific URL from config
+                switch environment {
+                case "development":
+                        n8nURL = "http://localhost:5678"
+                case "staging":
+                        n8nURL = "https://n8n-staging.example.com"
+                case "production":
+                        n8nURL = "https://n8n-prod.example.com"
+                default:
+                        n8nURL = "http://localhost:5678"
+                }
+        }
+        
+        n8nClient, err := client.NewN8nClient(n8nURL, "n8n_api_mock_development")
         if err != nil {
                 logger.WithError(err).Fatal("Failed to create n8n client")
                 return
@@ -129,8 +136,8 @@ func setupDirectoryWatch(watcher *fsnotify.Watcher, watchDir string) error {
 }
 
 func handleFileEvent(event fsnotify.Event, n8nClient *client.N8nClient, logger *logrus.Entry) {
-        // Only process YAML files
-        if !strings.HasSuffix(event.Name, ".yaml") && !strings.HasSuffix(event.Name, ".yml") {
+        // Only process JSON files
+        if !strings.HasSuffix(event.Name, ".json") {
                 return
         }
 
@@ -139,60 +146,56 @@ func handleFileEvent(event fsnotify.Event, n8nClient *client.N8nClient, logger *
                 return
         }
 
-        logger.WithField("file", event.Name).Info("YAML file modified")
+        logger.WithField("file", event.Name).Info("JSON file modified")
         fmt.Printf("📝 File changed: %s\n", filepath.Base(event.Name))
 
         // Process the file change
-        if err := processYAMLFileChange(event.Name, n8nClient, logger); err != nil {
-                logger.WithError(err).Error("Failed to process YAML file change")
+        if err := processJSONFileChange(event.Name, n8nClient, logger); err != nil {
+                logger.WithError(err).Error("Failed to process JSON file change")
                 fmt.Printf("❌ Error processing %s: %v\n", filepath.Base(event.Name), err)
         }
 }
 
-func processYAMLFileChange(filePath string, n8nClient *client.N8nClient, logger *logrus.Entry) error {
-        // Read and parse YAML file
-        workflow, err := readYAMLWorkflow(filePath)
+func processJSONFileChange(filePath string, n8nClient *client.N8nClient, logger *logrus.Entry) error {
+        // Read and parse JSON file
+        workflowData, err := readJSONWorkflow(filePath)
         if err != nil {
-                return fmt.Errorf("failed to read YAML workflow: %w", err)
+                return fmt.Errorf("failed to read JSON workflow: %w", err)
         }
 
         // Validate workflow
-        if workflow.ID == "" {
+        workflowID, ok := workflowData["id"].(string)
+        if !ok || workflowID == "" {
                 return fmt.Errorf("workflow ID is required")
         }
 
         // Create backup of existing workflow
-        if err := createWorkflowBackup(workflow.ID, n8nClient); err != nil {
+        if err := createWorkflowBackup(workflowID, n8nClient); err != nil {
                 logger.WithError(err).Warn("Failed to create workflow backup")
         }
 
-        // Convert YAML to JSON for n8n API
-        jsonWorkflow, err := convertYAMLToJSON(workflow)
-        if err != nil {
-                return fmt.Errorf("failed to convert YAML to JSON: %w", err)
-        }
-
         // Update workflow in n8n
-        if err := updateWorkflowInN8n(jsonWorkflow, n8nClient, logger); err != nil {
+        if err := updateWorkflowInN8n(workflowData, n8nClient, logger); err != nil {
                 return fmt.Errorf("failed to update workflow in n8n: %w", err)
         }
 
-        fmt.Printf("✅ Workflow '%s' updated in n8n\n", workflow.Name)
+        workflowName := workflowData["name"].(string)
+        fmt.Printf("✅ Workflow '%s' updated in n8n\n", workflowName)
         return nil
 }
 
-func readYAMLWorkflow(filePath string) (*WorkflowYAML, error) {
+func readJSONWorkflow(filePath string) (map[string]interface{}, error) {
         data, err := ioutil.ReadFile(filePath)
         if err != nil {
                 return nil, err
         }
 
-        var workflow WorkflowYAML
-        if err := yaml.Unmarshal(data, &workflow); err != nil {
+        var workflow map[string]interface{}
+        if err := json.Unmarshal(data, &workflow); err != nil {
                 return nil, err
         }
 
-        return &workflow, nil
+        return workflow, nil
 }
 
 func createWorkflowBackup(workflowID string, n8nClient *client.N8nClient) error {
@@ -225,7 +228,7 @@ func createWorkflowBackup(workflowID string, n8nClient *client.N8nClient) error 
 
         // Save backup metadata
         backupInfo := BackupInfo{
-                OriginalFile: fmt.Sprintf("./workflows/%s/%s.yaml", environment, workflowID),
+                OriginalFile: fmt.Sprintf("./workflows/%s/%s.json", environment, workflowID),
                 BackupFile:   backupFile,
                 Timestamp:    time.Now(),
                 Environment:  environment,
@@ -247,40 +250,40 @@ func createWorkflowBackup(workflowID string, n8nClient *client.N8nClient) error 
         return nil
 }
 
-func convertYAMLToJSON(workflow *WorkflowYAML) (map[string]interface{}, error) {
-        // Convert struct to map for JSON serialization
-        jsonData, err := json.Marshal(workflow)
-        if err != nil {
-                return nil, err
-        }
 
-        var jsonWorkflow map[string]interface{}
-        if err := json.Unmarshal(jsonData, &jsonWorkflow); err != nil {
-                return nil, err
-        }
-
-        // Set updatedAt timestamp if not provided
-        if workflow.UpdatedAt == "" {
-                jsonWorkflow["updatedAt"] = time.Now().Format(time.RFC3339)
-        }
-
-        return jsonWorkflow, nil
-}
 
 func updateWorkflowInN8n(jsonWorkflow map[string]interface{}, n8nClient *client.N8nClient, logger *logrus.Entry) error {
         workflowID := jsonWorkflow["id"].(string)
 
+        // Convert map to workflow struct
+        jsonData, err := json.Marshal(jsonWorkflow)
+        if err != nil {
+                return fmt.Errorf("failed to marshal workflow: %w", err)
+        }
+
+        var wf workflow.Workflow
+        if err := json.Unmarshal(jsonData, &wf); err != nil {
+                return fmt.Errorf("failed to unmarshal workflow: %w", err)
+        }
+
+        // Set updated timestamp in original JSON if not provided
+        if _, exists := jsonWorkflow["updatedAt"]; !exists || jsonWorkflow["updatedAt"] == "" {
+                jsonWorkflow["updatedAt"] = time.Now().Format(time.RFC3339)
+        }
+
         // Check if workflow exists
-        existingWorkflow, err := n8nClient.GetWorkflow(workflowID)
+        _, err = n8nClient.GetWorkflow(workflowID)
         if err != nil {
                 // Workflow doesn't exist, create new one
                 logger.WithField("workflowId", workflowID).Info("Creating new workflow")
-                return n8nClient.CreateWorkflow(jsonWorkflow)
+                _, err = n8nClient.CreateWorkflow(&wf)
+                return err
         }
 
         // Workflow exists, update it
         logger.WithField("workflowId", workflowID).Info("Updating existing workflow")
-        return n8nClient.UpdateWorkflow(workflowID, jsonWorkflow)
+        _, err = n8nClient.UpdateWorkflow(workflowID, &wf)
+        return err
 }
 
 func testN8nConnectionDaemon(n8nClient *client.N8nClient) error {
@@ -293,6 +296,6 @@ func testN8nConnectionDaemon(n8nClient *client.N8nClient) error {
                 return fmt.Errorf("n8n API is not healthy: status code %v", health["status_code"])
         }
 
-        fmt.Printf("🔗 Connected to n8n API: %s\n", n8nClient.BaseURL())
+        fmt.Printf("🔗 Connected to n8n API\n")
         return nil
 }
