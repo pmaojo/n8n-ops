@@ -12,6 +12,7 @@ Preferred communication style: Simple, everyday language.
 Project purpose: Operations tool for COMPILING and managing n8n workflows (not for deployment to hosting platforms)
 Custom ASCII art: User-provided "n8n deploy" ASCII art integrated into welcome screens
 Versioning: Uses Semantic Versioning (SemVer) with Git Flow workflow for multi-environment deployment
+Team Collaboration: Comprehensive system to prevent developers from stepping on each other using Git, branch protection, and automated conflict detection
 
 ## System Architecture
 
