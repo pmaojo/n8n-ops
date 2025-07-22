@@ -91,7 +91,7 @@ func runCheck(cmd *cobra.Command, args []string) {
 func checkWorkflowSync() (*CheckResult, error) {
         // Read local workflows
         workflowDir := fmt.Sprintf("./workflows/%s", environment)
-        localWorkflows, err := getLocalWorkflowStatus(workflowDir)
+        localWorkflows, err := getLocalWorkflows(workflowDir)
         if err != nil {
                 return nil, fmt.Errorf("failed to read local workflows: %w", err)
         }
@@ -105,7 +105,7 @@ func checkWorkflowSync() (*CheckResult, error) {
         return checkWorkflowSyncReal(localWorkflows)
 }
 
-func checkWorkflowSyncDemo(localWorkflows []WorkflowInfo) (*CheckResult, error) {
+func checkWorkflowSyncDemo(localWorkflows []WorkflowData) (*CheckResult, error) {
         result := &CheckResult{
                 Environment:    environment,
                 LastSync:      time.Now().Add(-15 * time.Minute),
@@ -156,7 +156,7 @@ func checkWorkflowSyncDemo(localWorkflows []WorkflowInfo) (*CheckResult, error) 
         return result, nil
 }
 
-func checkWorkflowSyncReal(localWorkflows []WorkflowInfo) (*CheckResult, error) {
+func checkWorkflowSyncReal(localWorkflows []WorkflowData) (*CheckResult, error) {
         // This would implement real n8n API comparison
         result := &CheckResult{
                 Environment:    environment,

@@ -1,0 +1,61 @@
+{
+  "active": true,
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Send Welcome Email",
+            "type": "main"
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-07-19T22:33:36.841290108Z",
+  "id": "1001",
+  "name": "Customer Onboarding",
+  "nodes": [
+    {
+      "id": "webhook-1001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "customer-signup"
+      }
+    },
+    {
+      "id": "email-1001",
+      "name": "Send Welcome Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ],
+      "parameters": {
+        "subject": "Welcome to our platform!",
+        "toEmail": "={{ $json.email }}"
+      }
+    }
+  ],
+  "syncMetadata": {
+    "environment": "development",
+    "gitCommit": "",
+    "syncDate": "2025-07-22T22:33:36.844827638Z",
+    "syncedBy": "demo@n8n-ops.example.com"
+  },
+  "tags": [
+    "customer",
+    "onboarding"
+  ],
+  "updatedAt": "2025-07-22T22:03:36.841290428Z",
+  "versionId": 15
+}

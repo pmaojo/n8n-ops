@@ -1,0 +1,60 @@
+{
+  "active": true,
+  "connections": {
+    "Payment Webhook": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Process Payment",
+            "type": "main"
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-07-20T22:33:36.841297208Z",
+  "id": "1002",
+  "name": "Payment Processing",
+  "nodes": [
+    {
+      "id": "webhook-1002",
+      "name": "Payment Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        200
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "stripe-webhook"
+      }
+    },
+    {
+      "id": "stripe-1002",
+      "name": "Process Payment",
+      "type": "n8n-nodes-base.stripe",
+      "typeVersion": 1,
+      "position": [
+        450,
+        200
+      ],
+      "parameters": {
+        "operation": "charge"
+      }
+    }
+  ],
+  "syncMetadata": {
+    "environment": "development",
+    "gitCommit": "",
+    "syncDate": "2025-07-22T22:33:36.841425308Z",
+    "syncedBy": "demo@n8n-ops.example.com"
+  },
+  "tags": [
+    "payment",
+    "stripe"
+  ],
+  "updatedAt": "2025-07-22T22:23:36.841297278Z",
+  "versionId": 23
+}
