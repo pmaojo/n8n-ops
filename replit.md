@@ -4,7 +4,7 @@
 
 This project is a command-line tool built in Go for managing n8n workflows across multiple environments. It provides automation for deploying, syncing, validating, and rolling back workflows with GitLab CI/CD integration. The tool supports multi-environment workflow management (development, staging, production) with local SQLite tracking and comprehensive logging capabilities.
 
-**Status**: Fully functional CLI tool with all core commands implemented and tested.
+**Status**: Fully functional CLI tool with all core commands implemented and tested. Now features beautiful futuristic ASCII art and Matrix effects.
 
 ## User Preferences
 

@@ -8,6 +8,7 @@ import (
 
         "github.com/spf13/cobra"
         "github.com/spf13/viper"
+        "github.com/n8n-workflows/cli/internal/ascii"
         "github.com/n8n-workflows/cli/internal/client"
         "github.com/n8n-workflows/cli/internal/config"
         "github.com/n8n-workflows/cli/internal/git"
@@ -74,6 +75,10 @@ func runSync(cmd *cobra.Command, args []string) error {
                         }
                 }
         }
+        
+        // Show banner
+        fmt.Print(ascii.Banner(env))
+        fmt.Print(ascii.CommandHelp("sync"))
         
         logger.Info("Starting workflow sync", "environment", env)
 

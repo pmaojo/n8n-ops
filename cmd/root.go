@@ -6,6 +6,7 @@ import (
 
         "github.com/spf13/cobra"
         "github.com/spf13/viper"
+        "github.com/n8n-workflows/cli/internal/ascii"
         "github.com/n8n-workflows/cli/internal/config"
         "github.com/n8n-workflows/cli/internal/utils"
 )
@@ -21,7 +22,9 @@ var (
 var rootCmd = &cobra.Command{
         Use:   "n8n-cli",
         Short: "A collaborative n8n workflow management CLI tool",
-        Long: `n8n-cli is a command-line tool for managing n8n workflows across multiple environments.
+        Long: ascii.N8nLogo() + `
+
+n8n-cli is a command-line tool for managing n8n workflows across multiple environments.
 It supports syncing workflows from n8n instances, deploying local changes, validating workflow files,
 and integrating with GitLab CI/CD pipelines for collaborative development.
 
