@@ -8,6 +8,7 @@ import (
         "github.com/spf13/viper"
         "github.com/n8n-workflows/cli/internal/ascii"
         "github.com/n8n-workflows/cli/internal/config"
+        "github.com/n8n-workflows/cli/internal/i18n"
         "github.com/n8n-workflows/cli/internal/utils"
 )
 
@@ -15,6 +16,7 @@ var (
         cfgFile     string
         environment string
         verbose     bool
+        language    string
         logger      = utils.NewLogger()
 )
 
@@ -47,14 +49,22 @@ func init() {
         rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.n8n-cli.yaml)")
         rootCmd.PersistentFlags().StringVarP(&environment, "env", "e", "development", "target environment (development, staging, production)")
         rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
+        rootCmd.PersistentFlags().StringVarP(&language, "lang", "l", "en", "language (en, es)")
 
         // Bind flags to viper
         viper.BindPFlag("environment", rootCmd.PersistentFlags().Lookup("env"))
         viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
+        viper.BindPFlag("language", rootCmd.PersistentFlags().Lookup("lang"))
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
+        // Set language first
+        if language != "" {
+                i18n.SetLanguage(language)
+        } else if viper.IsSet("language") {
+                i18n.SetLanguage(viper.GetString("language"))
+        }
         if cfgFile != "" {
                 // Use config file from the flag.
                 viper.SetConfigFile(cfgFile)
