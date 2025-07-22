@@ -24,31 +24,50 @@ const (
 // N8nLogo returns the main n8n CLI futuristic logo
 func N8nLogo() string {
         return fmt.Sprintf(`%s%s
-    ███▄    █   █████   ███▄    █      ▄████▄   ██▓     ██▓
-    ██ ▀█   █ ▒██▓  ██▒ ██ ▀█   █     ▒██▀ ▀█  ▓██▒    ▓██▒
-   ▓██  ▀█ ██▒▒██▒  ██░▓██  ▀█ ██▒    ▒▓█    ▄ ▒██░    ▒██▒
-   ▓██▒  ▐▌██▒░██  █▀ ░▓██▒  ▐▌██▒    ▒▓▓▄ ▄██▒▒██░    ░██░
-   ▒██░   ▓██░░▒███▒█▄ ▒██░   ▓██░    ▒ ▓███▀ ░░██████▒░██░
-   ░ ▒░   ▒ ▒ ░░ ▒▒░ ▒ ░ ▒░   ▒ ▒     ░ ░▒ ▒  ░░ ▒░▓  ░░▓  
-   ░ ░░   ░ ▒░ ░ ▒░  ░ ░ ░░   ░ ▒░      ░  ▒   ░ ░ ▒  ░ ▒ ░
-      ░   ░ ░    ░   ░    ░   ░ ░     ░          ░ ░    ▒ ░
-            ░     ░            ░     ░ ░          ░  ░ ░  
-                                     ░                     
+                   ad88888ba                                                        
+                  d8"     "8b                                                       
+                  88       88                                                       
+                  Y8a     a8P                                                       
+                   "Y8aaa8P"                                                        
+  ,ggg,,ggg,       ,d8"""8b,        ,ggg,,ggg,                                      
+ ,8" "8P" "8,     d8"     "8b      ,8" "8P" "8,                                     
+ I8   8I   8I     88       88      I8   8I   8I                                     
+,dP   8I   Yb,    Y8a     a8P     ,dP   8I   Yb,                                    
+8P'   8I   Y8     "Y88888P"      8P'   8I   Y8                                     
+                                                                                    
+         8I                                   ,dPYb,                                
+         8I                                   IP' Yb                                
+         8I                                   I8  8I                                
+         8I                                   I8  8'                                
+   ,gggg,8I       ,ggg,       gg,gggg,        I8 dP        ,ggggg,        gg     gg 
+  dP"  "Y8I      i8" "8i      I8P"  "Yb       I8dP        dP"  "Y8ggg     I8     8I 
+ i8'    ,8I      I8, ,8I      I8'    ,8i      I8P        i8'    ,8I       I8,   ,8I 
+,d8,   ,d8b,     YbadP'     ,I8 _  ,d8'     ,d8b,_     ,d8,   ,d8'      ,d8b, ,d8I 
+P"Y8888P" Y8    888P"Y888    PI8 YY88888P    8P'"Y88    P"Y8888P"        P""Y88P"888
+                              I8                                               ,d8I'
+                              I8                                             ,dP'8I 
+                              I8                                            ,8"  8I 
+                              I8                                            I8   8I 
+                              I8                                            8, ,8I  
+                              I8                                             Y8P"   
+%s
 %s             %s⚡ %s ⚡%s
-%s`, Cyan, Bold, i18n.T("workflow_automation"), Reset, Yellow, Reset)
+%s`, Cyan, Bold, Reset, Yellow, i18n.T("workflow_automation"), Reset)
 }
 
 // SmallLogo returns a compact version for headers
 func SmallLogo() string {
-        return fmt.Sprintf(`%s%s▓█████▄  █     █░▓█████  █    ██  ▄████▄  ██▓    ▒█████  
-▒██▀ ██▌▓█░ █ ░█░▓█   ▀  ██  ▓██▒▒██▀ ▀█ ▓██▒   ▒██▒  ██▒
-░██   █▌▒█░ █ ░█ ▒███   ▓██  ▒██░▒▓█    ▄▒██░   ▒██░  ██▒
-░▓█▄   ▌░█░ █ ░█ ▒▓█  ▄ ▓▓█  ░██░▒▓▓▄ ▄██▒██░   ▒██   ██░
-░▒████▓ ░░██▒██▓ ░▒████▒▒▒█████▓ ▒ ▓███▀ ░██████▒░ ████▓▒░
- ▒▒▓  ▒ ░ ▓░▒ ▒  ░░ ▒░ ░░▒▓▒ ▒ ▒ ░ ░▒ ▒  ░ ▒░▓  ░░ ▒░▒░▒░ 
- ░ ▒  ▒   ▒ ░ ░   ░ ░  ░░░▒░ ░ ░   ░  ▒  ░ ░ ▒  ░  ░ ▒ ▒░ 
- ░ ░  ░   ░   ░     ░    ░░░ ░ ░ ░         ░ ░   ░ ░ ░ ▒  
-   ░        ░       ░  ░   ░     ░ ░         ░  ░    ░ ░  %s`, Blue, Bold, Reset)
+        return fmt.Sprintf(`%s%s
+        ad88888ba       88888888ba          ,ad8888ba,   
+       d8"     "8b      88      "8b        d8"'    "8b  
+       88       88      88      ,8P       d8'        8b 
+       Y8a     a8P      88aaaaaa8P'       88          88 
+        "Y8aaa8P"       88""""""8b,       88          88 
+         ,d8"""8b,      88       8b       Y8,        ,8P 
+        d8"     "8b     88      a8P        Y8a.    .a8P  
+        Y8a     a8P     88888888P"          "Y8888Y"   
+         "Y88888P"                                        
+%s`, Blue, Bold, Reset)
 }
 
 // Banner creates a futuristic banner with environment info
