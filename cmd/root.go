@@ -19,6 +19,7 @@ var (
         language    string
         showVersion bool
         demoMode    bool
+        daemonMode  bool
         logger      = utils.NewLogger()
 )
 
@@ -42,6 +43,10 @@ Examples:
                         fmt.Printf("n8n-ops version %s\n", Version)
                         fmt.Printf("Git commit: %s\n", GitCommit)
                         fmt.Printf("Build date: %s\n", BuildDate)
+                        return
+                }
+                if daemonMode {
+                        runDaemonMode()
                         return
                 }
                 cmd.Help()
@@ -69,6 +74,7 @@ func init() {
         rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
         rootCmd.PersistentFlags().StringVarP(&language, "lang", "l", "en", "language (en, es)")
         rootCmd.PersistentFlags().BoolVar(&demoMode, "demo", false, "use demo mode with mock n8n server")
+        rootCmd.PersistentFlags().BoolVarP(&daemonMode, "daemon", "d", false, "run in daemon mode - watch for YAML changes and auto-sync to n8n")
         rootCmd.Flags().BoolVar(&showVersion, "version", false, "show version information")
 
         // Bind flags to viper
