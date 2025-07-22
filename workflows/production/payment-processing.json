@@ -1,0 +1,27 @@
+{
+  "id": "payment_processing_003",
+  "name": "Payment Processing Workflow", 
+  "nodes": [
+    {
+      "id": "api_trigger",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [250, 300]
+    },
+    {
+      "id": "stripe_node",
+      "type": "n8n-nodes-base.stripe", 
+      "credentials": {
+        "stripe": {
+          "id": "stripe_prod_001",
+          "name": "Stripe Production"
+        }
+      },
+      "position": [450, 300]
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "updatedAt": "2025-01-22T09:15:00.000Z"
+}

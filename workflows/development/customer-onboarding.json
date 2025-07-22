@@ -1,0 +1,27 @@
+{
+  "id": "customer_onboarding_001",
+  "name": "Customer Onboarding Process",
+  "nodes": [
+    {
+      "id": "trigger_node",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [250, 300]
+    },
+    {
+      "id": "email_node",
+      "type": "n8n-nodes-base.emailSend",
+      "credentials": {
+        "smtp": {
+          "id": "smtp_dev_001",
+          "name": "SMTP Development"
+        }
+      },
+      "position": [450, 300]
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "updatedAt": "2025-01-22T10:30:00.000Z"
+}

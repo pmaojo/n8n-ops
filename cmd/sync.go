@@ -9,6 +9,7 @@ import (
 
         "github.com/spf13/cobra"
         "github.com/n8n-workflows/n8n-ops/internal/client"
+        "github.com/n8n-workflows/n8n-ops/internal/git"
 )
 
 var syncCmd = &cobra.Command{
@@ -56,6 +57,15 @@ func init() {
 }
 
 func runSync(cmd *cobra.Command, args []string) error {
+        // Check for uncommitted changes before sync
+        if !force {
+                checker := git.NewGitStatusChecker(".")
+                if err := checker.CheckBeforeSync(); err != nil {
+                        fmt.Printf("\n❌ Sync blocked: %s\n\n", err.Error())
+                        fmt.Printf("Use --force to sync anyway (⚠️  may overwrite local changes)\n")
+                        return nil
+                }
+        }
         logger.Info("Starting workflow sync", "environment", environment)
         fmt.Printf("🔄 Syncing workflows from %s environment...\n", environment)
 

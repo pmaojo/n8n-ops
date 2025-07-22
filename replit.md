@@ -4,7 +4,7 @@
 
 This project is a command-line tool built in Go for managing n8n workflows across multiple environments. It provides automation for deploying, syncing, validating, and rolling back workflows with GitLab CI/CD integration. The tool supports multi-environment workflow management (development, staging, production) with local SQLite tracking and comprehensive logging capabilities.
 
-**Status**: MAJOR BREAKTHROUGH - Intelligent Branch Management System implemented! Features revolutionary DevOps workflow naming conventions, interactive branch creation, automatic versioning, and Git Flow integration. Eliminates deploy/rollback complexity by using Git naturally for versioning. 89% test success rate with mock API integration. Production-ready collaborative workflow management.
+**Status**: BREAKTHROUGH - Workflow Change Detection System implemented! Features intelligent Git status monitoring, uncommitted workflow detection, Web UI warnings, and sync protection. Prevents data loss by detecting workflows edited in n8n UI but not committed to Git. Real-time visual alerts in dashboard with automatic commit functionality. Production-ready collaborative workflow safety.
 
 ## User Preferences
 
@@ -14,7 +14,7 @@ Custom ASCII art: User-provided "n8n deploy" ASCII art integrated into welcome s
 Versioning: Revolutionary intelligent branch naming system with automatic semantic versioning
 Team Collaboration: Git-native approach eliminates deploy/rollback complexity - Git handles versioning naturally
 Branch Management: Interactive workflow creation with DevOps naming conventions (feature/, hotfix/, release/, experiment/)
-Change Detection: Automatic polling system detects n8n UI changes and syncs bidirectionally with Git
+Change Detection: Git status monitoring detects uncommitted workflows, Web UI warnings prevent data loss, sync operations blocked until changes committed
 Zero-Downtime Deployments: API-first approach that updates workflows without stopping n8n instances or touching infrastructure
 
 ## System Architecture

@@ -7,6 +7,7 @@ import (
         "time"
 
         "github.com/spf13/cobra"
+        "github.com/n8n-workflows/n8n-ops/internal/git"
 )
 
 var uiCmd = &cobra.Command{
@@ -55,6 +56,17 @@ func runUI(cmd *cobra.Command, args []string) error {
 }
 
 func startUIServer(env string, port int) error {
+        // Simulate uncommitted workflow changes for demo
+        simulatedUncommitted := []struct {
+                WorkflowName string
+                Status       string
+                Environment  string
+                FilePath     string
+        }{
+                {"Customer Onboarding Process", "modified", "development", "workflows/development/customer-onboarding.json"},
+                {"New Workflow Created", "untracked", "development", "workflows/development/new-workflow.json"},
+        }
+        
         // Simple dashboard data
         dashboardData := struct {
                 Environment string
@@ -69,10 +81,21 @@ func startUIServer(env string, port int) error {
                         Status string
                 }
                 LastSync time.Time
+                HasUncommittedChanges bool
+                UncommittedWorkflows []struct {
+                        WorkflowName string
+                        Status       string
+                        Environment  string
+                        FilePath     string
+                }
+                GitBranch string
         }{
                 Environment: env,
                 Status:      "connected",
                 LastSync:    time.Now(),
+                HasUncommittedChanges: true,  // Demo shows uncommitted changes
+                UncommittedWorkflows: simulatedUncommitted,
+                GitBranch: "feature/workflow-detection",
                 Workflows: []struct {
                         Name   string
                         Status string
@@ -115,6 +138,8 @@ func startUIServer(env string, port int) error {
         .status.connected { background: #c6f6d5; color: #22543d; }
         .status.configured { background: #c6f6d5; color: #22543d; }
         .status.missing { background: #fed7d7; color: #742a2a; }
+        .status.modified { background: #fefcbf; color: #744210; }
+        .status.untracked { background: #e6fffa; color: #234e52; }
         .workflow-item, .cred-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #eee; }
         .workflow-item:last-child, .cred-item:last-child { border-bottom: none; }
         .btn { background: #667eea; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background 0.2s; }
@@ -129,6 +154,11 @@ func startUIServer(env string, port int) error {
     <div class="header">
         <h1>🚀 n8n-ops Dashboard</h1>
         <p>Environment: <strong>{{.Environment}}</strong> | Status: <span class="status {{.Status}}">{{.Status}}</span></p>
+        {{if .HasUncommittedChanges}}
+        <div style="background: rgba(255,255,255,0.2); padding: 0.75rem; border-radius: 6px; margin-top: 1rem;">
+            <strong>⚠️ {{len .UncommittedWorkflows}} Uncommitted Workflow Changes</strong>
+        </div>
+        {{end}}
     </div>
 
     <div class="container">
@@ -152,6 +182,23 @@ func startUIServer(env string, port int) error {
         </div>
 
         <div class="cards">
+            {{if .HasUncommittedChanges}}
+            <div class="card" style="border-left: 4px solid #f56565;">
+                <h3>🚨 Uncommitted Changes</h3>
+                <p><strong>{{len .UncommittedWorkflows}} workflows</strong> have changes that are not committed to Git.</p>
+                {{range .UncommittedWorkflows}}
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid #eee;">
+                    <div>
+                        <strong>{{.WorkflowName}}</strong>
+                        <div style="font-size: 0.875rem; color: #718096;">{{.Environment}} | {{.FilePath}}</div>
+                    </div>
+                    <span class="status {{.Status}}">{{.Status}}</span>
+                </div>
+                {{end}}
+                <button class="btn" onclick="commitChanges()" style="margin-top: 1rem; background: #e53e3e;">Commit Changes</button>
+            </div>
+            {{end}}
+
             <div class="card">
                 <h3>📋 Workflows</h3>
                 {{range .Workflows}}
@@ -212,12 +259,25 @@ func startUIServer(env string, port int) error {
             }, 1000);
         }
         
+        function commitChanges() {
+            if (confirm('Commit {{len .UncommittedWorkflows}} workflow changes to Git?')) {
+                alert('Committing workflows...\ngit add .\ngit commit -m "Update workflows"\n\nChanges committed successfully!');
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            }
+        }
+        
         function validateCredentials() {
             alert('Validating credentials for {{.Environment}} environment...');
         }
         
         function checkStatus() {
-            alert('All systems operational!');
+            {{if .HasUncommittedChanges}}
+            alert('⚠️ Status: {{len .UncommittedWorkflows}} uncommitted workflow changes detected!\n\nRecommendation: Commit changes before syncing.');
+            {{else}}
+            alert('✅ All systems operational!\nAll workflows are committed.');
+            {{end}}
         }
         
         function viewLogs() {
