@@ -4,11 +4,13 @@
 
 This project is a command-line tool built in Go for managing n8n workflows across multiple environments. It provides automation for deploying, syncing, validating, and rolling back workflows with GitLab CI/CD integration. The tool supports multi-environment workflow management (development, staging, production) with local SQLite tracking and comprehensive logging capabilities.
 
-**Status**: Fully functional CLI tool with all core commands implemented and tested. Now features beautiful futuristic ASCII art and Matrix effects.
+**Status**: Fully functional CLI tool with all core commands implemented and tested. Features custom ASCII art, multilingual support (English/Spanish), complete n8n API integration, and comprehensive development/deployment guides.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Project purpose: CLI tool for COMPILING and managing n8n workflows (not for deployment to hosting platforms)
+Custom ASCII art: User-provided "n8n deploy" ASCII art integrated into welcome screens
 
 ## System Architecture
 
@@ -108,3 +110,23 @@ The repository follows a standard Go project layout with additional directories 
 - Cross-platform support (built with Go)
 - Single binary deployment with no external dependencies
 - Source code available for custom builds
+
+## Development Setup
+
+### Local Development
+1. Clone repository: `git clone https://gitlab.com/your-org/n8n-cli.git`
+2. Build CLI: `go build -o n8n-cli main.go`
+3. Configure environments in `~/.n8n-cli.yaml`
+4. Set environment variables for n8n API keys
+
+### GitLab CI/CD Integration
+- Automated validation and deployment pipeline
+- Environment-specific deployments (dev, staging, production)
+- Manual approval gates for production
+- Rollback capabilities
+
+### Key Configuration Files
+- `DEVELOPMENT.md` - Complete development guide
+- `config.example.yaml` - Configuration template
+- `.gitlab-ci.yml` - GitLab CI/CD pipeline
+- Environment variables for n8n API keys and GitLab tokens

@@ -34,3 +34,6 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "./n8n-cli --help"
+
+[deployment]
+deploymentTarget = "cloudrun"

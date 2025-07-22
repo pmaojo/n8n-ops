@@ -1,196 +1,187 @@
 # n8n CLI Configuration Example
-# Copy this file to .n8n-cli.yaml and customize for your setup
+# Copy this file to ~/.n8n-cli.yaml and customize for your environment
 
-# Environment configurations
+# Default environment when no --env flag is specified
+default_environment: development
+
+# Environment configurations for different n8n instances
 environments:
   development:
-    url: https://n8n-dev.example.com
-    api_key_env: N8N_DEV_API_KEY
-    # Optional: timeout settings
-    timeout: 30s
-    # Optional: custom headers
-    headers:
-      User-Agent: "n8n-cli/1.0.0"
-  
+    # n8n instance URL
+    url: "https://n8n-dev.yourcompany.com"
+    
+    # API key (use environment variable for security)
+    api_key: "${N8N_DEV_API_KEY}"
+    
+    # Request timeout in seconds
+    timeout: 30
+    
+    # Workflow directory for this environment
+    workflow_dir: "./workflows/development"
+    
+    # Enable/disable SSL verification
+    verify_ssl: true
+    
   staging:
-    url: https://n8n-staging.example.com
-    api_key_env: N8N_STAGING_API_KEY
-    timeout: 30s
-    headers:
-      User-Agent: "n8n-cli/1.0.0"
-  
+    url: "https://n8n-staging.yourcompany.com"
+    api_key: "${N8N_STAGING_API_KEY}"
+    timeout: 30
+    workflow_dir: "./workflows/staging"
+    verify_ssl: true
+    
   production:
-    url: https://n8n-prod.example.com
-    api_key_env: N8N_PROD_API_KEY
-    timeout: 60s
-    headers:
-      User-Agent: "n8n-cli/1.0.0"
+    url: "https://n8n-prod.yourcompany.com"
+    api_key: "${N8N_PROD_API_KEY}"
+    timeout: 60
+    workflow_dir: "./workflows/production"
+    verify_ssl: true
+    
+    # Additional validation for production
+    require_confirmation: true
+    backup_before_deploy: true
 
-# Default settings
-defaults:
-  environment: development
-  validation:
-    strict: false
-    # Skip validation for specific node types
-    skip_node_types:
-      - "community-node-example"
-  sync:
-    auto_backup: true
-    # Maximum number of backups to keep
-    max_backups: 10
-    # Auto-cleanup backups older than this duration
-    backup_retention: "30d"
-  deploy:
-    dry_run: false
-    skip_validation: false
-    # Confirm before deploying to production
-    confirm_production: true
-    # Wait time between workflow deployments
-    deploy_delay: "1s"
+# Git branch to environment mapping
+# This allows automatic environment detection based on current git branch
+branch_mapping:
+  main: production
+  master: production
+  staging: staging
+  develop: development
+  development: development
+  "feature/*": development
+  "hotfix/*": production
+  "release/*": staging
+
+# Local database settings for tracking deployments
+database:
+  # SQLite database path (relative to project root)
+  path: ".n8n-cli/database.sqlite"
+  
+  # Enable backup before major operations
+  backup_enabled: true
+  
+  # Keep deployment history for X days
+  retention_days: 90
 
 # Logging configuration
 logging:
-  level: info # debug, info, warn, error, fatal
-  format: text # text, json
-  file: logs/n8n-cli.log
-  # Rotate log files
-  rotation:
-    max_size: 100 # MB
-    max_age: 30 # days
-    max_backups: 10
+  # Log level: debug, info, warn, error
+  level: "info"
+  
+  # Log file path
+  file: ".n8n-cli/logs/n8n-cli.log"
+  
+  # Maximum log file size in MB
+  max_size: 10
+  
+  # Number of old log files to keep
+  max_backups: 5
+  
+  # Enable JSON formatted logs
+  json_format: false
 
-# Database configuration
-database:
-  path: .n8n-cli.db
-  # Enable WAL mode for better concurrent access
-  wal_mode: true
-  # Connection pool settings
-  max_connections: 10
-  max_idle_connections: 5
+# Validation settings
+validation:
+  # Workflow file extensions to validate
+  file_extensions:
+    - ".json"
+  
+  # Required workflow properties
+  required_fields:
+    - "name"
+    - "nodes"
+    - "connections"
+    - "active"
+  
+  # Maximum workflow file size in MB
+  max_file_size: 5
 
-# Git integration (optional)
-git:
-  # Auto-commit changes after sync
-  auto_commit: false
-  # Commit message template
-  commit_message_template: "Sync workflows from {environment} - {timestamp}"
-  # Auto-push after commit
-  auto_push: false
-  # Branch to push to
-  push_branch: "main"
+# Deployment settings
+deployment:
+  # Create backup before deployment
+  backup_before_deploy: true
+  
+  # Maximum number of concurrent deployments
+  max_concurrent: 3
+  
+  # Retry failed deployments
+  retry_count: 2
+  
+  # Wait time between retries in seconds
+  retry_delay: 5
 
-# Webhook configuration for real-time sync (optional)
-webhook:
-  enabled: false
-  port: 8080
-  path: "/webhook/n8n-sync"
-  secret: "your-webhook-secret"
+# CLI behavior settings
+cli:
+  # Default language (en, es)
+  language: "en"
+  
+  # Show ASCII art and animations
+  show_ascii_art: true
+  
+  # Color output (auto, always, never)
+  color: "auto"
+  
+  # Progress bars and animations
+  show_progress: true
+
+# GitLab integration settings
+gitlab:
+  # Base URL for GitLab API
+  url: "https://gitlab.com"
+  
+  # Project ID (can be found in project settings)
+  project_id: "${GITLAB_PROJECT_ID}"
+  
+  # Access token with API permissions
+  token: "${GITLAB_TOKEN}"
+  
+  # Default merge request settings
+  merge_request:
+    default_target_branch: "staging"
+    delete_source_branch: true
+    squash: true
 
 # Notification settings (optional)
 notifications:
+  # Slack webhook for deployment notifications
   slack:
     enabled: false
-    webhook_url_env: SLACK_WEBHOOK_URL
-    channel: "#n8n-deployments"
+    webhook_url: "${SLACK_WEBHOOK_URL}"
+    
+  # Email notifications
   email:
     enabled: false
-    smtp_host: smtp.example.com
+    smtp_host: "smtp.yourcompany.com"
     smtp_port: 587
-    username_env: SMTP_USERNAME
-    password_env: SMTP_PASSWORD
-    from: "n8n-cli@example.com"
+    username: "${EMAIL_USERNAME}"
+    password: "${EMAIL_PASSWORD}"
+    from: "n8n-cli@yourcompany.com"
     to:
-      - "team@example.com"
+      - "team@yourcompany.com"
 
-# Performance settings
-performance:
-  # Maximum concurrent operations
-  max_concurrent_operations: 5
-  # Request timeout for n8n API calls
-  api_timeout: 30s
-  # Retry settings
-  retry:
-    max_attempts: 3
-    initial_delay: 1s
-    max_delay: 10s
-    exponential_backoff: true
-
-# Security settings
-security:
-  # Encrypt sensitive data in local database
-  encrypt_local_data: false
-  # Encryption key environment variable
-  encryption_key_env: N8N_CLI_ENCRYPTION_KEY
-  # Validate SSL certificates
-  verify_ssl: true
-  # Custom CA certificate file
-  ca_cert_file: ""
-
-# Workflow templates
+# Workflow template settings
 templates:
   # Directory containing workflow templates
-  directory: templates/
-  # Default template to use for new workflows
-  default: basic-workflow
-  # Custom template variables
-  variables:
-    author: "Your Name"
-    organization: "Your Organization"
-    contact: "your-email@example.com"
+  directory: "./config/templates"
+  
+  # Available templates
+  available:
+    - "basic-webhook"
+    - "data-processing"
+    - "api-integration"
+    - "scheduled-task"
+    - "error-handling"
 
-# Custom commands (optional)
-custom_commands:
-  # Pre-deploy hooks
-  pre_deploy:
-    - command: "npm run test"
-      working_dir: "."
-      timeout: "5m"
-  # Post-deploy hooks
-  post_deploy:
-    - command: "curl -X POST https://api.example.com/notify"
-      timeout: "30s"
-
-# Feature flags
-features:
-  # Enable experimental features
-  experimental: false
-  # Enable metrics collection
-  metrics: false
-  # Enable auto-update checks
-  auto_update_check: true
-  # Enable workflow dependency analysis
-  dependency_analysis: false
-
-# Export/Import settings
-export:
-  # Include credentials in exports (not recommended for security)
-  include_credentials: false
-  # Include execution data
-  include_executions: false
-  # Format for exports
-  format: json # json, yaml
-  # Compression for large exports
-  compress: true
-
-# Monitoring and health checks
-monitoring:
-  # Health check interval for environments
-  health_check_interval: "5m"
-  # Enable performance monitoring
-  performance_monitoring: false
-  # Metrics export endpoint
-  metrics_endpoint: "http://localhost:9090/metrics"
-
-# Advanced settings
-advanced:
-  # Custom user agent for API requests
-  user_agent: "n8n-cli/1.0.0"
-  # Connection pool settings
-  http_client:
-    max_idle_connections: 100
-    max_connections_per_host: 10
-    idle_connection_timeout: "90s"
-  # Memory usage limits
-  memory:
-    max_workflow_size: "10MB"
-    max_total_memory: "100MB"
+# Custom hooks (optional scripts to run)
+hooks:
+  # Run before any deployment
+  pre_deploy: "./scripts/pre-deploy.sh"
+  
+  # Run after successful deployment
+  post_deploy: "./scripts/post-deploy.sh"
+  
+  # Run before sync operation
+  pre_sync: "./scripts/pre-sync.sh"
+  
+  # Run after sync operation  
+  post_sync: "./scripts/post-sync.sh"
