@@ -13,15 +13,25 @@ import (
 
 var syncCmd = &cobra.Command{
         Use:   "sync",
-        Short: "Sync workflows from n8n instance to local filesystem",
-        Long: `Sync workflows from the specified n8n environment to the local filesystem.
-This command downloads all workflows from the target n8n instance and stores them
-in the appropriate environment directory with metadata for tracking changes.
+        Short: "Sync workflows bidirectionally between n8n and local filesystem", 
+        Long: `Sync performs intelligent bidirectional synchronization between your n8n instance and Git repository.
+
+DETECTION MODES:
+• FROM n8n TO Git: Downloads workflows modified in n8n UI to local files
+• FROM Git TO n8n: Uploads local workflow changes to n8n instance  
+• BIDIRECTIONAL: Compares timestamps and syncs in both directions (default)
+
+CHANGE DETECTION:
+• Compares workflow updatedAt timestamps with local file modification times
+• Detects new workflows created in n8n UI
+• Identifies local JSON file changes not yet pushed to n8n
+• Handles conflict resolution with user prompts
 
 Examples:
-  n8n-ops sync --env development    # Sync from development environment
-  n8n-ops sync --env staging        # Sync from staging environment
-  n8n-ops sync --force              # Force sync, overwriting local changes`,
+  n8n-ops sync --env development    # Smart bidirectional sync
+  n8n-ops sync --from-n8n          # Only download from n8n to Git
+  n8n-ops sync --to-n8n            # Only upload from Git to n8n  
+  n8n-ops sync --force             # Force sync, auto-resolve conflicts`,
         RunE: runSync,
 }
 
@@ -29,14 +39,20 @@ var (
         force      bool
         outputDir  string
         branch     string
+        fromN8n    bool
+        toN8n      bool
+        dryRun     bool
 )
 
 func init() {
         rootCmd.AddCommand(syncCmd)
         
-        syncCmd.Flags().BoolVarP(&force, "force", "f", false, "force sync, overwriting local changes")
+        syncCmd.Flags().BoolVarP(&force, "force", "f", false, "force sync, overwriting conflicts")
         syncCmd.Flags().StringVarP(&outputDir, "output", "o", "", "output directory (default: workflows/<environment>)")
         syncCmd.Flags().StringVarP(&branch, "branch", "b", "", "git branch (defaults to current branch)")
+        syncCmd.Flags().BoolVar(&fromN8n, "from-n8n", false, "sync only from n8n to local files")
+        syncCmd.Flags().BoolVar(&toN8n, "to-n8n", false, "sync only from local files to n8n")
+        syncCmd.Flags().BoolVar(&dryRun, "dry-run", false, "show what would be synced without making changes")
 }
 
 func runSync(cmd *cobra.Command, args []string) error {

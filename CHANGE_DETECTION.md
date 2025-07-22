@@ -1,237 +1,255 @@
-# Detección de Cambios sin Sincronizar
+# n8n-ops Change Detection System
 
-## 🔍 Estrategias de Detección
+## 🎯 Problema Resuelto
 
-### 1. **Detección Manual (Actual)**
+**Pregunta**: "¿Cómo sabe n8n-ops que he editado un flujo en mi n8n local en Docker?"
+
+**Respuesta**: n8n-ops implementa un sistema inteligente de **detección automática de cambios** que monitorea tanto tu instancia de n8n como los archivos JSON locales, comparando timestamps y contenido para determinar qué ha cambiado y en qué dirección sincronizar.
+
+## 🔄 Estrategia de Sincronización Bidireccional
+
+### 1. **Detección Automática** 
+n8n-ops puede detectar cambios de 3 formas:
+
 ```bash
-# Verificar cambios manualmente
-./n8n-ops sync --env development --dry-run
-./n8n-ops status --env development
+# Modo Watch - Monitoreo continuo (RECOMENDADO)
+n8n-ops watch --env development --interval 30s
 
-# Comparar con último commit
-git status workflows/development/
-git diff workflows/development/
+# Sync Manual - Verificación bajo demanda  
+n8n-ops sync --env development
+
+# Check Status - Solo verificar sin sincronizar
+n8n-ops check --env development
 ```
 
-### 2. **Comparación por Hash/Timestamp**
-El CLI puede comparar:
-- **Hash del workflow** en n8n vs local
-- **Timestamp de modificación** (updatedAt)
-- **Número de versión** del workflow
+### 2. **Direcciones de Sincronización**
 
-### 3. **Sync Automático Programado**
+#### 🔽 FROM n8n TO Git
 ```bash
-# Cron job cada 15 minutos
-*/15 * * * * cd /path/to/project && ./n8n-ops sync --env development
-
-# Script con notificaciones
-./n8n-ops sync --env development && \
-  if git status --porcelain workflows/development/ | grep -q .; then
-    echo "⚠️  Workflows modificados sin sincronizar detectados"
-    git status workflows/development/
-  fi
+# Cuando editas workflows en la UI de n8n:
+n8n-ops sync --from-n8n --env development
 ```
+- Detecta workflows modificados en n8n UI
+- Descarga JSON actualizado a archivos locales
+- Actualiza timestamps para seguimiento
 
-## 🎯 Comando `check` - Detección de Cambios
-
-### Implementación Propuesta
+#### 🔼 FROM Git TO n8n  
 ```bash
-# Verificar si hay cambios sin sincronizar
-./n8n-ops check --env development
-
-# Output esperado:
-✅ Workflows sincronizados: 3
-⚠️  Workflows modificados: 2
-   - customer-onboarding (modified 5 min ago)
-   - payment-processing (modified 12 min ago)
-
-💡 Ejecuta './n8n-ops sync --env development' para sincronizar
+# Cuando editas archivos JSON localmente:
+n8n-ops sync --to-n8n --env development
 ```
+- Detecta archivos JSON modificados localmente
+- Sube cambios a la instancia de n8n vía API
+- Actualiza workflows en n8n UI
 
-### Casos de Uso
+#### ⚡ BIDIRECCIONAL (Automático)
 ```bash
-# Antes de hacer commit
-./n8n-ops check --env development
-git add . && git commit -m "..."
+# Modo inteligente (por defecto):
+n8n-ops sync --env development
+```
+- Compara timestamps de modificación
+- Sincroniza en ambas direcciones según necesidad
+- Detecta conflictos y pide resolución
 
-# Verificación automática en CI/CD
-./n8n-ops check --env staging --fail-if-changes
+## 📊 Lógica de Detección de Cambios
+
+### Algoritmo de Comparación
+
+```
+1. OBTENER workflows desde n8n API
+2. OBTENER archivos JSON locales 
+3. PARA cada workflow:
+   - Comparar hash MD5 del contenido
+   - Si difieren → Comparar timestamps:
+     * Remote > Local + 30s → FROM n8n TO Git
+     * Local > Remote + 30s → FROM Git TO n8n  
+     * Diferencia < 30s → CONFLICTO (pedir resolución)
+4. DETECTAR workflows nuevos/eliminados
+5. GENERAR reporte de cambios
 ```
 
-## 📊 Comparación Detallada
+### Ejemplo Práctico
 
-### Workflow Local vs n8n Instance
-```json
-// Estado actual en n8n (via API)
-{
-  "id": "1001",
-  "name": "Customer Onboarding", 
-  "updatedAt": "2025-07-22T16:30:00Z",
-  "versionId": 15,
-  "nodes": [...] // 8 nodos
-}
+**Escenario**: Editas un workflow en n8n UI
 
-// Estado local (archivo JSON)
-{
-  "id": "1001", 
-  "name": "Customer Onboarding",
-  "updatedAt": "2025-07-22T15:45:00Z", 
-  "versionId": 14,
-  "nodes": [...] // 7 nodos
-}
+```bash
+# 1. n8n-ops detecta el cambio
+$ n8n-ops check --env development
+🔍 Workflow Sync Status - development Environment
+📝 Changes detected:
+   • "Customer Onboarding" modified in n8n (remote newer)
+   • Last modified: 2 minutes ago
+   
+⚡ Action required: Run sync to download changes
 
-// Resultado: Workflow modificado en n8n (45 min ago)
+# 2. Sincronizar cambios automáticamente  
+$ n8n-ops sync --env development
+🔄 Syncing workflows from development environment...
+📝 Workflow "Customer Onboarding" updated from n8n
+📁 Saved to: workflows/development/customer-onboarding.json
+✅ 1 workflow synchronized
 ```
 
-## 🔄 Flujo de Detección
+## 🕵️ Modo Watch - Monitoreo Continuo
 
-### Proceso Completo
-```
-1. Developer edita workflow en n8n web interface
-   ↓
-2. n8n guarda cambios (updatedAt, versionId++)
-   ↓  
-3. ./n8n-ops check --env development
-   ↓
-4. CLI compara timestamps/versions/hashes
-   ↓
-5. CLI reporta workflows "out of sync"
-   ↓
-6. Developer ejecuta sync para actualizar local
-   ↓
-7. Git muestra cambios para commit
+### Configuración de Monitoring
+```bash
+# Monitoreo básico cada 10 segundos
+n8n-ops watch --env development
+
+# Monitoreo con auto-commit a Git
+n8n-ops watch --env development --auto-commit --interval 30s
+
+# Monitoreo con sync automático
+n8n-ops watch --env development --auto-sync --interval 1m
 ```
 
-## ⚙️ Configuración de Monitoreo
+### Output del Watch Mode
+```
+👁️ Watching n8n workflows - development environment
+🔄 Check interval: 30s
+✅ Connected to n8n API. Monitoring for changes...
 
-### GitLab CI/CD con Detección
+[14:32:15] 🆕 New workflow detected: Email Automation (wf_abc123)
+[14:32:15] 🔄 Auto-syncing changes...
+[14:32:16] ✅ Changes synced successfully
+[14:32:16] 📝 Changes committed to Git
+
+[14:35:20] 📝 Workflow updated: Customer Onboarding (wf_def456)  
+[14:35:20] 🔄 Auto-syncing changes...
+[14:35:21] ✅ Changes synced successfully
+```
+
+## 🎛️ Configuración de Docker para n8n Local
+
+### docker-compose.yml Recomendado
 ```yaml
-# Job que verifica cambios sin sincronizar
-check-sync-status:
-  stage: validate
-  script:
-    - ./n8n-ops check --env development --json > sync-status.json
-    - |
-      if [ $(jq '.modified | length' sync-status.json) -gt 0 ]; then
-        echo "⚠️ Workflows modified in n8n but not synced to Git"
-        jq '.modified[] | "- \(.name) (modified \(.timeAgo))"' sync-status.json
-        echo "💡 Consider running sync before deployment"
-      fi
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "develop"'
+version: '3.8'
+services:
+  n8n:
+    image: n8nio/n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=false
+      - N8N_API_KEY_ENABLE=true  # ← IMPORTANTE para n8n-ops
+    volumes:
+      - n8n_data:/home/node/.n8n
+    restart: unless-stopped
+
+volumes:
+  n8n_data:
 ```
 
-### Webhook n8n → GitLab (Avanzado)
+### Variables de Entorno para n8n-ops
 ```bash
-# Configurar webhook en n8n que llame GitLab API
-# Cuando se guarda workflow → Trigger pipeline sync
+# Configurar conexión a tu n8n local
+export N8N_URL="http://localhost:5678"
+export N8N_API_KEY="n8n_api_xxxxxxxxxxxxxxxx"
 
-# En n8n workflow:
-# Trigger: Webhook "On workflow save"
-# Action: HTTP Request to GitLab API
-# URL: https://gitlab.com/api/v4/projects/123/pipeline
+# Ejecutar n8n-ops
+n8n-ops sync --env development
 ```
 
-## 📈 Estrategias por Ambiente
+## 🔧 Resolución de Conflictos
 
-### Development (Detección Frecuente)
+### Conflictos Automáticos vs Manuales
+
+#### Conflicto Detectado
 ```bash
-# Verificar cada 5 minutos
-*/5 * * * * ./n8n-ops check --env development --notify-if-changes
-
-# Auto-sync si hay cambios menores
-./n8n-ops sync --env development --auto-commit
+$ n8n-ops sync --env development
+⚠️ Conflict detected for workflow "Data Processing":
+   • Local file:  Modified 14:30 (2 min ago)
+   • n8n remote: Modified 14:32 (30 sec ago)
+   
+❓ Resolution required:
+   [1] Use remote version (from n8n)
+   [2] Use local version (upload to n8n)  
+   [3] Show diff and merge manually
+   [4] Skip this workflow
+   
+Choose option [1-4]: 
 ```
 
-### Staging (Detección Manual)
+#### Resolución Forzada
 ```bash  
-# Verificar antes de deploy
-./n8n-ops check --env staging
-./n8n-ops sync --env staging --dry-run
+# Siempre usar versión remota (de n8n)
+n8n-ops sync --from-n8n --force --env development
+
+# Siempre usar versión local (subir a n8n)
+n8n-ops sync --to-n8n --force --env development
 ```
 
-### Production (Solo Alertas)
+## 📁 Estructura de Archivos Resultante
+
+```
+project/
+├── workflows/
+│   ├── development/
+│   │   ├── customer-onboarding.json
+│   │   ├── email-automation.json
+│   │   └── data-processing.json
+│   ├── staging/
+│   │   ├── customer-onboarding.json
+│   │   └── email-automation.json
+│   └── production/
+│       └── customer-onboarding.json
+├── .n8n-ops/
+│   ├── sync-state.json          # Estado de sincronización
+│   └── change-reports/          # Reportes de cambios para CI/CD
+│       ├── 2025-01-15-sync.json
+│       └── 2025-01-16-sync.json
+└── .git/
+    └── # Control de versiones normal
+```
+
+## 🚀 Workflow Completo de Desarrollo
+
+### 1. Setup Inicial
 ```bash
-# Solo alertar, nunca auto-sync
-./n8n-ops check --env production --alert-only
+# Inicializar proyecto
+n8n-ops init --name mi-proyecto
+
+# Configurar n8n local  
+export N8N_URL="http://localhost:5678"
+export N8N_API_KEY="tu-api-key"
+
+# Primera sincronización
+n8n-ops sync --env development
 ```
 
-## 🛠️ Implementación del Comando `check`
-
-### Uso Básico
+### 2. Desarrollo Colaborativo
 ```bash
-# Verificar estado de sincronización
-./n8n-ops check --env development
+# Desarrollador A - trabaja en n8n UI
+n8n-ops watch --env development --auto-commit
 
-# Modo silencioso (solo exit code)
-./n8n-ops check --env development --quiet
-echo $? # 0=sync, 1=changes detected
-
-# JSON para scripts
-./n8n-ops check --env development --json
+# Desarrollador B - edita archivos JSON
+git pull
+# editar workflows/development/mi-workflow.json
+n8n-ops sync --to-n8n --env development
+git add . && git commit -m "Update workflow logic"
 ```
 
-### Output JSON
-```json
-{
-  "environment": "development",
-  "lastSync": "2025-07-22T15:45:00Z",
-  "totalWorkflows": 5,
-  "synchronized": 3,
-  "modified": 2,
-  "workflows": {
-    "synchronized": [
-      {"id": "1003", "name": "Email Notifications", "status": "sync"}
-    ],
-    "modified": [
-      {
-        "id": "1001", 
-        "name": "Customer Onboarding",
-        "localVersion": 14,
-        "remoteVersion": 15, 
-        "lastModified": "2025-07-22T16:30:00Z",
-        "timeAgo": "5 minutes ago"
-      }
-    ]
-  }
-}
-```
-
-## 💡 Mejores Prácticas
-
-### 1. **Verificación Pre-Commit**
+### 3. Despliegue a Staging/Production
 ```bash
-# Git hook pre-commit
-#!/bin/bash
-./n8n-ops check --env development --fail-if-changes
-if [ $? -eq 1 ]; then
-  echo "⚠️ Workflows modified in n8n. Run sync first:"
-  echo "   ./n8n-ops sync --env development"
-  exit 1
-fi
+# Git maneja el despliegue (como sugieres)
+git checkout staging
+git merge development
+n8n-ops sync --to-n8n --env staging
+
+# Production via Git Flow
+git checkout production  
+git merge staging
+n8n-ops sync --to-n8n --env production
 ```
 
-### 2. **Monitoreo Continuo**
-```bash
-# Script de monitoreo
-while true; do
-  ./n8n-ops check --env development --quiet
-  if [ $? -eq 1 ]; then
-    echo "$(date): Changes detected in development workflows"
-    ./n8n-ops check --env development
-  fi
-  sleep 300 # 5 minutos
-done
-```
+## 💡 Beneficios del Enfoque
 
-### 3. **Integración con Slack/Teams**
-```bash
-# Notificar a equipo si hay cambios
-./n8n-ops check --env production --json | \
-  jq -r 'if .modified > 0 then "⚠️ \(.modified) workflows modified in production without sync" else empty end' | \
-  curl -X POST -H 'Content-Type: application/json' \
-       -d "{\"text\": \"$(cat)\"}" \
-       $SLACK_WEBHOOK_URL
-```
+1. **Sin rollback/deploy complejos**: Git maneja versioning
+2. **Detección inteligente**: Sabe automáticamente qué cambió
+3. **Sincronización bidireccional**: Funciona editando en UI o archivos
+4. **Colaboración real**: Múltiples desarrolladores sin conflictos
+5. **CI/CD Ready**: Reportes JSON para pipelines automáticos
+6. **Zero-downtime**: Solo llamadas API, sin tocar infraestructura
 
-El comando `check` te permitirá detectar proactivamente cuando hay workflows modificados en n8n que necesitan sincronización con Git.
+Este sistema permite que **trabajes como quieras** - editando en la UI de n8n o modificando JSONs directamente - mientras n8n-ops se encarga inteligentemente de mantener todo sincronizado.
