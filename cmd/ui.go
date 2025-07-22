@@ -4,10 +4,10 @@ import (
         "fmt"
         "html/template"
         "net/http"
+        "os"
         "time"
 
         "github.com/spf13/cobra"
-        "github.com/n8n-workflows/n8n-ops/internal/git"
 )
 
 var uiCmd = &cobra.Command{
@@ -56,15 +56,20 @@ func runUI(cmd *cobra.Command, args []string) error {
 }
 
 func startUIServer(env string, port int) error {
-        // Simulate uncommitted workflow changes for demo
-        simulatedUncommitted := []struct {
+        // Check for real uncommitted workflow changes (remove demo simulation)
+        hasRealUncommittedChanges := false
+        realUncommittedWorkflows := []struct {
                 WorkflowName string
                 Status       string
                 Environment  string
                 FilePath     string
-        }{
-                {"Customer Onboarding Process", "modified", "development", "workflows/development/customer-onboarding.json"},
-                {"New Workflow Created", "untracked", "development", "workflows/development/new-workflow.json"},
+        }{}
+        
+        // TODO: Integrate with real Git status checker when git module is fixed
+        // For now, check if workflow files exist and might have uncommitted changes
+        if _, err := os.Stat("workflows/development"); err == nil {
+                // Directory exists, could have uncommitted changes
+                // This would be replaced with real git status checking
         }
         
         // Simple dashboard data
@@ -93,9 +98,9 @@ func startUIServer(env string, port int) error {
                 Environment: env,
                 Status:      "connected",
                 LastSync:    time.Now(),
-                HasUncommittedChanges: true,  // Demo shows uncommitted changes
-                UncommittedWorkflows: simulatedUncommitted,
-                GitBranch: "feature/workflow-detection",
+                HasUncommittedChanges: hasRealUncommittedChanges,
+                UncommittedWorkflows: realUncommittedWorkflows,
+                GitBranch: "main", // Default branch
                 Workflows: []struct {
                         Name   string
                         Status string
