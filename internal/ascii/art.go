@@ -5,7 +5,6 @@ import (
         "math/rand"
         "strings"
         "time"
-        "github.com/n8n-workflows/cli/internal/i18n"
 )
 
 // Colors for terminal output
@@ -51,8 +50,7 @@ P"Y8888P" Y8    888P"Y888    PI8 YY88888P    8P'"Y88    P"Y8888P"        P""Y88P
                               I8                                            8, ,8I  
                               I8                                             Y8P"   
 %s
-%s             %s⚡ %s ⚡%s
-%s`, Cyan, Bold, Reset, Yellow, i18n.T("workflow_automation"), Reset)
+             %s⚡ Workflow Automation CLI ⚡%s`, Cyan, Bold, Reset, Yellow, Reset)
 }
 
 // SmallLogo returns a compact version for headers
