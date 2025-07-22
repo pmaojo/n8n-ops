@@ -1,7 +1,7 @@
 {
   "active": false,
   "connections": {},
-  "createdAt": "2025-07-21T22:33:36.841298298Z",
+  "createdAt": "2025-07-21T22:37:00.572310357Z",
   "id": "1003",
   "name": "Order Fulfillment",
   "nodes": [
@@ -22,13 +22,13 @@
   "syncMetadata": {
     "environment": "development",
     "gitCommit": "",
-    "syncDate": "2025-07-22T22:33:36.844240058Z",
+    "syncDate": "2025-07-22T22:37:00.575295376Z",
     "syncedBy": "demo@n8n-ops.example.com"
   },
   "tags": [
     "orders",
     "fulfillment"
   ],
-  "updatedAt": "2025-07-22T22:28:36.841298348Z",
+  "updatedAt": "2025-07-22T22:32:00.572310467Z",
   "versionId": 8
 }
