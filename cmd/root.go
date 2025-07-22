@@ -18,6 +18,7 @@ var (
         verbose     bool
         language    string
         showVersion bool
+        demoMode    bool
         logger      = utils.NewLogger()
 )
 
@@ -67,6 +68,7 @@ func init() {
         rootCmd.PersistentFlags().StringVarP(&environment, "env", "e", "development", "target environment (development, staging, production)")
         rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
         rootCmd.PersistentFlags().StringVarP(&language, "lang", "l", "en", "language (en, es)")
+        rootCmd.PersistentFlags().BoolVar(&demoMode, "demo", false, "use demo mode with mock n8n server")
         rootCmd.Flags().BoolVar(&showVersion, "version", false, "show version information")
 
         // Bind flags to viper

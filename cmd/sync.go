@@ -53,20 +53,25 @@ func runSync(cmd *cobra.Command, args []string) error {
                 return fmt.Errorf("failed to create output directory: %w", err)
         }
 
-        // Get n8n configuration from environment
+        // Get n8n configuration from environment (or use demo mode)
         apiURL := os.Getenv("N8N_URL")
         apiKey := os.Getenv("N8N_API_KEY")
         
-        if apiURL == "" || apiKey == "" {
+        if demoMode {
+                fmt.Printf("🎭 Demo mode enabled - using mock n8n data\n")
+                apiURL = "demo://localhost"
+                apiKey = "demo-key"
+        } else if apiURL == "" || apiKey == "" {
                 fmt.Printf("⚠️  N8N_URL or N8N_API_KEY not configured\n")
-                fmt.Printf("💡 Set environment variables or use mock server:\n")
+                fmt.Printf("💡 Set environment variables or use --demo flag:\n")
                 fmt.Printf("   export N8N_URL=http://localhost:3001\n")
                 fmt.Printf("   export N8N_API_KEY=n8n_api_mock_development\n")
+                fmt.Printf("   OR: ./n8n-ops sync --demo\n")
                 return nil
         }
 
-        // Initialize n8n client
-        n8nClient := client.NewN8nClient(apiURL, apiKey)
+        // Initialize n8n client (with demo mode support)
+        n8nClient := client.NewN8nClientWithDemo(apiURL, apiKey, demoMode)
         
         // Test connection
         fmt.Printf("🔗 Connecting to n8n API: %s\n", apiURL)
