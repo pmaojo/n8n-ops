@@ -10,6 +10,7 @@ This project is a command-line tool built in Go for managing n8n workflows acros
 
 Preferred communication style: Simple, everyday language.
 Project purpose: Operations tool for COMPILING and managing n8n workflows (not for deployment to hosting platforms)
+VPS Deployment: User interested in VPS deployment for backup/monitoring - tool perfect for enterprise backup scenarios
 Custom ASCII art: User-provided "n8n deploy" ASCII art integrated into welcome screens
 Versioning: Revolutionary intelligent branch naming system with automatic semantic versioning
 Team Collaboration: Git-native approach eliminates deploy/rollback complexity - Git handles versioning naturally
