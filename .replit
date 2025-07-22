@@ -17,7 +17,7 @@ args = "Go CLI Server"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "test_cli"
+args = "CLI Test"
 
 [[workflows.workflow]]
 name = "Go CLI Server"
@@ -28,9 +28,9 @@ task = "shell.exec"
 args = "go run main.go --help"
 
 [[workflows.workflow]]
-name = "test_cli"
+name = "CLI Test"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd /tmp && go mod download && go build -o n8n-cli && ./n8n-cli --help"
+args = "./n8n-cli --help"
