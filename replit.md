@@ -15,6 +15,7 @@ Custom ASCII art: User-provided "n8n deploy" ASCII art integrated into welcome s
 Versioning: Revolutionary intelligent branch naming system with automatic semantic versioning
 Team Collaboration: Git-native approach eliminates deploy/rollback complexity - Git handles versioning naturally
 Branch Management: Interactive workflow creation with DevOps naming conventions (feature/, hotfix/, release/, experiment/)
+Branch Tracking: Precise identification of active workflows per GitLab branch with automated environment detection and workflow comparison
 Change Detection: Git status monitoring detects uncommitted workflows, Web UI warnings prevent data loss, sync operations blocked until changes committed
 Zero-Downtime Deployments: API-first approach that updates workflows without stopping n8n instances or touching infrastructure
 Git Provider: Only GitLab active - other providers (GitHub, Bitbucket) commented for future use
