@@ -1,4 +1,4 @@
-# GitLab CI/CD Configuration for n8n CLI Workflow Management
+# GitLab CI/CD Configuration for n8n-ops Workflow Management
 # This pipeline compiles the CLI tool and manages workflow deployments across environments
 
 stages:
@@ -18,7 +18,7 @@ build-cli:
   stage: build
   image: golang:${GO_VERSION}
   script:
-    - echo "Building n8n CLI tool..."
+    - echo "Building n8n-ops tool..."
     - go mod tidy
     - go build -o ${CLI_BINARY} main.go
     - chmod +x ${CLI_BINARY}
@@ -55,7 +55,7 @@ test-cli-functions:
     - echo "Testing CLI basic functions..."
     - ./${CLI_BINARY} welcome
     - ./${CLI_BINARY} --lang es welcome
-    - ./${CLI_BINARY} branch current
+    - ./${CLI_BINARY} version
     - echo "CLI tests completed"
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -74,16 +74,12 @@ deploy-development:
   script:
     - echo "Syncing workflows from development n8n instance..."
     - ./${CLI_BINARY} sync --env development --verbose
-    
     - echo "Validating workflows before deployment..."
     - ./${CLI_BINARY} validate ./workflows/development/
-    
     - echo "Running dry-run deployment..."
     - ./${CLI_BINARY} deploy --env development --dry-run --verbose
-    
     - echo "Deploying workflows to development..."
     - ./${CLI_BINARY} deploy --env development --verbose
-    
     - echo "Development deployment completed"
   environment:
     name: development
@@ -104,13 +100,10 @@ deploy-staging:
   script:
     - echo "Validating workflows for staging deployment..."
     - ./${CLI_BINARY} validate ./workflows/staging/
-    
     - echo "Running staging dry-run..."
     - ./${CLI_BINARY} deploy --env staging --dry-run --verbose
-    
     - echo "Deploying workflows to staging..."
     - ./${CLI_BINARY} deploy --env staging --verbose
-    
     - echo "Staging deployment completed"
   environment:
     name: staging
@@ -133,16 +126,12 @@ deploy-production:
   script:
     - echo "PRODUCTION DEPLOYMENT - Performing strict validation..."
     - ./${CLI_BINARY} validate ./workflows/production/ --verbose
-    
     - echo "Running production dry-run with detailed output..."
     - ./${CLI_BINARY} deploy --env production --dry-run --verbose
-    
     - echo "⚠️  DEPLOYING TO PRODUCTION ⚠️"
     - echo "This will update live workflows. Ensure you have tested in staging."
     - sleep 5
-    
     - ./${CLI_BINARY} deploy --env production --verbose
-    
     - echo "✅ Production deployment completed successfully"
   environment:
     name: production
@@ -152,7 +141,7 @@ deploy-production:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
-# Rollback job (manual trigger only)
+# Rollback Production (Emergency use only)
 rollback-production:
   stage: deploy-production
   image: golang:${GO_VERSION}
@@ -172,3 +161,20 @@ rollback-production:
   allow_failure: false
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
+
+# Notification job (runs after deployments)
+notify-deployment:
+  stage: deploy-production
+  image: alpine:latest
+  dependencies:
+    - build-cli
+  script:
+    - echo "Sending deployment notification..."
+    - echo "Deployment completed for environment: $CI_ENVIRONMENT_NAME"
+    - echo "Branch: $CI_COMMIT_BRANCH"
+    - echo "Commit: $CI_COMMIT_SHA"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+    - if: '$CI_COMMIT_BRANCH == "staging"'  
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  when: on_success
