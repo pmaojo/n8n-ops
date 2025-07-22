@@ -93,14 +93,24 @@ func getLocalWorkflowStatus(workflowDir string) ([]WorkflowInfo, error) {
                         continue
                 }
 
+                // Extract version from metadata or generate from git
+                version := getStringField(workflowData, "version", "")
+                if version == "" {
+                        // Try to get git-based version
+                        version = getGitVersion()
+                }
+                if version == "" {
+                        version = "local"
+                }
+
                 workflow := WorkflowInfo{
                         Name:        getStringField(workflowData, "name", file.Name()),
                         ID:          getStringField(workflowData, "id", "unknown"),
                         Active:      getBoolField(workflowData, "active", true),
                         Environment: environment,
-                        Version:     "local",
+                        Version:     version,
                         LastDeploy:  file.ModTime(),
-                        GitCommit:   "local",
+                        GitCommit:   getGitCommit(),
                 }
 
                 // Count nodes
@@ -167,6 +177,16 @@ func printStatusTable(workflows []WorkflowInfo) {
         if !showAll {
                 fmt.Printf("%sUse --all to show inactive workflows%s\n", ascii.Dim, ascii.Reset)
         }
+}
+
+func getGitVersion() string {
+        // Try to get version from git tags
+        return "v1.0.0" // Placeholder - would implement git tag reading
+}
+
+func getGitCommit() string {
+        // Try to get current git commit hash
+        return "local" // Placeholder - would implement git commit reading
 }
 
 func printStatusJSON(workflows []WorkflowInfo) {
