@@ -1,0 +1,50 @@
+{
+  "name": "Test Valid Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "test-webhook",
+        "responseMode": "onReceived"
+      },
+      "id": "test-webhook-1",
+      "name": "Test Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "test_field",
+              "value": "test_value"
+            }
+          ]
+        }
+      },
+      "id": "test-set-1",
+      "name": "Test Set",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [450, 300]
+    }
+  ],
+  "connections": {
+    "Test Webhook": {
+      "main": [
+        [
+          {
+            "node": "Test Set",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "tags": ["test", "fixture"]
+}

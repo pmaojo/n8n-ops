@@ -1,0 +1,191 @@
+{
+  "name": "Scheduled Task Template",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "{{CRON_EXPRESSION}}"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "task_id",
+              "value": "{{TASK_ID}}"
+            },
+            {
+              "name": "environment",
+              "value": "{{ENVIRONMENT}}"
+            },
+            {
+              "name": "execution_time",
+              "value": "={{ new Date().toISOString() }}"
+            }
+          ],
+          "boolean": [
+            {
+              "name": "is_scheduled",
+              "value": true
+            }
+          ]
+        }
+      },
+      "id": "set-context",
+      "name": "Set Context",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Your scheduled task logic here\nconst context = $input.item.json;\n\n// Example: Fetch data, process files, send notifications, etc.\nconst taskResult = {\n  task_id: context.task_id,\n  started_at: context.execution_time,\n  completed_at: new Date().toISOString(),\n  status: 'completed',\n  environment: context.environment,\n  // Add your task-specific results here\n  results: {\n    message: 'Scheduled task executed successfully',\n    data: {\n      // Your task results\n    }\n  }\n};\n\nreturn { json: taskResult };"
+      },
+      "id": "task-execution",
+      "name": "Execute Task",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "operation": "equal",
+              "value2": "completed"
+            }
+          ]
+        }
+      },
+      "id": "status-check",
+      "name": "Check Status",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [800, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "notification",
+              "value": "Task {{ $node['Set Context'].json.task_id }} completed successfully at {{ $json.completed_at }}"
+            }
+          ]
+        }
+      },
+      "id": "success-notification",
+      "name": "Success Notification",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1000, 200]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "error_notification",
+              "value": "Task {{ $node['Set Context'].json.task_id }} failed at {{ $json.completed_at }}"
+            }
+          ]
+        }
+      },
+      "id": "error-notification",
+      "name": "Error Notification",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1000, 400]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Context": {
+      "main": [
+        [
+          {
+            "node": "Execute Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Task": {
+      "main": [
+        [
+          {
+            "node": "Check Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Status": {
+      "main": [
+        [
+          {
+            "node": "Success Notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "saveExecutionProgress": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "timezone": "America/New_York"
+  },
+  "tags": ["template", "scheduled", "cron", "task"],
+  "meta": {
+    "templateVersion": "1.0.0",
+    "description": "Template for scheduled/cron-based tasks",
+    "variables": {
+      "CRON_EXPRESSION": "0 9 * * 1-5",
+      "TASK_ID": "daily-maintenance",
+      "ENVIRONMENT": "development"
+    },
+    "examples": {
+      "daily_at_9am": "0 9 * * *",
+      "every_monday_9am": "0 9 * * 1",
+      "every_15_minutes": "*/15 * * * *",
+      "hourly": "0 * * * *"
+    }
+  }
+}
