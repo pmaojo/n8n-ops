@@ -3,7 +3,10 @@ package cmd
 import (
         "encoding/json"
         "fmt"
+        "io/ioutil"
         "os"
+        "path/filepath"
+        "strings"
         "time"
 
         "github.com/spf13/cobra"
@@ -103,6 +106,47 @@ func checkWorkflowSync() (*CheckResult, error) {
 
         // Real API comparison (when implemented)
         return checkWorkflowSyncReal(localWorkflows)
+}
+
+// WorkflowData represents a workflow from the filesystem
+type WorkflowData struct {
+        ID   string `json:"id"`
+        Name string `json:"name"`
+}
+
+// getLocalWorkflows reads workflow files from the specified directory
+func getLocalWorkflows(workflowDir string) ([]WorkflowData, error) {
+        var workflows []WorkflowData
+
+        // Check if directory exists
+        if _, err := os.Stat(workflowDir); os.IsNotExist(err) {
+                return workflows, nil // Return empty slice if directory doesn't exist
+        }
+
+        // Read all JSON files in the workflow directory
+        files, err := ioutil.ReadDir(workflowDir)
+        if err != nil {
+                return nil, fmt.Errorf("failed to read workflow directory: %w", err)
+        }
+
+        for _, file := range files {
+                if !file.IsDir() && strings.HasSuffix(file.Name(), ".json") {
+                        filePath := filepath.Join(workflowDir, file.Name())
+                        data, err := ioutil.ReadFile(filePath)
+                        if err != nil {
+                                continue // Skip files that can't be read
+                        }
+
+                        var workflow WorkflowData
+                        if err := json.Unmarshal(data, &workflow); err != nil {
+                                continue // Skip files that aren't valid JSON
+                        }
+
+                        workflows = append(workflows, workflow)
+                }
+        }
+
+        return workflows, nil
 }
 
 func checkWorkflowSyncDemo(localWorkflows []WorkflowData) (*CheckResult, error) {
