@@ -1,0 +1,47 @@
+{
+  "id": "1002", 
+  "name": "Payment Processing System",
+  "active": true,
+  "nodes": [
+    {
+      "id": "webhook",
+      "type": "webhook",
+      "name": "Payment Webhook"
+    },
+    {
+      "id": "stripe",
+      "type": "stripe", 
+      "name": "Process Stripe Payment"
+    },
+    {
+      "id": "validation",
+      "type": "function",
+      "name": "Validate Payment"
+    },
+    {
+      "id": "notify",
+      "type": "slack",
+      "name": "Notify Team"
+    },
+    {
+      "id": "database",
+      "type": "postgres",
+      "name": "Log Transaction"
+    }
+  ],
+  "connections": {
+    "webhook": {
+      "main": [
+        [
+          {
+            "node": "validation", 
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-07-19T14:00:00Z",
+  "updatedAt": "2025-07-22T09:15:00Z"
+}
