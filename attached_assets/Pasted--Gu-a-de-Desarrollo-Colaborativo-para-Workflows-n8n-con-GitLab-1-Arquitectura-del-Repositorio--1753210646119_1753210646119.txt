@@ -1,0 +1,937 @@
+# Guía de Desarrollo Colaborativo para Workflows n8n con GitLab
+
+## 1. Arquitectura del Repositorio
+
+### 1.1 Estructura de Directorios
+
+```
+n8n-workflows/
+├── .gitlab-ci.yml              # Pipeline CI/CD
+├── README.md                   # Documentación principal
+├── package.json                # Scripts y dependencias
+├── .gitignore                  # Archivos ignorados
+├── .env.example                # Variables de entorno template
+├── workflows/                  # Workflows por entorno
+│   ├── development/
+│   ├── staging/
+│   └── production/
+├── scripts/                    # Scripts de automatización
+│   ├── deploy.js
+│   ├── sync.js
+│   ├── validate.js
+│   └── rollback.js
+├── docs/                       # Documentación de workflows
+│   ├── architecture.md
+│   ├── workflows/
+│   └── api-reference.md
+├── tests/                      # Tests automatizados
+│   ├── unit/
+│   ├── integration/
+│   └── fixtures/
+└── config/                     # Configuraciones
+    ├── environments.json
+    ├── credentials-template.json
+    └── workflow-templates/
+```
+
+### 1.2 Configuración Inicial GitLab
+
+```bash
+# 1. Crear proyecto en GitLab
+git clone git@gitlab.com:company/n8n-workflows.git
+cd n8n-workflows
+
+# 2. Configurar variables de entorno en GitLab CI/CD
+# Settings > CI/CD > Variables
+N8N_DEV_URL=https://n8n-dev.company.com
+N8N_DEV_API_KEY=dev_api_key_here
+N8N_STAGING_URL=https://n8n-staging.company.com
+N8N_STAGING_API_KEY=staging_api_key_here
+N8N_PROD_URL=https://n8n-prod.company.com
+N8N_PROD_API_KEY=prod_api_key_here
+
+# 3. Configurar protección de ramas
+# Settings > Repository > Protected branches
+# main: Maintainer role, no push allowed
+# staging: Developer role, no push allowed
+```
+
+## 2. Estrategia de Branching GitFlow Adaptado
+
+### 2.1 Estructura de Ramas
+
+```
+main                    # Producción estable
+├── staging            # Pre-producción
+├── develop            # Desarrollo integrado
+├── feature/*          # Nuevos workflows
+├── hotfix/*           # Correcciones urgentes
+└── release/*          # Preparación de releases
+```
+
+### 2.2 Nomenclatura de Ramas
+
+```bash
+# Nuevos workflows
+feature/etl-customer-sync-v1
+feature/webhook-payment-processor
+feature/scheduled-reports-daily
+
+# Correcciones
+hotfix/customer-sync-validation-error
+hotfix/payment-webhook-timeout
+
+# Releases
+release/v2.1.0-customer-workflows
+release/v1.5.0-payment-integration
+```
+
+## 3. Scripts de Automatización
+
+### 3.1 package.json - Scripts Colaborativos
+
+```json
+{
+  "name": "n8n-workflows-collaborative",
+  "version": "1.0.0",
+  "scripts": {
+    "dev:sync": "node scripts/sync.js --env=development",
+    "dev:deploy": "node scripts/deploy.js --env=development",
+    "staging:sync": "node scripts/sync.js --env=staging",
+    "staging:deploy": "node scripts/deploy.js --env=staging",
+    "prod:deploy": "node scripts/deploy.js --env=production",
+    "validate": "node scripts/validate.js",
+    "test": "npm run test:unit && npm run test:integration",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest tests/integration",
+    "docs:generate": "node scripts/generate-docs.js",
+    "workflow:create": "node scripts/create-workflow-template.js",
+    "workflow:export": "node scripts/export-workflow.js",
+    "rollback": "node scripts/rollback.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "dotenv": "^16.0.0",
+    "joi": "^17.0.0",
+    "jest": "^29.0.0"
+  }
+}
+```
+
+### 3.2 Script de Sincronización Colaborativa
+
+```javascript
+// scripts/sync.js
+const axios = require('axios');
+const fs = require('fs').promises;
+const path = require('path');
+
+class N8nCollaborativeSync {
+  constructor(environment) {
+    this.env = environment;
+    this.config = require(`../config/environments.json`)[environment];
+    this.apiKey = process.env[`N8N_${environment.toUpperCase()}_API_KEY`];
+    this.baseURL = process.env[`N8N_${environment.toUpperCase()}_URL`];
+  }
+
+  async syncWorkflows() {
+    console.log(`🔄 Sincronizando workflows para ${this.env}...`);
+    
+    try {
+      // 1. Obtener workflows del entorno
+      const workflows = await this.getRemoteWorkflows();
+      
+      // 2. Sincronizar con archivos locales
+      await this.syncToLocal(workflows);
+      
+      // 3. Generar metadata de sincronización
+      await this.generateSyncMetadata();
+      
+      console.log(`✅ Sincronización completada: ${workflows.length} workflows`);
+    } catch (error) {
+      console.error(`❌ Error en sincronización: ${error.message}`);
+      process.exit(1);
+    }
+  }
+
+  async getRemoteWorkflows() {
+    const response = await axios.get(`${this.baseURL}/api/v1/workflows`, {
+      headers: { 'X-N8N-API-KEY': this.apiKey }
+    });
+    return response.data.data;
+  }
+
+  async syncToLocal(workflows) {
+    const envDir = path.join('workflows', this.env);
+    await fs.mkdir(envDir, { recursive: true });
+    
+    for (const workflow of workflows) {
+      const filename = `${workflow.name.replace(/[^a-zA-Z0-9]/g, '_')}_${workflow.id}.json`;
+      const filepath = path.join(envDir, filename);
+      
+      // Añadir metadata de sincronización
+      const workflowWithMeta = {
+        ...workflow,
+        syncMetadata: {
+          syncDate: new Date().toISOString(),
+          environment: this.env,
+          gitCommit: process.env.CI_COMMIT_SHA || 'local',
+          syncedBy: process.env.GITLAB_USER_EMAIL || 'local-user'
+        }
+      };
+      
+      await fs.writeFile(filepath, JSON.stringify(workflowWithMeta, null, 2));
+      console.log(`💾 Sincronizado: ${filename}`);
+    }
+  }
+
+  async generateSyncMetadata() {
+    const metadata = {
+      lastSync: new Date().toISOString(),
+      environment: this.env,
+      totalWorkflows: (await this.getRemoteWorkflows()).length,
+      gitCommit: process.env.CI_COMMIT_SHA || 'local',
+      pipelineId: process.env.CI_PIPELINE_ID || null
+    };
+    
+    await fs.writeFile(
+      path.join('workflows', this.env, '_sync_metadata.json'),
+      JSON.stringify(metadata, null, 2)
+    );
+  }
+}
+
+// Ejecutar sincronización
+const env = process.argv.find(arg => arg.startsWith('--env='))?.split('=')[1] || 'development';
+new N8nCollaborativeSync(env).syncWorkflows();
+```
+
+### 3.3 Script de Deploy Colaborativo
+
+```javascript
+// scripts/deploy.js
+const axios = require('axios');
+const fs = require('fs').promises;
+const path = require('path');
+const Joi = require('joi');
+
+class CollaborativeDeploy {
+  constructor(environment) {
+    this.env = environment;
+    this.apiKey = process.env[`N8N_${environment.toUpperCase()}_API_KEY`];
+    this.baseURL = process.env[`N8N_${environment.toUpperCase()}_URL`];
+    this.deployLog = [];
+  }
+
+  async deployWorkflows() {
+    console.log(`🚀 Iniciando deploy a ${this.env}...`);
+    
+    try {
+      // 1. Validar archivos antes del deploy
+      await this.validateWorkflows();
+      
+      // 2. Obtener workflows a deployar
+      const workflows = await this.getWorkflowsToDeploy();
+      
+      // 3. Deploy incremental
+      for (const workflow of workflows) {
+        await this.deployWorkflow(workflow);
+      }
+      
+      // 4. Generar reporte de deploy
+      await this.generateDeployReport();
+      
+      console.log(`✅ Deploy completado: ${workflows.length} workflows`);
+    } catch (error) {
+      console.error(`❌ Deploy fallido: ${error.message}`);
+      await this.rollback();
+      process.exit(1);
+    }
+  }
+
+  async deployWorkflow(workflowFile) {
+    const workflow = JSON.parse(await fs.readFile(workflowFile, 'utf8'));
+    const workflowName = workflow.name;
+    
+    try {
+      // Verificar si existe el workflow
+      const existingId = await this.findExistingWorkflow(workflowName);
+      
+      let deployedWorkflow;
+      if (existingId) {
+        // Actualizar workflow existente
+        deployedWorkflow = await this.updateWorkflow(existingId, workflow);
+        console.log(`📝 Actualizado: ${workflowName} (ID: ${existingId})`);
+      } else {
+        // Crear nuevo workflow
+        deployedWorkflow = await this.createWorkflow(workflow);
+        console.log(`✨ Creado: ${workflowName} (ID: ${deployedWorkflow.id})`);
+      }
+      
+      // Activar si está marcado como activo
+      if (workflow.active) {
+        await this.activateWorkflow(deployedWorkflow.id);
+        console.log(`🟢 Activado: ${workflowName}`);
+      }
+      
+      // Log del deploy
+      this.deployLog.push({
+        workflow: workflowName,
+        id: deployedWorkflow.id,
+        action: existingId ? 'updated' : 'created',
+        active: workflow.active,
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error(`❌ Error deploying ${workflowName}: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async findExistingWorkflow(name) {
+    const response = await axios.get(`${this.baseURL}/api/v1/workflows`, {
+      headers: { 'X-N8N-API-KEY': this.apiKey }
+    });
+    
+    const existing = response.data.data.find(w => w.name === name);
+    return existing ? existing.id : null;
+  }
+
+  async createWorkflow(workflow) {
+    const response = await axios.post(`${this.baseURL}/api/v1/workflows`, workflow, {
+      headers: { 
+        'X-N8N-API-KEY': this.apiKey,
+        'Content-Type': 'application/json'
+      }
+    });
+    return response.data;
+  }
+
+  async updateWorkflow(id, workflow) {
+    const response = await axios.put(`${this.baseURL}/api/v1/workflows/${id}`, workflow, {
+      headers: { 
+        'X-N8N-API-KEY': this.apiKey,
+        'Content-Type': 'application/json'
+      }
+    });
+    return response.data;
+  }
+
+  async activateWorkflow(id) {
+    await axios.post(`${this.baseURL}/api/v1/workflows/${id}/activate`, {}, {
+      headers: { 'X-N8N-API-KEY': this.apiKey }
+    });
+  }
+
+  async generateDeployReport() {
+    const report = {
+      environment: this.env,
+      deployDate: new Date().toISOString(),
+      gitCommit: process.env.CI_COMMIT_SHA,
+      pipelineUrl: process.env.CI_PIPELINE_URL,
+      deployedBy: process.env.GITLAB_USER_EMAIL,
+      workflows: this.deployLog
+    };
+    
+    await fs.writeFile(
+      `deploy-report-${this.env}-${Date.now()}.json`,
+      JSON.stringify(report, null, 2)
+    );
+  }
+}
+
+// Ejecutar deploy
+const env = process.argv.find(arg => arg.startsWith('--env='))?.split('=')[1];
+if (!env) {
+  console.error('❌ Especifica el entorno: --env=development|staging|production');
+  process.exit(1);
+}
+
+new CollaborativeDeploy(env).deployWorkflows();
+```
+
+## 4. Pipeline CI/CD GitLab
+
+### 4.1 .gitlab-ci.yml Completo
+
+```yaml
+# .gitlab-ci.yml
+stages:
+  - validate
+  - test
+  - sync
+  - deploy-dev
+  - deploy-staging
+  - deploy-production
+
+variables:
+  NODE_VERSION: "18"
+  NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/.npm"
+
+cache:
+  paths:
+    - .npm/
+    - node_modules/
+
+# ===============================
+# STAGE: VALIDATE
+# ===============================
+validate-workflows:
+  stage: validate
+  image: node:$NODE_VERSION
+  script:
+    - npm install
+    - npm run validate
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == "staging"
+    - if: $CI_COMMIT_BRANCH == "main"
+
+lint-code:
+  stage: validate
+  image: node:$NODE_VERSION
+  script:
+    - npm install
+    - npm run lint
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+# ===============================
+# STAGE: TEST
+# ===============================
+test-unit:
+  stage: test
+  image: node:$NODE_VERSION
+  script:
+    - npm install
+    - npm run test:unit
+  coverage: '/Lines\s*:\s*(\d+\.\d+)%/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "develop"
+
+test-integration:
+  stage: test
+  image: node:$NODE_VERSION
+  services:
+    - name: n8nio/n8n:latest
+      alias: n8n-test
+  variables:
+    N8N_BASIC_AUTH_ACTIVE: "false"
+    N8N_API_KEY_AUTH_ACTIVE: "true"
+    N8N_API_KEY: "test-api-key"
+  script:
+    - npm install
+    - sleep 30  # Esperar a que n8n esté listo
+    - npm run test:integration
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == "staging"
+
+# ===============================
+# STAGE: SYNC
+# ===============================
+sync-development:
+  stage: sync
+  image: node:$NODE_VERSION
+  script:
+    - npm install
+    - npm run dev:sync
+  artifacts:
+    paths:
+      - workflows/development/
+    expire_in: 1 day
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+
+# ===============================
+# STAGE: DEPLOY DEVELOPMENT
+# ===============================
+deploy-development:
+  stage: deploy-dev
+  image: node:$NODE_VERSION
+  script:
+    - npm install
+    - npm run dev:deploy
+  environment:
+    name: development
+    url: $N8N_DEV_URL
+  artifacts:
+    reports:
+      dotenv: deploy-development.env
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+
+# ===============================
+# STAGE: DEPLOY STAGING  
+# ===============================
+deploy-staging:
+  stage: deploy-staging
+  image: node:$NODE_VERSION
+  script:
+    - npm install
+    - npm run staging:deploy
+  environment:
+    name: staging
+    url: $N8N_STAGING_URL
+  artifacts:
+    reports:
+      dotenv: deploy-staging.env
+  rules:
+    - if: $CI_COMMIT_BRANCH == "staging"
+  when: manual
+
+# ===============================
+# STAGE: DEPLOY PRODUCTION
+# ===============================
+deploy-production:
+  stage: deploy-production
+  image: node:$NODE_VERSION
+  script:
+    - npm install
+    - npm run prod:deploy
+  environment:
+    name: production
+    url: $N8N_PROD_URL
+  artifacts:
+    reports:
+      dotenv: deploy-production.env
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+  when: manual
+  allow_failure: false
+
+# ===============================
+# JOBS AUXILIARES
+# ===============================
+generate-docs:
+  stage: deploy-dev
+  image: node:$NODE_VERSION
+  script:
+    - npm install
+    - npm run docs:generate
+  artifacts:
+    paths:
+      - docs/generated/
+    expire_in: 30 days
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "develop"
+
+security-scan:
+  stage: validate
+  image: node:$NODE_VERSION
+  script:
+    - npm install
+    - npm audit --audit-level moderate
+  allow_failure: true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+    - if: $CI_COMMIT_BRANCH == "main"
+```
+
+## 5. Flujo de Trabajo Colaborativo
+
+### 5.1 Crear Nuevo Workflow
+
+```bash
+# 1. Desarrollador A crea nueva feature
+git checkout develop
+git pull origin develop
+git checkout -b feature/etl-customer-data-v1
+
+# 2. Crear workflow desde template
+npm run workflow:create -- --name="ETL_Customer_Data" --type="etl"
+
+# 3. Desarrollar workflow en n8n UI (development)
+# http://n8n-dev.company.com
+
+# 4. Sincronizar cambios al repositorio
+npm run dev:sync
+git add workflows/development/ETL_Customer_Data_*.json
+git add docs/workflows/ETL_Customer_Data.md
+
+# 5. Commit con mensaje convencional
+git commit -m "feat(etl): add customer data extraction workflow
+
+- Extract customer data from CRM API
+- Transform data for analytics
+- Load to data warehouse
+- Includes error handling and logging
+
+Closes #123"
+
+# 6. Push y crear Merge Request
+git push origin feature/etl-customer-data-v1
+```
+
+### 5.2 Code Review y Colaboración
+
+```bash
+# Configurar Merge Request Template
+# .gitlab/merge_request_templates/workflow_mr.md
+
+## 📋 Workflow Information
+- **Workflow Name**: 
+- **Type**: [ETL|Webhook|Scheduled|Manual]
+- **Environment Tested**: [development|staging]
+- **Dependencies**: 
+
+## 🧪 Testing Checklist
+- [ ] Unit tests pass
+- [ ] Integration tests pass
+- [ ] Manual testing completed
+- [ ] Error scenarios tested
+- [ ] Performance acceptable
+
+## 📚 Documentation
+- [ ] Workflow documented in `/docs`
+- [ ] README updated if needed
+- [ ] API changes documented
+
+## 🔍 Security Review
+- [ ] No hardcoded credentials
+- [ ] Proper error handling (no data leaks)
+- [ ] Input validation implemented
+- [ ] Rate limiting considered
+
+## 🚀 Deployment Notes
+- [ ] Staging deployment plan ready
+- [ ] Production rollback plan available
+- [ ] Monitoring/alerts configured
+```
+
+### 5.3 Revisión Automatizada
+
+```javascript
+// scripts/validate.js - Validación colaborativa
+const Joi = require('joi');
+const fs = require('fs').promises;
+const path = require('path');
+
+const workflowSchema = Joi.object({
+  name: Joi.string().pattern(/^[A-Z][a-zA-Z0-9_]*$/).required(),
+  nodes: Joi.array().min(1).required(),
+  connections: Joi.object().required(),
+  active: Joi.boolean().default(false),
+  // Metadata obligatorio para colaboración
+  metadata: Joi.object({
+    author: Joi.string().email().required(),
+    version: Joi.string().pattern(/^\d+\.\d+\.\d+$/).required(),
+    description: Joi.string().min(10).required(),
+    category: Joi.string().valid('etl', 'webhook', 'scheduled', 'manual').required(),
+    dependencies: Joi.array().items(Joi.string()),
+    tags: Joi.array().items(Joi.string()),
+    lastModified: Joi.date().iso().required(),
+    reviewedBy: Joi.string().email(),
+    approvedBy: Joi.string().email()
+  }).required()
+});
+
+class WorkflowValidator {
+  async validateAll() {
+    const errors = [];
+    const workflowDirs = ['development', 'staging', 'production'];
+    
+    for (const dir of workflowDirs) {
+      const dirPath = path.join('workflows', dir);
+      if (await this.pathExists(dirPath)) {
+        const dirErrors = await this.validateDirectory(dirPath);
+        errors.push(...dirErrors);
+      }
+    }
+    
+    if (errors.length > 0) {
+      console.error('❌ Errores de validación encontrados:');
+      errors.forEach(error => console.error(`  - ${error}`));
+      process.exit(1);
+    }
+    
+    console.log('✅ Todos los workflows son válidos');
+  }
+
+  async validateDirectory(dirPath) {
+    const errors = [];
+    const files = await fs.readdir(dirPath);
+    
+    for (const file of files) {
+      if (file.endsWith('.json') && !file.startsWith('_')) {
+        const filePath = path.join(dirPath, file);
+        const fileErrors = await this.validateWorkflow(filePath);
+        errors.push(...fileErrors);
+      }
+    }
+    
+    return errors;
+  }
+
+  async validateWorkflow(filePath) {
+    const errors = [];
+    
+    try {
+      const content = await fs.readFile(filePath, 'utf8');
+      const workflow = JSON.parse(content);
+      
+      // Validación de esquema
+      const { error } = workflowSchema.validate(workflow);
+      if (error) {
+        errors.push(`${filePath}: ${error.details[0].message}`);
+      }
+      
+      // Validaciones específicas de n8n
+      const n8nErrors = this.validateN8nWorkflow(workflow, filePath);
+      errors.push(...n8nErrors);
+      
+    } catch (parseError) {
+      errors.push(`${filePath}: JSON inválido - ${parseError.message}`);
+    }
+    
+    return errors;
+  }
+
+  validateN8nWorkflow(workflow, filePath) {
+    const errors = [];
+    
+    // Validar que no haya credenciales hardcodeadas
+    const workflowStr = JSON.stringify(workflow);
+    const suspiciousPatterns = [
+      /password['"]\s*:\s*['"][^'"]{8,}/gi,
+      /api[_-]?key['"]\s*:\s*['"][^'"]{10,}/gi,
+      /secret['"]\s*:\s*['"][^'"]{8,}/gi,
+      /token['"]\s*:\s*['"][^'"]{10,}/gi
+    ];
+    
+    suspiciousPatterns.forEach(pattern => {
+      if (pattern.test(workflowStr)) {
+        errors.push(`${filePath}: Posibles credenciales hardcodeadas detectadas`);
+      }
+    });
+    
+    // Validar estructura de nodos
+    if (!workflow.nodes || workflow.nodes.length === 0) {
+      errors.push(`${filePath}: Workflow sin nodos`);
+    }
+    
+    // Validar nodo de error handling
+    const hasErrorHandler = workflow.nodes.some(node => 
+      node.type === 'n8n-nodes-base.errorTrigger' || 
+      node.name.toLowerCase().includes('error')
+    );
+    
+    if (!hasErrorHandler) {
+      errors.push(`${filePath}: Workflow sin manejo de errores`);
+    }
+    
+    return errors;
+  }
+
+  async pathExists(path) {
+    try {
+      await fs.access(path);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
+new WorkflowValidator().validateAll();
+```
+
+## 6. Gestión de Releases y Hotfixes
+
+### 6.1 Proceso de Release
+
+```bash
+# 1. Crear rama de release
+git checkout develop
+git pull origin develop
+git checkout -b release/v2.1.0
+
+# 2. Preparar release
+npm version minor  # Actualiza version en package.json
+npm run validate
+npm run test
+
+# 3. Crear changelog automático
+npm run changelog:generate
+
+# 4. Commit de release
+git add .
+git commit -m "chore(release): prepare v2.1.0
+
+- Customer data ETL workflows
+- Payment processing improvements
+- Bug fixes in scheduling system"
+
+# 5. Merge a staging para testing
+git checkout staging
+git merge release/v2.1.0
+git push origin staging
+
+# 6. Tras validación en staging, merge a main
+git checkout main
+git merge release/v2.1.0
+git tag -a v2.1.0 -m "Release v2.1.0"
+git push origin main --tags
+
+# 7. Cleanup
+git branch -d release/v2.1.0
+git push origin --delete release/v2.1.0
+```
+
+### 6.2 Hotfix de Producción
+
+```bash
+# 1. Crear hotfix desde main
+git checkout main
+git pull origin main
+git checkout -b hotfix/payment-webhook-timeout
+
+# 2. Fix rápido y testing
+# Editar workflow en n8n-prod
+npm run prod:sync
+git add workflows/production/
+git commit -m "fix(payment): resolve webhook timeout issue
+
+- Increase timeout from 30s to 60s
+- Add retry logic for failed requests
+- Improve error logging
+
+Fixes #456"
+
+# 3. Deploy inmediato
+git push origin hotfix/payment-webhook-timeout
+
+# 4. Crear MR urgente a main
+# Con label ~"priority::high" ~"type::hotfix"
+
+# 5. Tras aprobación, merge y deploy
+git checkout main
+git merge hotfix/payment-webhook-timeout
+git tag -a v2.1.1 -m "Hotfix v2.1.1 - Payment webhook timeout"
+git push origin main --tags
+
+# 6. Back-merge a develop
+git checkout develop
+git merge main
+git push origin develop
+```
+
+## 7. Monitorización y Alertas
+
+### 7.1 GitLab Monitors
+
+```yaml
+# .gitlab/issue_templates/workflow_incident.md
+## 🚨 Incident Report
+
+**Affected Workflow**: 
+**Environment**: [development|staging|production]
+**Severity**: [low|medium|high|critical]
+**Started**: YYYY-MM-DD HH:MM UTC
+
+### 📋 Summary
+Brief description of the issue.
+
+### 🔍 Impact
+- [ ] Data loss
+- [ ] Service degradation  
+- [ ] Complete outage
+- [ ] Security concern
+
+### 📊 Metrics
+- Error rate: %
+- Failed executions: 
+- Performance impact:
+
+### 🛠️ Actions Taken
+- [ ] Immediate mitigation
+- [ ] Root cause identified
+- [ ] Fix deployed
+- [ ] Monitoring enhanced
+
+### 📚 Root Cause Analysis
+Detailed analysis of what went wrong and why.
+
+### 🚀 Prevention Measures  
+Steps to prevent this issue in the future.
+```
+
+### 7.2 Alertas Automatizadas
+
+```javascript
+// scripts/monitor-workflows.js
+const axios = require('axios');
+
+class WorkflowMonitor {
+  async checkAllEnvironments() {
+    const environments = ['development', 'staging', 'production'];
+    
+    for (const env of environments) {
+      try {
+        await this.checkEnvironmentHealth(env);
+      } catch (error) {
+        await this.createGitLabIssue(env, error);
+      }
+    }
+  }
+
+  async checkEnvironmentHealth(env) {
+    const baseURL = process.env[`N8N_${env.toUpperCase()}_URL`];
+    const apiKey = process.env[`N8N_${env.toUpperCase()}_API_KEY`];
+    
+    // Check API health
+    const healthResponse = await axios.get(`${baseURL}/healthz`);
+    if (healthResponse.status !== 200) {
+      throw new Error(`${env} API health check failed`);
+    }
+    
+    // Check workflows status
+    const workflowsResponse = await axios.get(`${baseURL}/api/v1/workflows`, {
+      headers: { 'X-N8N-API-KEY': apiKey }
+    });
+    
+    const activeWorkflows = workflowsResponse.data.data.filter(w => w.active);
+    const failedWorkflows = await this.checkWorkflowExecutions(baseURL, apiKey, activeWorkflows);
+    
+    if (failedWorkflows.length > 0) {
+      throw new Error(`${failedWorkflows.length} workflows failing in ${env}`);
+    }
+  }
+
+  async createGitLabIssue(env, error) {
+    const issue = {
+      title: `🚨 Workflow Issue Detected - ${env}`,
+      description: `
+**Environment**: ${env}
+**Error**: ${error.message}
+**Detection Time**: ${new Date().toISOString()}
+**Pipeline**: ${process.env.CI_PIPELINE_URL || 'Manual execution'}
+
+This issue was automatically created by the monitoring system.
+
+/label ~"type::bug" ~"priority::high" ~"environment::${env}"
+/assign @on-call-team
+      `,
+      labels: ['type::bug', 'priority::high', `environment::${env}`]
+    };
+    
+    // Crear issue en GitLab via API
+    console.log(`🚨 Creating GitLab issue for ${env}: ${error.message}`);
+  }
+}
+
+// Ejecutar monitorización
+new WorkflowMonitor().checkAllEnvironments();
+```
+
+---
+¿Cömo LO VES?
