@@ -79,11 +79,16 @@ The repository follows a standard Go project layout with additional directories 
 
 ### n8n API Integration
 - **Purpose**: Connect to n8n instances for workflow management
-- **Authentication**: API key-based authentication per environment
+- **Authentication**: API key-based authentication using `X-N8N-API-KEY` header
+- **Endpoints**: `/api/v1/workflows` for CRUD operations
 - **Operations**: Download, upload, validate, and manage workflows
+- **Compliance**: 100% compatible with official n8n API documentation
 
-### GitLab CI/CD
-- **Variables**: Environment-specific URLs and API keys
+### GitLab CI/CD Integration  
+- **Authentication**: Personal Access Tokens using `PRIVATE-TOKEN` header
+- **API Version**: v4 (`/api/v4/` endpoints)
+- **Operations**: Project management, pipeline triggers, commit tracking
+- **Variables**: Environment-specific URLs and tokens for automated deployment
 - **Pipelines**: Automated deployment and validation workflows
 - **Integration**: Git hooks and merge request automation
 
