@@ -105,7 +105,7 @@ func checkWorkflowSync() (*CheckResult, error) {
         return checkWorkflowSyncReal(localWorkflows)
 }
 
-func checkWorkflowSyncDemo(localWorkflows []struct{ID, Name string}) (*CheckResult, error) {
+func checkWorkflowSyncDemo(localWorkflows []WorkflowInfo) (*CheckResult, error) {
         result := &CheckResult{
                 Environment:    environment,
                 LastSync:      time.Now().Add(-15 * time.Minute),
@@ -156,7 +156,7 @@ func checkWorkflowSyncDemo(localWorkflows []struct{ID, Name string}) (*CheckResu
         return result, nil
 }
 
-func checkWorkflowSyncReal(localWorkflows []struct{ID, Name string}) (*CheckResult, error) {
+func checkWorkflowSyncReal(localWorkflows []WorkflowInfo) (*CheckResult, error) {
         // This would implement real n8n API comparison
         result := &CheckResult{
                 Environment:    environment,
