@@ -17,6 +17,8 @@ Team Collaboration: Git-native approach eliminates deploy/rollback complexity - 
 Branch Management: Interactive workflow creation with DevOps naming conventions (feature/, hotfix/, release/, experiment/)
 Change Detection: Git status monitoring detects uncommitted workflows, Web UI warnings prevent data loss, sync operations blocked until changes committed
 Zero-Downtime Deployments: API-first approach that updates workflows without stopping n8n instances or touching infrastructure
+Git Provider: Only GitLab active - other providers (GitHub, Bitbucket) commented for future use
+No UI Components: Daemon and CLI only, web interface removed per user preference
 
 ## System Architecture
 
@@ -45,10 +47,10 @@ The repository follows a standard Go project layout with additional directories 
 - **Rationale**: Go provides excellent cross-platform support and fast execution for CLI tools
 
 ### 2. Git Provider Adapter Pattern
-- **Purpose**: Unified interface for multiple Git providers (GitLab, GitHub, Bitbucket)
-- **Architecture**: GitProvider interface with provider-specific implementations
-- **Extensibility**: Easy addition of new Git providers through factory pattern
-- **Authentication**: Provider-specific auth methods (PRIVATE-TOKEN, Bearer Token)
+- **Purpose**: Unified interface for Git providers (currently GitLab only)
+- **Architecture**: GitProvider interface with GitLab implementation active
+- **Current Provider**: GitLab with PRIVATE-TOKEN authentication
+- **Future Extensibility**: GitHub, Bitbucket providers commented for future use
 
 ### 2. Local Database (SQLite)
 - **Purpose**: Track workflow states, deployment history, and metadata
