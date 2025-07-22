@@ -25,10 +25,6 @@ args = "Mock n8n Server"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "n8n-ops UI"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
 args = "n8n-ops Daemon Test"
 
 [[workflows.workflow]]
@@ -55,15 +51,6 @@ author = "agent"
 task = "shell.exec"
 args = "cd mock-n8n-server && go run main.go"
 waitForPort = 3001
-
-[[workflows.workflow]]
-name = "n8n-ops UI"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "./n8n-ops ui --port 5000"
-waitForPort = 5000
 
 [[workflows.workflow]]
 name = "n8n-ops Daemon Test"
