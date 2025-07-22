@@ -4,7 +4,6 @@ import (
         "fmt"
         "html/template"
         "net/http"
-        "os"
         "time"
 
         "github.com/spf13/cobra"
@@ -65,12 +64,8 @@ func startUIServer(env string, port int) error {
                 FilePath     string
         }{}
         
-        // TODO: Integrate with real Git status checker when git module is fixed
-        // For now, check if workflow files exist and might have uncommitted changes
-        if _, err := os.Stat("workflows/development"); err == nil {
-                // Directory exists, could have uncommitted changes
-                // This would be replaced with real git status checking
-        }
+        // For now, show clean state until real Git integration is implemented
+        // In production, this would check actual Git status
         
         // Simple dashboard data
         dashboardData := struct {
@@ -106,16 +101,17 @@ func startUIServer(env string, port int) error {
                         Status string
                         Branch string
                 }{
-                        {"Customer Onboarding", "active", "feature/customer-onboarding"},
-                        {"Email Notifications", "inactive", "feature/email-system"},
-                        {"Payment Processing", "active", "hotfix/payment-fix"},
+                        {"Customer Onboarding Process", "active", "main"},
+                        {"Email Notification System", "active", "main"},
+                        {"Payment Processing", "active", "main"},
                 },
                 Credentials: []struct {
                         Name   string
                         Status string
                 }{
-                        {"SMTP", "configured"},
-                        {"PostgreSQL", "configured"},
+                        {"N8N API", "missing"},
+                        {"SMTP", "missing"},
+                        {"PostgreSQL", "missing"},
                         {"Stripe", "missing"},
                 },
         }
