@@ -1,0 +1,36 @@
+modules = ["go"]
+
+[nix]
+channel = "stable-24_05"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Go CLI Server"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "test_cli"
+
+[[workflows.workflow]]
+name = "Go CLI Server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "go run main.go --help"
+
+[[workflows.workflow]]
+name = "test_cli"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd /tmp && go mod download && go build -o n8n-cli && ./n8n-cli --help"

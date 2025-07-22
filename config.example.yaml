@@ -1,0 +1,196 @@
+# n8n CLI Configuration Example
+# Copy this file to .n8n-cli.yaml and customize for your setup
+
+# Environment configurations
+environments:
+  development:
+    url: https://n8n-dev.example.com
+    api_key_env: N8N_DEV_API_KEY
+    # Optional: timeout settings
+    timeout: 30s
+    # Optional: custom headers
+    headers:
+      User-Agent: "n8n-cli/1.0.0"
+  
+  staging:
+    url: https://n8n-staging.example.com
+    api_key_env: N8N_STAGING_API_KEY
+    timeout: 30s
+    headers:
+      User-Agent: "n8n-cli/1.0.0"
+  
+  production:
+    url: https://n8n-prod.example.com
+    api_key_env: N8N_PROD_API_KEY
+    timeout: 60s
+    headers:
+      User-Agent: "n8n-cli/1.0.0"
+
+# Default settings
+defaults:
+  environment: development
+  validation:
+    strict: false
+    # Skip validation for specific node types
+    skip_node_types:
+      - "community-node-example"
+  sync:
+    auto_backup: true
+    # Maximum number of backups to keep
+    max_backups: 10
+    # Auto-cleanup backups older than this duration
+    backup_retention: "30d"
+  deploy:
+    dry_run: false
+    skip_validation: false
+    # Confirm before deploying to production
+    confirm_production: true
+    # Wait time between workflow deployments
+    deploy_delay: "1s"
+
+# Logging configuration
+logging:
+  level: info # debug, info, warn, error, fatal
+  format: text # text, json
+  file: logs/n8n-cli.log
+  # Rotate log files
+  rotation:
+    max_size: 100 # MB
+    max_age: 30 # days
+    max_backups: 10
+
+# Database configuration
+database:
+  path: .n8n-cli.db
+  # Enable WAL mode for better concurrent access
+  wal_mode: true
+  # Connection pool settings
+  max_connections: 10
+  max_idle_connections: 5
+
+# Git integration (optional)
+git:
+  # Auto-commit changes after sync
+  auto_commit: false
+  # Commit message template
+  commit_message_template: "Sync workflows from {environment} - {timestamp}"
+  # Auto-push after commit
+  auto_push: false
+  # Branch to push to
+  push_branch: "main"
+
+# Webhook configuration for real-time sync (optional)
+webhook:
+  enabled: false
+  port: 8080
+  path: "/webhook/n8n-sync"
+  secret: "your-webhook-secret"
+
+# Notification settings (optional)
+notifications:
+  slack:
+    enabled: false
+    webhook_url_env: SLACK_WEBHOOK_URL
+    channel: "#n8n-deployments"
+  email:
+    enabled: false
+    smtp_host: smtp.example.com
+    smtp_port: 587
+    username_env: SMTP_USERNAME
+    password_env: SMTP_PASSWORD
+    from: "n8n-cli@example.com"
+    to:
+      - "team@example.com"
+
+# Performance settings
+performance:
+  # Maximum concurrent operations
+  max_concurrent_operations: 5
+  # Request timeout for n8n API calls
+  api_timeout: 30s
+  # Retry settings
+  retry:
+    max_attempts: 3
+    initial_delay: 1s
+    max_delay: 10s
+    exponential_backoff: true
+
+# Security settings
+security:
+  # Encrypt sensitive data in local database
+  encrypt_local_data: false
+  # Encryption key environment variable
+  encryption_key_env: N8N_CLI_ENCRYPTION_KEY
+  # Validate SSL certificates
+  verify_ssl: true
+  # Custom CA certificate file
+  ca_cert_file: ""
+
+# Workflow templates
+templates:
+  # Directory containing workflow templates
+  directory: templates/
+  # Default template to use for new workflows
+  default: basic-workflow
+  # Custom template variables
+  variables:
+    author: "Your Name"
+    organization: "Your Organization"
+    contact: "your-email@example.com"
+
+# Custom commands (optional)
+custom_commands:
+  # Pre-deploy hooks
+  pre_deploy:
+    - command: "npm run test"
+      working_dir: "."
+      timeout: "5m"
+  # Post-deploy hooks
+  post_deploy:
+    - command: "curl -X POST https://api.example.com/notify"
+      timeout: "30s"
+
+# Feature flags
+features:
+  # Enable experimental features
+  experimental: false
+  # Enable metrics collection
+  metrics: false
+  # Enable auto-update checks
+  auto_update_check: true
+  # Enable workflow dependency analysis
+  dependency_analysis: false
+
+# Export/Import settings
+export:
+  # Include credentials in exports (not recommended for security)
+  include_credentials: false
+  # Include execution data
+  include_executions: false
+  # Format for exports
+  format: json # json, yaml
+  # Compression for large exports
+  compress: true
+
+# Monitoring and health checks
+monitoring:
+  # Health check interval for environments
+  health_check_interval: "5m"
+  # Enable performance monitoring
+  performance_monitoring: false
+  # Metrics export endpoint
+  metrics_endpoint: "http://localhost:9090/metrics"
+
+# Advanced settings
+advanced:
+  # Custom user agent for API requests
+  user_agent: "n8n-cli/1.0.0"
+  # Connection pool settings
+  http_client:
+    max_idle_connections: 100
+    max_connections_per_host: 10
+    idle_connection_timeout: "90s"
+  # Memory usage limits
+  memory:
+    max_workflow_size: "10MB"
+    max_total_memory: "100MB"
