@@ -41,7 +41,7 @@ var (
         branch     string
         fromN8n    bool
         toN8n      bool
-        dryRun     bool
+        syncDryRun bool
 )
 
 func init() {
@@ -52,7 +52,7 @@ func init() {
         syncCmd.Flags().StringVarP(&branch, "branch", "b", "", "git branch (defaults to current branch)")
         syncCmd.Flags().BoolVar(&fromN8n, "from-n8n", false, "sync only from n8n to local files")
         syncCmd.Flags().BoolVar(&toN8n, "to-n8n", false, "sync only from local files to n8n")
-        syncCmd.Flags().BoolVar(&dryRun, "dry-run", false, "show what would be synced without making changes")
+        syncCmd.Flags().BoolVar(&syncDryRun, "dry-run", false, "show what would be synced without making changes")
 }
 
 func runSync(cmd *cobra.Command, args []string) error {
