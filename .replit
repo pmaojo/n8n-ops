@@ -17,7 +17,7 @@ args = "Go CLI Server"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "OPS Test"
+args = "n8n-ops Version"
 
 [[workflows.workflow]]
 name = "Go CLI Server"
@@ -28,12 +28,12 @@ task = "shell.exec"
 args = "go run main.go --help"
 
 [[workflows.workflow]]
-name = "OPS Test"
+name = "n8n-ops Version"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "./n8n-ops --help"
+args = "./n8n-ops version"
 
 [deployment]
 deploymentTarget = "cloudrun"

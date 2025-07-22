@@ -17,6 +17,7 @@ var (
         environment string
         verbose     bool
         language    string
+        showVersion bool
         logger      = utils.NewLogger()
 )
 
@@ -35,12 +36,28 @@ Examples:
   n8n-ops deploy --env staging      # Deploy workflows to staging environment  
   n8n-ops validate ./workflows/     # Validate workflow files
   n8n-ops rollback --env production # Rollback to previous deployment`,
+        Run: func(cmd *cobra.Command, args []string) {
+                if showVersion {
+                        fmt.Printf("n8n-ops version %s\n", Version)
+                        fmt.Printf("Git commit: %s\n", GitCommit)
+                        fmt.Printf("Build date: %s\n", BuildDate)
+                        return
+                }
+                cmd.Help()
+        },
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 func Execute() error {
         return rootCmd.Execute()
 }
+
+// Version information - will be set at build time
+var (
+        Version   = "1.0.0"
+        GitCommit = "unknown"
+        BuildDate = "unknown"
+)
 
 func init() {
         cobra.OnInitialize(initConfig)
@@ -50,6 +67,7 @@ func init() {
         rootCmd.PersistentFlags().StringVarP(&environment, "env", "e", "development", "target environment (development, staging, production)")
         rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
         rootCmd.PersistentFlags().StringVarP(&language, "lang", "l", "en", "language (en, es)")
+        rootCmd.Flags().BoolVar(&showVersion, "version", false, "show version information")
 
         // Bind flags to viper
         viper.BindPFlag("environment", rootCmd.PersistentFlags().Lookup("env"))
