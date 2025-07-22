@@ -4,7 +4,7 @@ modules = ["go"]
 channel = "stable-24_05"
 
 [workflows]
-runButton = "Project"
+runButton = "Go CLI Server"
 
 [[workflows.workflow]]
 name = "Project"
