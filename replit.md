@@ -13,6 +13,7 @@ Project purpose: Operations tool for COMPILING and managing n8n workflows (not f
 Custom ASCII art: User-provided "n8n deploy" ASCII art integrated into welcome screens
 Versioning: Uses Semantic Versioning (SemVer) with Git Flow workflow for multi-environment deployment
 Team Collaboration: Comprehensive system to prevent developers from stepping on each other using Git, branch protection, and automated conflict detection
+Zero-Downtime Deployments: API-first approach that updates workflows without stopping n8n instances or touching infrastructure
 
 ## System Architecture
 
