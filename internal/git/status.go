@@ -3,7 +3,6 @@ package git
 import (
 	"bufio"
 	"fmt"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -34,14 +33,19 @@ type WorkflowChange struct {
 // GitStatusChecker checks Git status for workflow changes
 type GitStatusChecker struct {
 	WorkingDir string
+	executor   Executor
 }
 
-func NewGitStatusChecker(workingDir string) *GitStatusChecker {
+func NewGitStatusChecker(workingDir string, exec Executor) *GitStatusChecker {
 	if workingDir == "" {
 		workingDir = "."
 	}
+	if exec == nil {
+		exec = NewExecutor(workingDir)
+	}
 	return &GitStatusChecker{
 		WorkingDir: workingDir,
+		executor:   exec,
 	}
 }
 
@@ -72,14 +76,12 @@ func (gsc *GitStatusChecker) GetStatus() (*GitStatus, error) {
 	}
 
 	// Get Git status
-	cmd := exec.Command("git", "status", "--porcelain")
-	cmd.Dir = gsc.WorkingDir
-	output, err := cmd.Output()
+	output, err := gsc.executor.StatusPorcelain()
 	if err != nil {
 		return nil, fmt.Errorf("failed to run git status: %w", err)
 	}
 
-	scanner := bufio.NewScanner(strings.NewReader(string(output)))
+	scanner := bufio.NewScanner(strings.NewReader(output))
 	for scanner.Scan() {
 		line := scanner.Text()
 		if len(line) < 3 {
@@ -173,24 +175,12 @@ func (gsc *GitStatusChecker) extractEnvironment(filePath string) string {
 
 // getCurrentBranch gets the current Git branch
 func (gsc *GitStatusChecker) getCurrentBranch() (string, error) {
-	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
-	cmd.Dir = gsc.WorkingDir
-	output, err := cmd.Output()
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSpace(string(output)), nil
+	return gsc.executor.CurrentBranch()
 }
 
 // getLastCommit gets the last commit hash and message
 func (gsc *GitStatusChecker) getLastCommit() (string, error) {
-	cmd := exec.Command("git", "log", "-1", "--pretty=format:%h %s")
-	cmd.Dir = gsc.WorkingDir
-	output, err := cmd.Output()
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSpace(string(output)), nil
+	return gsc.executor.LastCommit()
 }
 
 // GetUncommittedWorkflowSummary returns a summary of uncommitted workflow changes
@@ -308,9 +298,7 @@ func (gsc *GitStatusChecker) AutoCommitWorkflows(message string) error {
 
 	// Add workflow files
 	for _, workflow := range status.UncommittedWorkflows {
-		cmd := exec.Command("git", "add", workflow.FilePath)
-		cmd.Dir = gsc.WorkingDir
-		if err := cmd.Run(); err != nil {
+		if err := gsc.executor.Add(workflow.FilePath); err != nil {
 			return fmt.Errorf("failed to add %s: %w", workflow.FilePath, err)
 		}
 	}
@@ -320,9 +308,7 @@ func (gsc *GitStatusChecker) AutoCommitWorkflows(message string) error {
 		message = fmt.Sprintf("Auto-commit %d workflow changes", len(status.UncommittedWorkflows))
 	}
 
-	cmd := exec.Command("git", "commit", "-m", message)
-	cmd.Dir = gsc.WorkingDir
-	if err := cmd.Run(); err != nil {
+	if err := gsc.executor.Commit(message); err != nil {
 		return fmt.Errorf("failed to commit: %w", err)
 	}
 

@@ -65,7 +65,7 @@ func init() {
 func runSync(cmd *cobra.Command, args []string) error {
 	// Check for uncommitted changes before sync
 	if !force {
-		checker := git.NewGitStatusChecker(".")
+		checker := git.NewGitStatusChecker(".", nil)
 		if err := checker.CheckBeforeSync(); err != nil {
 			fmt.Printf("\n❌ Sync blocked: %s\n\n", err.Error())
 			fmt.Printf("Use --force to sync anyway (⚠️  may overwrite local changes)\n")
