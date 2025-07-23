@@ -56,7 +56,9 @@ func runTutorial(cmd *cobra.Command, args []string) {
 }
 
 func showTutorialIntro() {
-	utils.ClearTerminalScreen()
+	if err := utils.ClearTerminalScreen(); err != nil {
+		fmt.Printf("Failed to clear screen: %v\n", err)
+	}
 	fmt.Print(ascii.TutorialWelcome())
 	time.Sleep(1 * time.Second)
 
@@ -133,7 +135,9 @@ func runMainTutorial() {
 
 	currentTopic := 0
 	for {
-		utils.ClearTerminalScreen()
+		if err := utils.ClearTerminalScreen(); err != nil {
+			fmt.Printf("Failed to clear screen: %v\n", err)
+		}
 		fmt.Println(ascii.Banner("tutorial"))
 		fmt.Printf("\n%s%s📚 TUTORIAL TOPICS%s\n\n", ascii.Bold, ascii.Yellow, ascii.Reset)
 
@@ -159,7 +163,9 @@ func runMainTutorial() {
 				currentTopic++
 			}
 		case "enter":
-			utils.ClearTerminalScreen()
+			if err := utils.ClearTerminalScreen(); err != nil {
+				fmt.Printf("Failed to clear screen: %v\n", err)
+			}
 			topics[currentTopic].action()
 			waitForEnter()
 		case "q":

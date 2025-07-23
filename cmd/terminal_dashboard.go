@@ -73,7 +73,9 @@ func runTerminalDashboard(cmd *cobra.Command, args []string) error {
 	}
 
 	// Initial clear screen
-	utils.ClearTerminalScreen()
+	if err := utils.ClearTerminalScreen(); err != nil {
+		return fmt.Errorf("failed to clear screen: %w", err)
+	}
 
 	// Main loop
 	ticker := time.NewTicker(refreshInterval)
@@ -87,11 +89,15 @@ func runTerminalDashboard(cmd *cobra.Command, args []string) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-sigChan:
-			utils.ClearTerminalScreen()
+			if err := utils.ClearTerminalScreen(); err != nil {
+				return fmt.Errorf("failed to clear screen: %w", err)
+			}
 			fmt.Println("🚀 Terminal dashboard stopped. Thanks for using n8n-ops!")
 			return nil
 		case <-ticker.C:
-			utils.ClearTerminalScreen()
+			if err := utils.ClearTerminalScreen(); err != nil {
+				return fmt.Errorf("failed to clear screen: %w", err)
+			}
 			displayDashboard(n8nClient, ctx)
 		}
 	}

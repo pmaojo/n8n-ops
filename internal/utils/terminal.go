@@ -7,7 +7,7 @@ import (
 )
 
 // ClearTerminalScreen clears the terminal screen cross-platform
-func ClearTerminalScreen() {
+func ClearTerminalScreen() error {
 	var cmd *exec.Cmd
 	switch runtime.GOOS {
 	case "windows":
@@ -16,5 +16,5 @@ func ClearTerminalScreen() {
 		cmd = exec.Command("clear")
 	}
 	cmd.Stdout = os.Stdout
-	cmd.Run()
+	return cmd.Run()
 }
