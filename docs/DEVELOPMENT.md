@@ -166,7 +166,7 @@ test-cli-functions:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH'
 
-# Run Go unit tests
+# Run Go unit tests (cache GOMODCACHE)
 unit-tests:
   stage: test
   image: golang:${GO_VERSION}
