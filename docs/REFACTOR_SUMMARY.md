@@ -7,6 +7,7 @@ Successfully implemented a complete refactor of the n8n API client following SOL
 ## Changes Implemented
 
 ### 1. Single Responsibility Principle (SRP)
+
 - **Before**: N8nClient mixed connection, retries, serialization, and domain logic
 - **After**: Separated concerns into distinct components:
   - `interfaces.go` - Clean interface definitions
@@ -15,15 +16,18 @@ Successfully implemented a complete refactor of the n8n API client following SOL
   - `n8n_refactored.go` - Business logic implementation
 
 ### 2. Open/Closed Principle (OCP)
+
 - **Before**: Each method manually created `http.Request` with duplication
 - **After**: Generic `doRequest[T]()` function eliminates duplication
 - **Benefit**: Adding new endpoints requires minimal code
 
 ### 3. Liskov Substitution Principle (LSP)
+
 - **Before**: Concrete implementation only
 - **After**: Interface-based design allows any implementation to be substituted
 
 ### 4. Interface Segregation Principle (ISP)
+
 - **Before**: Single large interface
 - **After**: Segregated interfaces:
   - `WorkflowReader` - Read operations only
@@ -32,12 +36,14 @@ Successfully implemented a complete refactor of the n8n API client following SOL
   - `N8nClient` - Combines all interfaces
 
 ### 5. Dependency Inversion Principle (DIP)
+
 - **Before**: Constructor created `http.Client` internally
 - **After**: HTTP client injected from outside, enabling testing and customization
 
 ## Technical Improvements
 
 ### HTTP Transport Layer
+
 ```go
 // Optimal HTTP client configuration
 func defaultHTTPClient() *http.Client {
@@ -45,7 +51,7 @@ func defaultHTTPClient() *http.Client {
         Timeout: 30 * time.Second,
         Transport: &http.Transport{
             TLSHandshakeTimeout:   10 * time.Second,
-            ResponseHeaderTimeout: 15 * time.Second, 
+            ResponseHeaderTimeout: 15 * time.Second,
             IdleConnTimeout:       90 * time.Second,
             MaxIdleConnsPerHost:   10,
         },
@@ -54,11 +60,13 @@ func defaultHTTPClient() *http.Client {
 ```
 
 ### Context Support
+
 - All methods now accept `context.Context`
 - Proper cancellation and timeout support
 - Follows Go context conventions
 
 ### Error Handling
+
 ```go
 // Structured error types
 var (
@@ -75,6 +83,7 @@ func IsNotFound(err error) bool {
 ```
 
 ### Generic Request Handler
+
 ```go
 // DRY principle - single request handler for all endpoints
 func doRequest[T any](ctx context.Context, c *n8nClient, method, path string, body interface{}) (T, error) {
@@ -83,6 +92,7 @@ func doRequest[T any](ctx context.Context, c *n8nClient, method, path string, bo
 ```
 
 ### No Side Effects in Constructor
+
 ```go
 // Before: Constructor made network calls
 func NewN8nClient(baseURL, apiKey string) (*N8nClient, error) {
@@ -107,21 +117,25 @@ func (c *n8nClient) Ping(ctx context.Context) error {
 ## Code Quality Improvements
 
 ### 1. Memory Efficiency
+
 - No more `bytes.NewBuffer()` waste
 - Direct `json.Unmarshal()` on response bytes
 - Proper resource management
 
 ### 2. Type Safety
+
 - Generic functions with proper type constraints
 - Structured response types
 - Compile-time interface compliance
 
 ### 3. Testability
+
 - Dependency injection for HTTP transport
 - Mock transport implementation
 - Interface-based design enables easy testing
 
 ### 4. Documentation
+
 - Comprehensive godoc comments
 - Clear interface definitions
 - Usage examples in tests
@@ -129,6 +143,7 @@ func (c *n8nClient) Ping(ctx context.Context) error {
 ## Usage Examples
 
 ### Basic Usage
+
 ```go
 // Create client with dependency injection
 client, err := New("https://api.n8n.com", "api-key", nil)
@@ -150,6 +165,7 @@ if IsUnauthorized(err) {
 ```
 
 ### Interface Segregation
+
 ```go
 // Use only what you need
 func processWorkflows(reader WorkflowReader) error {
@@ -163,6 +179,7 @@ processWorkflows(client)
 ```
 
 ### Custom HTTP Client
+
 ```go
 customClient := &http.Client{
     Timeout: 60 * time.Second,

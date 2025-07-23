@@ -57,8 +57,17 @@ func runWatch(cmd *cobra.Command, args []string) error {
                 fmt.Printf("🔄 Check interval: %s\n", watchInterval)
         }
 
-        // Create n8n client
-        n8nClient, err := client.New("http://localhost:3001", "n8n_api_mock_development", nil)
+        // Create n8n client using environment configuration
+        n8nURL := os.Getenv("N8N_DEV_URL")
+        if n8nURL == "" {
+                n8nURL = "http://localhost:5678"
+        }
+        apiKey := os.Getenv("N8N_DEV_API_KEY")
+        if apiKey == "" {
+                return fmt.Errorf("N8N_DEV_API_KEY environment variable not set")
+        }
+        
+        n8nClient, err := client.New(n8nURL, apiKey, nil)
         if err != nil {
                 return fmt.Errorf("failed to create n8n client: %w", err)
         }

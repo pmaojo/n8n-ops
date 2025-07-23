@@ -79,7 +79,7 @@ func TestEnvironmentIsolation(t *testing.T) {
                 }
                 
                 // Verify environment-specific naming
-                if env == "development" && keyName != "N8N_development_API_KEY" {
+                if env == "development" && keyName != "N8N_DEV_API_KEY" {
                         t.Error("Development API key name format incorrect")
                 }
         }
