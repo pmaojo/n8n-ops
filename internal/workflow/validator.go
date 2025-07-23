@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/sirupsen/logrus"
 )
 
 var validate *validator.Validate
@@ -68,15 +69,17 @@ func ValidateWorkflow(wf *Workflow) error {
 }
 
 // ValidateWorkflowStrict performs strict validation with additional checks
-func ValidateWorkflowStrict(wf *Workflow) error {
+func ValidateWorkflowStrict(wf *Workflow, logger logrus.FieldLogger) error {
 	// Run basic validation first
 	if err := ValidateWorkflow(wf); err != nil {
 		return err
 	}
 
 	// Strict validation rules
-	if err := validateNodeTypes(wf.Nodes); err != nil {
-		return err
+	for _, warning := range validateNodeTypes(wf.Nodes) {
+		if logger != nil {
+			logger.Warn(warning)
+		}
 	}
 
 	if err := validateNodeConnectivity(wf.Nodes, wf.Connections); err != nil {
@@ -165,7 +168,7 @@ func validateConnections(connections map[string]interface{}) error {
 }
 
 // validateNodeTypes validates that node types are known/supported
-func validateNodeTypes(nodes []Node) error {
+func validateNodeTypes(nodes []Node) []string {
 	// List of commonly known n8n node types
 	// In a real implementation, this could be loaded from a configuration file
 	knownTypes := map[string]bool{
@@ -190,6 +193,7 @@ func validateNodeTypes(nodes []Node) error {
 		// Add more as needed
 	}
 
+	var warnings []string
 	for _, node := range nodes {
 		// Skip validation for custom/community nodes
 		if strings.HasPrefix(node.Type, "@") {
@@ -197,13 +201,11 @@ func validateNodeTypes(nodes []Node) error {
 		}
 
 		if !knownTypes[node.Type] {
-			// This is a warning, not an error in strict mode
-			// You might want to make this configurable
-			fmt.Printf("Warning: Unknown node type '%s' for node '%s'\n", node.Type, node.Name)
+			warnings = append(warnings, fmt.Sprintf("Unknown node type '%s' for node '%s'", node.Type, node.Name))
 		}
 	}
 
-	return nil
+	return warnings
 }
 
 // validateNodeConnectivity ensures nodes are properly connected

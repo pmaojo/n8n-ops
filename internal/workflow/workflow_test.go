@@ -2,9 +2,12 @@ package workflow
 
 import (
 	"encoding/json"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/sirupsen/logrus"
 )
 
 func minimalWorkflow() *Workflow {
@@ -36,9 +39,13 @@ func TestValidateWorkflowFailureMissingName(t *testing.T) {
 }
 
 func TestValidateWorkflowStrictConnectivityFailure(t *testing.T) {
+	logger := logrus.New()
+	logger.SetOutput(io.Discard)
+
 	wf := minimalWorkflow()
 	wf.Nodes = append(wf.Nodes, Node{Name: "Func", Type: "n8n-nodes-base.function", Position: []float64{200, 0}})
-	if err := ValidateWorkflowStrict(wf); err == nil {
+
+	if err := ValidateWorkflowStrict(wf, logger); err == nil {
 		t.Fatal("expected connectivity error for second node")
 	}
 }

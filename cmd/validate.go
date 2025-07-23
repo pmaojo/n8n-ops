@@ -173,7 +173,7 @@ func validateWorkflowFile(file string, strict bool) error {
 		}
 
 		// Strict validation checks
-		if err := workflow.ValidateWorkflowStrict(wf); err != nil {
+		if err := workflow.ValidateWorkflowStrict(wf, logger); err != nil {
 			return fmt.Errorf("strict validation failed: %w", err)
 		}
 	}
