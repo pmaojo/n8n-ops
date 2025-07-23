@@ -210,3 +210,27 @@ func (c *n8nClient) GetExecution(ctx context.Context, id string) (*workflow.Exec
         
         return result, nil
 }
+
+// GetExecutions implements WorkflowExecutor interface
+func (c *n8nClient) GetExecutions(ctx context.Context, workflowID string, status string, limit int) ([]*workflow.ExecutionResult, error) {
+        path := fmt.Sprintf("/api/v1/executions?workflowId=%s", workflowID)
+        
+        if status != "" {
+                path += fmt.Sprintf("&status=%s", status)
+        }
+        
+        if limit > 0 {
+                path += fmt.Sprintf("&limit=%d", limit)
+        }
+        
+        type executionsResponse struct {
+                Data []*workflow.ExecutionResult `json:"data"`
+        }
+        
+        resp, err := doRequest[executionsResponse](ctx, c, http.MethodGet, path, nil)
+        if err != nil {
+                return nil, fmt.Errorf("failed to get executions for workflow %s: %w", workflowID, err)
+        }
+        
+        return resp.Data, nil
+}

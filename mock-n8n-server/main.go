@@ -5,6 +5,7 @@ import (
         "fmt"
         "log"
         "net/http"
+        "strconv"
         "time"
 
         "github.com/gorilla/mux"
@@ -344,6 +345,8 @@ func main() {
         api.HandleFunc("/workflows/{id}", authMiddleware(deleteWorkflow)).Methods("DELETE")
         api.HandleFunc("/workflows/{id}/activate", authMiddleware(activateWorkflow)).Methods("POST")
         api.HandleFunc("/workflows/{id}/deactivate", authMiddleware(deactivateWorkflow)).Methods("POST")
+        api.HandleFunc("/executions", authMiddleware(getExecutions)).Methods("GET")
+        api.HandleFunc("/executions/{id}", authMiddleware(getExecution)).Methods("GET")
         
         // CORS middleware for all routes
         r.Use(func(next http.Handler) http.Handler {
@@ -369,4 +372,131 @@ func main() {
         fmt.Println("===============================================")
         
         log.Fatal(http.ListenAndServe(":"+port, r))
+}
+
+// Execution represents an n8n workflow execution
+type Execution struct {
+        ID           string                 `json:"id"`
+        WorkflowID   string                 `json:"workflowId"`
+        WorkflowName string                 `json:"workflowName"`
+        Status       string                 `json:"status"` // running, success, error, waiting
+        StartedAt    time.Time              `json:"startedAt"`
+        StoppedAt    *time.Time             `json:"stoppedAt,omitempty"`
+        Mode         string                 `json:"mode"` // manual, trigger, retry
+        Retries      int                    `json:"retries"`
+        Data         map[string]interface{} `json:"data,omitempty"`
+        Error        *ExecutionError        `json:"error,omitempty"`
+}
+
+type ExecutionError struct {
+        Message string `json:"message"`
+        Node    string `json:"node"`
+        Stack   string `json:"stack,omitempty"`
+}
+
+type ExecutionsList struct {
+        Data []Execution `json:"data"`
+}
+
+// Mock executions data
+var executions = map[string]*Execution{
+        "exec_1001": {
+                ID:           "exec_1001",
+                WorkflowID:   "1001",
+                WorkflowName: "Customer Onboarding",
+                Status:       "success",
+                StartedAt:    time.Now().Add(-2 * time.Hour),
+                StoppedAt:    timePtr(time.Now().Add(-2*time.Hour).Add(5 * time.Minute)),
+                Mode:         "trigger",
+                Retries:      0,
+        },
+        "exec_1002": {
+                ID:           "exec_1002",
+                WorkflowID:   "1001",
+                WorkflowName: "Customer Onboarding",
+                Status:       "error",
+                StartedAt:    time.Now().Add(-1 * time.Hour),
+                StoppedAt:    timePtr(time.Now().Add(-1 * time.Hour).Add(2 * time.Minute)),
+                Mode:         "trigger",
+                Retries:      2,
+                Error: &ExecutionError{
+                        Message: "Database connection timeout",
+                        Node:    "PostgreSQL",
+                        Stack:   "Error: Database connection timeout\n    at PostgreSQL.execute()",
+                },
+        },
+        "exec_1003": {
+                ID:           "exec_1003",
+                WorkflowID:   "1002",
+                WorkflowName: "Payment Processing",
+                Status:       "error",
+                StartedAt:    time.Now().Add(-30 * time.Minute),
+                StoppedAt:    timePtr(time.Now().Add(-25 * time.Minute)),
+                Mode:         "trigger",
+                Retries:      3,
+                Error: &ExecutionError{
+                        Message: "API rate limit exceeded",
+                        Node:    "Stripe",
+                        Stack:   "Error: API rate limit exceeded\n    at Stripe.makeRequest()",
+                },
+        },
+}
+
+func timePtr(t time.Time) *time.Time {
+        return &t
+}
+
+// GET /api/v1/executions
+func getExecutions(w http.ResponseWriter, r *http.Request) {
+        workflowID := r.URL.Query().Get("workflowId")
+        status := r.URL.Query().Get("status")
+        limitStr := r.URL.Query().Get("limit")
+        
+        limit := 50 // default
+        if limitStr != "" {
+                if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+                        limit = l
+                }
+        }
+        
+        var filteredExecutions []Execution
+        count := 0
+        
+        for _, exec := range executions {
+                if count >= limit {
+                        break
+                }
+                
+                // Filter by workflowID if provided
+                if workflowID != "" && exec.WorkflowID != workflowID {
+                        continue
+                }
+                
+                // Filter by status if provided
+                if status != "" && exec.Status != status {
+                        continue
+                }
+                
+                filteredExecutions = append(filteredExecutions, *exec)
+                count++
+        }
+        
+        response := ExecutionsList{Data: filteredExecutions}
+        w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(response)
+}
+
+// GET /api/v1/executions/{id}
+func getExecution(w http.ResponseWriter, r *http.Request) {
+        vars := mux.Vars(r)
+        id := vars["id"]
+        
+        execution, exists := executions[id]
+        if !exists {
+                http.Error(w, "Execution not found", http.StatusNotFound)
+                return
+        }
+        
+        w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(execution)
 }

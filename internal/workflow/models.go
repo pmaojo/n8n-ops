@@ -36,12 +36,31 @@ type Node struct {
         Color       string                `json:"color,omitempty"`
 }
 
-// Tag represents a workflow tag
+// Tag represents a workflow tag - can be string or object
 type Tag struct {
         ID        string    `json:"id,omitempty"`
         Name      string    `json:"name"`
         CreatedAt time.Time `json:"createdAt,omitempty"`
         UpdatedAt time.Time `json:"updatedAt,omitempty"`
+}
+
+// UnmarshalJSON handles both string and object tag formats from n8n API
+func (t *Tag) UnmarshalJSON(data []byte) error {
+        // Try string first (common in n8n API responses)
+        var tagName string
+        if err := json.Unmarshal(data, &tagName); err == nil {
+                t.Name = tagName
+                return nil
+        }
+
+        // Try object format
+        type tagAlias Tag
+        var tagObj tagAlias
+        if err := json.Unmarshal(data, &tagObj); err != nil {
+                return err
+        }
+        *t = Tag(tagObj)
+        return nil
 }
 
 // SyncMetadata contains metadata about workflow synchronization
@@ -56,13 +75,23 @@ type SyncMetadata struct {
 
 // ExecutionResult represents the result of a workflow execution
 type ExecutionResult struct {
-        ID         string                 `json:"id"`
-        WorkflowID string                 `json:"workflowId"`
-        Mode       string                 `json:"mode"`
-        Status     string                 `json:"status"`
-        StartedAt  time.Time             `json:"startedAt"`
-        StoppedAt  time.Time             `json:"stoppedAt"`
-        Data       map[string]interface{} `json:"data,omitempty"`
+        ID           string                 `json:"id"`
+        WorkflowID   string                 `json:"workflowId,omitempty"`
+        WorkflowName string                 `json:"workflowName,omitempty"`
+        Status       string                 `json:"status"`       // "success", "error", "running", "waiting"
+        StartedAt    time.Time              `json:"startedAt"`
+        StoppedAt    *time.Time             `json:"stoppedAt,omitempty"`
+        Mode         string                 `json:"mode"`         // "trigger", "manual", "retry"
+        Retries      int                    `json:"retries,omitempty"`
+        Data         map[string]interface{} `json:"data,omitempty"`
+        Error        *ExecutionError        `json:"error,omitempty"`
+}
+
+// ExecutionError represents an execution error
+type ExecutionError struct {
+        Message string `json:"message"`
+        Node    string `json:"node,omitempty"`
+        Stack   string `json:"stack,omitempty"`
 }
 
 // Connection represents a connection between nodes

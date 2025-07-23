@@ -24,6 +24,7 @@ type WorkflowWriter interface {
 type WorkflowExecutor interface {
         ExecuteWorkflow(ctx context.Context, id string) (*workflow.ExecutionResult, error)
         GetExecution(ctx context.Context, id string) (*workflow.ExecutionResult, error)
+        GetExecutions(ctx context.Context, workflowID string, status string, limit int) ([]*workflow.ExecutionResult, error)
 }
 
 // Client combines all workflow operations
