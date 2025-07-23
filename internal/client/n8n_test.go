@@ -2,207 +2,132 @@ package client
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/pmaojo/n8n-ops/internal/workflow"
 )
 
-// MockTransport implements HTTPTransport for testing
-type MockTransport struct {
-	responses map[string]*Response
-	requests  []*Request
-}
-
-func NewMockTransport() *MockTransport {
-	return &MockTransport{
-		responses: make(map[string]*Response),
-		requests:  make([]*Request, 0),
+// newTestClient creates a client backed by the provided handler.
+func newTestClient(t testing.TB, handler http.HandlerFunc) (Client, func()) {
+	srv := httptest.NewServer(handler)
+	c, err := New(srv.URL, "token", srv.Client())
+	if err != nil {
+		srv.Close()
+		t.Fatalf("failed to create client: %v", err)
 	}
+	return c, srv.Close
 }
 
-func (m *MockTransport) Do(req *Request) (*Response, error) {
-	m.requests = append(m.requests, req)
-
-	key := req.Method + " " + req.URL
-	if resp, exists := m.responses[key]; exists {
-		return resp, nil
+func TestNewValidation(t *testing.T) {
+	if _, err := New("", "k", nil); err == nil {
+		t.Error("expected error for empty baseURL")
 	}
-
-	// Default response
-	return &Response{
-		StatusCode: http.StatusOK,
-		Body:       []byte(`{}`),
-		Headers:    make(map[string]string),
-	}, nil
-}
-
-func (m *MockTransport) AddResponse(method, url string, statusCode int, body string) {
-	key := method + " " + url
-	m.responses[key] = &Response{
-		StatusCode: statusCode,
-		Body:       []byte(body),
-		Headers:    make(map[string]string),
+	if _, err := New("http://example.com", "", nil); err == nil {
+		t.Error("expected error for empty apiKey")
 	}
-}
-
-func (m *MockTransport) GetRequests() []*Request {
-	return m.requests
-}
-
-func TestNew(t *testing.T) {
-	tests := []struct {
-		name    string
-		baseURL string
-		apiKey  string
-		wantErr bool
-	}{
-		{
-			name:    "valid parameters",
-			baseURL: "https://api.example.com",
-			apiKey:  "test-key",
-			wantErr: false,
-		},
-		{
-			name:    "empty base URL",
-			baseURL: "",
-			apiKey:  "test-key",
-			wantErr: true,
-		},
-		{
-			name:    "empty API key",
-			baseURL: "https://api.example.com",
-			apiKey:  "",
-			wantErr: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			client, err := New(tt.baseURL, tt.apiKey, nil)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !tt.wantErr && client == nil {
-				t.Errorf("New() returned nil client")
-			}
-		})
+	if _, err := New("http://example.com", "k", nil); err != nil {
+		t.Errorf("unexpected error: %v", err)
 	}
 }
 
 func TestHealthCheck(t *testing.T) {
-	ctx := context.Background()
-
-	// Create client with short timeout for testing
-	client, err := New("https://test.example.com", "test-key", &http.Client{Timeout: 1 * time.Millisecond})
-	if err != nil {
-		t.Fatalf("Failed to create client: %v", err)
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/v1/workflows" {
+			http.NotFound(w, r)
+			return
+		}
+		if r.Header.Get("X-N8N-API-KEY") != "token" {
+			t.Errorf("missing api key header")
+		}
+		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 	}
 
-	// This will likely timeout, but tests the method signature
-	err = client.HealthCheck(ctx)
+	client, closeFn := newTestClient(t, handler)
+	defer closeFn()
 
-	// We expect an error due to timeout/invalid URL, but method should exist
-	if err == nil {
-		t.Errorf("Expected error due to invalid URL, but got no error")
+	if err := client.HealthCheck(context.Background()); err != nil {
+		t.Fatalf("health check failed: %v", err)
 	}
 }
 
 func TestGetWorkflows(t *testing.T) {
-	ctx := context.Background()
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			t.Errorf("unexpected method: %s", r.Method)
+		}
+		json.NewEncoder(w).Encode(map[string]any{
+			"data": []*workflow.Workflow{{ID: "1", Name: "test", Nodes: []workflow.Node{{Name: "start", Type: "start", Position: []float64{0, 0}}}}},
+		})
+	}
+	client, closeFn := newTestClient(t, handler)
+	defer closeFn()
 
-	// Create a minimal client for testing structure
-	client, err := New("https://test.example.com", "test-key", &http.Client{Timeout: 1 * time.Millisecond})
+	wfs, err := client.GetWorkflows(context.Background())
 	if err != nil {
-		t.Fatalf("Failed to create client: %v", err)
+		t.Fatalf("unexpected error: %v", err)
 	}
-
-	// This will likely timeout, but tests the method signature
-	workflows, err := client.GetWorkflows(ctx)
-
-	// We expect an error due to timeout/invalid URL, but method should exist
-	if workflows != nil && err == nil {
-		t.Errorf("Expected error due to invalid URL, but got workflows: %v", workflows)
+	if len(wfs) != 1 || wfs[0].ID != "1" {
+		t.Fatalf("unexpected workflows: %+v", wfs)
 	}
-
-	// Test that the method signature is correct
-	var _ []*workflow.Workflow = workflows // This should compile
 }
 
 func TestCreateWorkflow(t *testing.T) {
-	ctx := context.Background()
+	called := false
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			t.Errorf("unexpected method: %s", r.Method)
+		}
+		called = true
+		var wf workflow.Workflow
+		if err := json.NewDecoder(r.Body).Decode(&wf); err != nil {
+			t.Errorf("invalid body: %v", err)
+		}
+		wf.ID = "42"
+		json.NewEncoder(w).Encode(&wf)
+	}
+	client, closeFn := newTestClient(t, handler)
+	defer closeFn()
 
-	client, err := New("https://test.example.com", "test-key", &http.Client{Timeout: 1 * time.Millisecond})
+	res, err := client.CreateWorkflow(context.Background(), &workflow.Workflow{Name: "demo", Nodes: []workflow.Node{{Name: "start", Type: "start", Position: []float64{0, 0}}}})
 	if err != nil {
-		t.Fatalf("Failed to create client: %v", err)
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !called {
+		t.Fatal("handler not called")
+	}
+	if res.ID != "42" {
+		t.Fatalf("unexpected workflow ID: %s", res.ID)
 	}
 
-	wf := &workflow.Workflow{
-		Name:   "Test Workflow",
-		Active: false,
-		Nodes:  []workflow.Node{},
+	if _, err := client.CreateWorkflow(context.Background(), nil); err == nil {
+		t.Error("expected error for nil workflow")
 	}
-
-	// Test nil workflow
-	result, err := client.CreateWorkflow(ctx, nil)
-	if err == nil {
-		t.Errorf("Expected error for nil workflow")
-	}
-	if result != nil {
-		t.Errorf("Expected nil result for nil workflow")
-	}
-
-	// Test with valid workflow (will timeout, but tests signature)
-	result, err = client.CreateWorkflow(ctx, wf)
-	if err == nil {
-		t.Errorf("expected error due to timeout")
-	}
-
-	// We expect an error due to timeout, but method should exist
-	var _ *workflow.Workflow = result // This should compile
 }
 
 func TestErrorTypes(t *testing.T) {
-	// Test that our error types implement error interface
-	var _ error = ErrNotFound
-	var _ error = ErrUnauthorized
-	var _ error = ErrBadRequest
-	var _ error = ErrServerError
-
-	// Test APIError
-	apiErr := NewAPIError(404, "not found")
-	if apiErr.Code != 404 {
-		t.Errorf("Expected code 404, got %d", apiErr.Code)
+	apiErr := NewAPIError(http.StatusNotFound, "missing")
+	if !IsAPIError(apiErr, http.StatusNotFound) {
+		t.Error("IsAPIError should detect not found")
 	}
-
-	errStr := apiErr.Error()
-	if errStr == "" {
-		t.Errorf("APIError.Error() returned empty string")
+	if IsAPIError(apiErr, http.StatusOK) {
+		t.Error("IsAPIError should not match other codes")
 	}
-
-	// Test error checking functions
-	if !IsAPIError(apiErr, 404) {
-		t.Errorf("IsAPIError should return true for matching status code")
-	}
-
-	if IsAPIError(apiErr, 500) {
-		t.Errorf("IsAPIError should return false for non-matching status code")
+	if apiErr.Error() == "" {
+		t.Error("error string should not be empty")
 	}
 }
 
-// BenchmarkHealthCheck tests performance of health check
 func BenchmarkHealthCheck(b *testing.B) {
-	client, err := New("https://httpbin.org", "test-key", nil)
-	if err != nil {
-		b.Fatalf("Failed to create client: %v", err)
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 	}
-
+	c, closeFn := newTestClient(b, handler)
+	defer closeFn()
 	ctx := context.Background()
-
-	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		client.HealthCheck(ctx)
+		c.HealthCheck(ctx)
 	}
 }
