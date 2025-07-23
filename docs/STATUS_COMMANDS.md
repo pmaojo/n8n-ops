@@ -69,7 +69,7 @@ stages: [build, validate, test, deploy-dev, deploy-staging, deploy-production]
 build-cli:           # ✅ Compila n8n-ops binary
 validate-workflows:  # ✅ Valida archivos JSON
 test-cli-functions: # ✅ Tests básicos CLI
-unit-tests:        # ✅ Pruebas unitarias Go
+unit-tests:        # ✅ Pruebas unitarias Go (cache GOMODCACHE)
 deploy-development: # ⚠️ Preparado, requiere N8N_DEV_API_KEY
 deploy-staging:     # ⚠️ Preparado, requiere N8N_STAGING_API_KEY
 deploy-production:  # ⚠️ Preparado, requiere N8N_PROD_API_KEY
