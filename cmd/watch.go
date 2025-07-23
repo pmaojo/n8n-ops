@@ -42,7 +42,7 @@ func init() {
 }
 
 func runWatch(cmd *cobra.Command, args []string) error {
-	logger := logrus.WithFields(logrus.Fields{
+	logEntry := logger.WithFields(logrus.Fields{
 		"command": "watch",
 		"env":     environment,
 	})
@@ -64,7 +64,7 @@ func runWatch(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create n8n client: %w", err)
 	}
 
-	svc := iwatch.NewService(n8nClient, cm, logger, environment)
+	svc := iwatch.NewService(n8nClient, cm, logEntry, environment)
 
 	return svc.Watch(context.Background(), iwatch.Options{
 		Interval:   watchInterval,

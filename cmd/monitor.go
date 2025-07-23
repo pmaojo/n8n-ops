@@ -14,6 +14,7 @@ import (
 	"github.com/pmaojo/n8n-ops/internal/client"
 	"github.com/pmaojo/n8n-ops/internal/issues"
 	"github.com/pmaojo/n8n-ops/internal/monitoring"
+	"github.com/pmaojo/n8n-ops/internal/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -52,10 +53,10 @@ func init() {
 }
 
 func runMonitor(cmd *cobra.Command, args []string) error {
-	logger := logrus.New()
-	logger.SetLevel(logrus.InfoLevel)
+	logger := utils.NewLogger()
+	utils.SetLogLevel(logger, "info")
 	if verbose {
-		logger.SetLevel(logrus.DebugLevel)
+		utils.SetLogLevel(logger, "debug")
 	}
 
 	logEntry := logger.WithFields(logrus.Fields{
