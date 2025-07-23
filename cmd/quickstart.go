@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/pmaojo/n8n-ops/internal/ascii"
+	"github.com/pmaojo/n8n-ops/internal/tutorial"
 	"github.com/spf13/cobra"
 )
 
@@ -43,7 +44,7 @@ func runQuickstart(cmd *cobra.Command, args []string) {
 	fmt.Println(ascii.Banner("quickstart"))
 
 	// Check if config exists
-	if !configExists() {
+	if !tutorial.ConfigExists() {
 		fmt.Printf("%s\n", ascii.ErrorMessage("No configuration found. Let's set up your environment first."))
 		fmt.Println("\nWould you like to run the onboarding wizard now? (y/n)")
 		var response string
