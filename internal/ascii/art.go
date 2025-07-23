@@ -135,11 +135,11 @@ func WorkflowInfo(name, status, env string) string {
         
         return fmt.Sprintf(`%s
     ┌─────────────────────────────────────────────────────────────────┐
-    │  %sWorkflow: %s%s%-20s%s                                       │
-    │  %sStatus:   %s%s%-20s%s                                       │
-    │  %sEnv:      %s%s%-20s%s                                       │
+    │  %sWorkflow: %s%-20s%s                                         │
+    │  %sStatus:   %s%-20s%s                                         │
+    │  %sEnv:      %s%-20s%s                                         │
     └─────────────────────────────────────────────────────────────────┘%s
-`, Dim, Cyan, Bold, name, Dim, Cyan, statusColor, status, Dim, Cyan, envColor, env, Dim, Reset)
+`, Dim, Cyan, name, Dim, Cyan, statusColor, status, Dim, Cyan, envColor, env, Dim, Reset)
 }
 
 // CommandHelp creates futuristic help display
@@ -210,5 +210,5 @@ func WelcomeScreen() string {
 ╚══════════════════════════════════════════════════════════════════════╝%s
 
 %sType '%sn8n-ops --help%s' to begin your journey...%s
-`, MatrixEffect(), N8nLogo(), Purple, Bold, Cyan, Purple, Green, Purple, Blue, Purple, Yellow, Purple, Red, Purple, Purple, Reset, Dim, Cyan, Bold, Dim, Reset)
+`, MatrixEffect(), N8nLogo(), Purple, Bold, Cyan, Purple, Green, Purple, Blue, Purple, Yellow, Purple, Red, Purple, Reset, Dim, Cyan, Bold, Dim, Reset)
 }
