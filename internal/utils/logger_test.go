@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/sirupsen/logrus"
 )
 
 func countOpenFDsFor(path string) (int, error) {
@@ -33,7 +35,9 @@ func TestSetLogFileClosesPrevious(t *testing.T) {
 	file1 := filepath.Join(dir, "first.log")
 	file2 := filepath.Join(dir, "second.log")
 
-	if err := SetLogFile(file1); err != nil {
+	logger := logrus.New()
+
+	if err := SetLogFile(logger, file1); err != nil {
 		t.Fatalf("set first log file: %v", err)
 	}
 	c, err := countOpenFDsFor(file1)
@@ -41,7 +45,7 @@ func TestSetLogFileClosesPrevious(t *testing.T) {
 		t.Fatalf("expected 1 open fd for first file, got %d (err=%v)", c, err)
 	}
 
-	if err := SetLogFile(file2); err != nil {
+	if err := SetLogFile(logger, file2); err != nil {
 		t.Fatalf("set second log file: %v", err)
 	}
 	c1, _ := countOpenFDsFor(file1)

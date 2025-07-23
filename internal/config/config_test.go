@@ -37,7 +37,9 @@ func TestInitConfigLoadsConfiguration(t *testing.T) {
 	prepareConfig(cfgYAML)
 	t.Setenv("TEST_KEY", "secret")
 
-	InitConfig()
+	if err := InitConfig(); err != nil {
+		t.Fatalf("init config: %v", err)
+	}
 
 	cfg := GetConfig()
 	if cfg.Defaults.Environment != "test" {
@@ -64,7 +66,9 @@ func TestInitConfigLoadsConfiguration(t *testing.T) {
 
 func TestGetEnvironmentConfigErrors(t *testing.T) {
 	prepareConfig("environments: {}")
-	InitConfig()
+	if err := InitConfig(); err != nil {
+		t.Fatalf("init config: %v", err)
+	}
 	if _, err := GetEnvironmentConfig("missing"); err == nil {
 		t.Error("expected error for unknown environment")
 	}
