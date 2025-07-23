@@ -52,7 +52,7 @@ Examples:
 			return
 		}
 		if daemonMode {
-			runDaemonMode()
+			runDaemonMode(environment)
 			return
 		}
 		cmd.Help()
