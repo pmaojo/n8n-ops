@@ -45,11 +45,9 @@ type LoggingConfig struct {
 	File   string `mapstructure:"file"`
 }
 
-var globalConfig *Config
-
-// InitConfig initializes the global configuration
-func InitConfig() {
-	globalConfig = &Config{}
+// NewConfig creates and initializes a new Config object
+func NewConfig() (*Config, error) {
+	config := &Config{}
 
 	// Set defaults
 	viper.SetDefault("defaults.environment", "development")
@@ -61,28 +59,39 @@ func InitConfig() {
 	viper.SetDefault("logging.format", "text")
 
 	// Unmarshal configuration
-	if err := viper.Unmarshal(globalConfig); err != nil {
-		fmt.Printf("Warning: Failed to parse configuration: %v\n", err)
-		return
+	if err := viper.Unmarshal(config); err != nil {
+		return nil, fmt.Errorf("failed to parse configuration: %w", err)
 	}
 
 	// Resolve API keys from environment variables
-	for name, env := range globalConfig.Environments {
+	for name, env := range config.Environments {
 		if env.APIKeyEnv != "" {
 			apiKey := os.Getenv(env.APIKeyEnv)
 			if apiKey == "" {
 				fmt.Printf("Warning: Environment variable %s not set for environment %s\n", env.APIKeyEnv, name)
 			}
 			env.APIKey = apiKey
-			globalConfig.Environments[name] = env
+			config.Environments[name] = env
 		}
 	}
+	return config, nil
 }
 
-// GetConfig returns the global configuration
+// GetConfig is a placeholder and should be removed or refactored
+// to not depend on a global instance.
+var globalConfig *Config
+
 func GetConfig() *Config {
 	if globalConfig == nil {
-		InitConfig()
+		// This is not ideal, but serves as a temporary bridge
+		// during refactoring.
+		cfg, err := NewConfig()
+		if err != nil {
+			fmt.Printf("Error initializing config: %v", err)
+			// Return an empty config to avoid nil pointer panics
+			return &Config{}
+		}
+		globalConfig = cfg
 	}
 	return globalConfig
 }

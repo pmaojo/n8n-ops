@@ -10,16 +10,11 @@ import (
 )
 
 var (
-	globalLogger  *logrus.Logger
 	logFileHandle *os.File
 )
 
 // NewLogger creates and configures a new logger instance
 func NewLogger() *logrus.Logger {
-	if globalLogger != nil {
-		return globalLogger
-	}
-
 	logger := logrus.New()
 
 	// Default configuration
@@ -32,8 +27,6 @@ func NewLogger() *logrus.Logger {
 	logger.SetLevel(logrus.InfoLevel)
 	logger.SetOutput(os.Stdout)
 
-	globalLogger = logger
-
 	// Configure from environment or config if available
 	configureLogger(logger)
 
@@ -41,40 +34,32 @@ func NewLogger() *logrus.Logger {
 }
 
 // SetLogLevel sets the logging level
-func SetLogLevel(level string) {
-	if globalLogger == nil {
-		NewLogger()
-	}
-
+func SetLogLevel(logger *logrus.Logger, level string) {
 	switch level {
 	case "debug":
-		globalLogger.SetLevel(logrus.DebugLevel)
+		logger.SetLevel(logrus.DebugLevel)
 	case "info":
-		globalLogger.SetLevel(logrus.InfoLevel)
+		logger.SetLevel(logrus.InfoLevel)
 	case "warn":
-		globalLogger.SetLevel(logrus.WarnLevel)
+		logger.SetLevel(logrus.WarnLevel)
 	case "error":
-		globalLogger.SetLevel(logrus.ErrorLevel)
+		logger.SetLevel(logrus.ErrorLevel)
 	case "fatal":
-		globalLogger.SetLevel(logrus.FatalLevel)
+		logger.SetLevel(logrus.FatalLevel)
 	default:
-		globalLogger.SetLevel(logrus.InfoLevel)
+		logger.SetLevel(logrus.InfoLevel)
 	}
 }
 
 // SetLogFormat sets the logging format
-func SetLogFormat(format string) {
-	if globalLogger == nil {
-		NewLogger()
-	}
-
+func SetLogFormat(logger *logrus.Logger, format string) {
 	switch format {
 	case "json":
-		globalLogger.SetFormatter(&logrus.JSONFormatter{
+		logger.SetFormatter(&logrus.JSONFormatter{
 			TimestampFormat: time.RFC3339,
 		})
 	case "text":
-		globalLogger.SetFormatter(&logrus.TextFormatter{
+		logger.SetFormatter(&logrus.TextFormatter{
 			FullTimestamp:   true,
 			TimestampFormat: "2006-01-02 15:04:05",
 			ForceColors:     true,
@@ -85,11 +70,7 @@ func SetLogFormat(format string) {
 }
 
 // SetLogFile sets the log output file
-func SetLogFile(filename string) error {
-	if globalLogger == nil {
-		NewLogger()
-	}
-
+func SetLogFile(logger *logrus.Logger, filename string) error {
 	// Create log directory if it doesn't exist
 	logDir := filepath.Dir(filename)
 	if err := os.MkdirAll(logDir, 0755); err != nil {
@@ -111,7 +92,7 @@ func SetLogFile(filename string) error {
 
 	// Set output to both file and stdout
 	multiWriter := io.MultiWriter(os.Stdout, file)
-	globalLogger.SetOutput(multiWriter)
+	logger.SetOutput(multiWriter)
 
 	return nil
 }
@@ -130,39 +111,29 @@ func CloseLogFile() error {
 func configureLogger(logger *logrus.Logger) {
 	// Check for log level in environment
 	if level := os.Getenv("LOG_LEVEL"); level != "" {
-		switch level {
-		case "debug":
-			logger.SetLevel(logrus.DebugLevel)
-		case "info":
-			logger.SetLevel(logrus.InfoLevel)
-		case "warn":
-			logger.SetLevel(logrus.WarnLevel)
-		case "error":
-			logger.SetLevel(logrus.ErrorLevel)
-		case "fatal":
-			logger.SetLevel(logrus.FatalLevel)
-		}
+		SetLogLevel(logger, level)
 	}
 
 	// Check for log format in environment
 	if format := os.Getenv("LOG_FORMAT"); format == "json" {
-		logger.SetFormatter(&logrus.JSONFormatter{
-			TimestampFormat: time.RFC3339,
-		})
+		SetLogFormat(logger, "json")
 	}
 
 	// Check for log file in environment
 	if logFile := os.Getenv("LOG_FILE"); logFile != "" {
-		SetLogFile(logFile)
+		SetLogFile(logger, logFile)
 	} else {
 		CloseLogFile()
 	}
 }
 
-// GetLogger returns the global logger instance
+// GetLogger is a placeholder for refactoring.
+// It is recommended to pass logger instances instead of using a global logger.
+var globalLogger *logrus.Logger
+
 func GetLogger() *logrus.Logger {
 	if globalLogger == nil {
-		return NewLogger()
+		globalLogger = NewLogger()
 	}
 	return globalLogger
 }
