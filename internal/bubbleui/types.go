@@ -1,10 +1,13 @@
 package bubbleui
 
+import "time"
+
 // WorkflowStatus describes minimal workflow data for display.
 type WorkflowStatus struct {
-	ID     string
-	Name   string
-	Status string
+	ID        string
+	Name      string
+	Status    string
+	UpdatedAt time.Time
 }
 
 // Metrics holds dashboard metric data.

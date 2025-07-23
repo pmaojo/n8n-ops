@@ -48,14 +48,15 @@ type model struct {
 	width  int
 	height int
 
-	workflows []WorkflowStatus
-	metrics   Metrics
-	events    []string
-	summary   Summary
+	workflows     []WorkflowStatus
+	metrics       Metrics
+	events        []string
+	summary       Summary
+	selectedIndex int
 }
 
 func newModel(c client.WorkflowReader, refresh time.Duration) model {
-	return model{client: c, refresh: refresh, start: time.Now()}
+	return model{client: c, refresh: refresh, start: time.Now(), selectedIndex: 0}
 }
 
 func (m model) Init() tea.Cmd {
@@ -68,6 +69,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "q", "ctrl+c":
 			return m, tea.Quit
+		case "up":
+			if m.selectedIndex > 0 {
+				m.selectedIndex--
+			}
+		case "down":
+			if m.selectedIndex < len(m.workflows)-1 {
+				m.selectedIndex++
+			}
 		}
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -89,7 +98,7 @@ func (m *model) refreshData() {
 			status = "active"
 			active++
 		}
-		statuses = append(statuses, WorkflowStatus{ID: wf.ID, Name: wf.Name, Status: status})
+		statuses = append(statuses, WorkflowStatus{ID: wf.ID, Name: wf.Name, Status: status, UpdatedAt: wf.UpdatedAt})
 	}
 	m.workflows = statuses
 	m.metrics = Metrics{
@@ -124,13 +133,29 @@ func (m model) View() string {
 	gaugeStr := gauge.Render("[" + bar + "] " + label)
 
 	var b strings.Builder
-	for _, r := range rows {
-		b.WriteString(fmt.Sprintf("%-8s %-30s %-10s\n", r[0], r[1], r[2]))
+	highlight := lipgloss.NewStyle().Foreground(lipgloss.Color("0")).Background(lipgloss.Color("2"))
+	for i, r := range rows {
+		row := fmt.Sprintf("%-8s %-30s %-10s", r[0], r[1], r[2])
+		if i == m.selectedIndex+1 { // +1 because rows include header
+			row = highlight.Render(row)
+		}
+		b.WriteString(row + "\n")
 	}
-
-	return lipgloss.JoinVertical(lipgloss.Left,
+	sections := []string{
 		lipgloss.NewStyle().Bold(true).Render("Workflows"),
 		b.String(),
+	}
+
+	if len(m.workflows) > 0 && m.selectedIndex < len(m.workflows) {
+		wf := m.workflows[m.selectedIndex]
+		details := fmt.Sprintf("Name: %s\nStatus: %s\nLast Updated: %s", wf.Name, wf.Status, wf.UpdatedAt.Format(time.RFC3339))
+		sections = append(sections,
+			lipgloss.NewStyle().Bold(true).Render("Details"),
+			details,
+		)
+	}
+
+	sections = append(sections,
 		lipgloss.NewStyle().Bold(true).Render("Metrics"),
 		metricsText(m.metrics),
 		lipgloss.NewStyle().Bold(true).Render("Active Workflows"),
@@ -138,4 +163,6 @@ func (m model) View() string {
 		lipgloss.NewStyle().Bold(true).Render("Events"),
 		strings.Join(m.events, "\n"),
 	)
+
+	return lipgloss.JoinVertical(lipgloss.Left, sections...)
 }
