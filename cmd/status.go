@@ -70,8 +70,12 @@ func runUncommittedCheck() error {
 	checker := git.NewGitStatusChecker(".", nil)
 
 	// Show warning if uncommitted changes exist
-	if err := checker.WarnIfUncommittedChanges(); err != nil {
+	warning, err := checker.WarnIfUncommittedChanges()
+	if err != nil {
 		return fmt.Errorf("failed to check Git status: %w", err)
+	}
+	if warning != "" {
+		fmt.Print(warning)
 	}
 
 	// Get detailed summary

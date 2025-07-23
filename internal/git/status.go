@@ -223,15 +223,16 @@ func (gsc *GitStatusChecker) GetUncommittedWorkflowSummary() (string, error) {
 }
 
 // WarnIfUncommittedChanges prints a warning if there are uncommitted workflow changes
-func (gsc *GitStatusChecker) WarnIfUncommittedChanges() error {
+func (gsc *GitStatusChecker) WarnIfUncommittedChanges() (string, error) {
 	status, err := gsc.GetStatus()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if len(status.UncommittedWorkflows) > 0 {
-		fmt.Printf("\n🚨 WARNING: Uncommitted Workflow Changes Detected!\n")
-		fmt.Printf("=====================================\n\n")
+		var out strings.Builder
+		out.WriteString("\n🚨 WARNING: Uncommitted Workflow Changes Detected!\n")
+		out.WriteString("=====================================\n\n")
 
 		for _, workflow := range status.UncommittedWorkflows {
 			var statusColor string
@@ -248,58 +249,61 @@ func (gsc *GitStatusChecker) WarnIfUncommittedChanges() error {
 				statusColor = "\033[0m" // Reset
 			}
 
-			fmt.Printf("%s• %s (%s)\033[0m\n", statusColor, workflow.WorkflowName, workflow.Status)
-			fmt.Printf("  Environment: %s | File: %s\n", workflow.Environment, workflow.FilePath)
+			out.WriteString(fmt.Sprintf("%s• %s (%s)\033[0m\n", statusColor, workflow.WorkflowName, workflow.Status))
+			out.WriteString(fmt.Sprintf("  Environment: %s | File: %s\n", workflow.Environment, workflow.FilePath))
 		}
 
-		fmt.Printf("\n💡 Recommendation:\n")
-		fmt.Printf("  git add .\n")
-		fmt.Printf("  git commit -m \"Update %d workflow(s)\"\n", len(status.UncommittedWorkflows))
-		fmt.Printf("  git push origin %s\n\n", status.CurrentBranch)
+		out.WriteString("\n💡 Recommendation:\n")
+		out.WriteString("  git add .\n")
+		out.WriteString(fmt.Sprintf("  git commit -m \"Update %d workflow(s)\"\n", len(status.UncommittedWorkflows)))
+		out.WriteString(fmt.Sprintf("  git push origin %s\n\n", status.CurrentBranch))
+
+		return out.String(), nil
 	}
 
-	return nil
+	return "", nil
 }
 
 // CheckBeforeSync checks for uncommitted changes before sync operations
-func (gsc *GitStatusChecker) CheckBeforeSync() error {
+func (gsc *GitStatusChecker) CheckBeforeSync() (string, error) {
 	status, err := gsc.GetStatus()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if len(status.UncommittedWorkflows) > 0 {
-		fmt.Printf("⚠️  Found %d uncommitted workflow changes\n", len(status.UncommittedWorkflows))
-		fmt.Printf("Sync operations may overwrite local changes\n\n")
+		var out strings.Builder
+		out.WriteString(fmt.Sprintf("⚠️  Found %d uncommitted workflow changes\n", len(status.UncommittedWorkflows)))
+		out.WriteString("Sync operations may overwrite local changes\n\n")
 
 		for _, workflow := range status.UncommittedWorkflows {
-			fmt.Printf("• %s (%s) - %s\n", workflow.WorkflowName, workflow.Status, workflow.Environment)
+			out.WriteString(fmt.Sprintf("• %s (%s) - %s\n", workflow.WorkflowName, workflow.Status, workflow.Environment))
 		}
 
-		fmt.Printf("\nRecommendation: Commit your changes first:\n")
-		fmt.Printf("  git add . && git commit -m \"Save workflow changes\"\n\n")
+		out.WriteString("\nRecommendation: Commit your changes first:\n")
+		out.WriteString("  git add . && git commit -m \"Save workflow changes\"\n\n")
 
-		return fmt.Errorf("uncommitted workflow changes detected - commit before syncing")
+		return out.String(), fmt.Errorf("uncommitted workflow changes detected - commit before syncing")
 	}
 
-	return nil
+	return "", nil
 }
 
 // AutoCommitWorkflows automatically commits workflow changes if enabled
-func (gsc *GitStatusChecker) AutoCommitWorkflows(message string) error {
+func (gsc *GitStatusChecker) AutoCommitWorkflows(message string) (string, error) {
 	status, err := gsc.GetStatus()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if len(status.UncommittedWorkflows) == 0 {
-		return nil // Nothing to commit
+		return "", nil // Nothing to commit
 	}
 
 	// Add workflow files
 	for _, workflow := range status.UncommittedWorkflows {
 		if err := gsc.executor.Add(workflow.FilePath); err != nil {
-			return fmt.Errorf("failed to add %s: %w", workflow.FilePath, err)
+			return "", fmt.Errorf("failed to add %s: %w", workflow.FilePath, err)
 		}
 	}
 
@@ -309,9 +313,8 @@ func (gsc *GitStatusChecker) AutoCommitWorkflows(message string) error {
 	}
 
 	if err := gsc.executor.Commit(message); err != nil {
-		return fmt.Errorf("failed to commit: %w", err)
+		return "", fmt.Errorf("failed to commit: %w", err)
 	}
 
-	fmt.Printf("✅ Auto-committed %d workflow changes\n", len(status.UncommittedWorkflows))
-	return nil
+	return fmt.Sprintf("✅ Auto-committed %d workflow changes\n", len(status.UncommittedWorkflows)), nil
 }

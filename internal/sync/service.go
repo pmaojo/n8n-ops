@@ -50,7 +50,11 @@ func (s *Service) Sync(ctx context.Context, opts Options) error {
 	}
 
 	if !opts.Force {
-		if err := s.GitChecker.CheckBeforeSync(); err != nil {
+		msg, err := s.GitChecker.CheckBeforeSync()
+		if msg != "" {
+			s.Logger.Warn(msg)
+		}
+		if err != nil {
 			s.Logger.Error("sync blocked", "error", err)
 			return fmt.Errorf("pre-sync git check failed: %w", err)
 		}
