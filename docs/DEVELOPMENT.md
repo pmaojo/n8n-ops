@@ -147,12 +147,15 @@ variables:
   image: golang:${GO_VERSION}
   dependencies:
     - build-cli
+  variables:
+    TARGET_ENV: $CI_ENVIRONMENT_NAME
   script:
-    - go build -o n8n-ops main.go
-    - ./n8n-ops validate ./workflows/
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH'
+    - ./n8n-ops sync --env $TARGET_ENV --verbose
+    - ./n8n-ops validate ./workflows/$TARGET_ENV/
+    - ./n8n-ops deploy --env $TARGET_ENV --dry-run --verbose
+    - ./n8n-ops deploy --env $TARGET_ENV --verbose
+  environment:
+    url: $N8N_URL
 
 # Test CLI functions
 test-cli-functions:
@@ -186,12 +189,10 @@ deploy-development:
   extends: .deploy_template
   stage: deploy-dev
   variables:
-    TARGET_ENV: development
     N8N_API_KEY: ${N8N_DEV_API_KEY}
     N8N_URL: ${N8N_DEV_URL}
   environment:
     name: development
-    url: $N8N_DEV_URL
   rules:
     - if: '$CI_COMMIT_BRANCH == "develop"'
 
@@ -200,12 +201,10 @@ deploy-staging:
   extends: .deploy_template
   stage: deploy-staging
   variables:
-    TARGET_ENV: staging
     N8N_API_KEY: ${N8N_STAGING_API_KEY}
     N8N_URL: ${N8N_STAGING_URL}
   environment:
     name: staging
-    url: $N8N_STAGING_URL
   when: manual
   rules:
     - if: '$CI_COMMIT_BRANCH == "staging"'
@@ -215,14 +214,11 @@ deploy-production:
   extends: .deploy_template
   stage: deploy-production
   variables:
-    TARGET_ENV: production
     N8N_API_KEY: ${N8N_PROD_API_KEY}
     N8N_URL: ${N8N_PROD_URL}
   environment:
     name: production
-    url: $N8N_PROD_URL
   when: manual
-  allow_failure: false
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 ```

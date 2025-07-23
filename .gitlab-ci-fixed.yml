@@ -18,6 +18,8 @@ variables:
   image: golang:${GO_VERSION}
   dependencies:
     - build-cli
+  variables:
+    TARGET_ENV: $CI_ENVIRONMENT_NAME
   script:
     - echo "Syncing workflows from $TARGET_ENV n8n instance..."
     - ./${CLI_BINARY} sync --env $TARGET_ENV --verbose
@@ -28,6 +30,8 @@ variables:
     - echo "Deploying workflows to $TARGET_ENV..."
     - ./${CLI_BINARY} deploy --env $TARGET_ENV --verbose
     - echo "$TARGET_ENV deployment completed"
+  environment:
+    url: $N8N_URL
 
 # Build the CLI tool
 build-cli:
@@ -82,12 +86,10 @@ deploy-development:
   extends: .deploy_template
   stage: deploy-dev
   variables:
-    TARGET_ENV: development
     N8N_API_KEY: ${N8N_DEV_API_KEY}
     N8N_URL: ${N8N_DEV_URL}
   environment:
     name: development
-    url: $N8N_DEV_URL
   rules:
     - if: '$CI_COMMIT_BRANCH == "develop"'
 
@@ -96,14 +98,11 @@ deploy-staging:
   extends: .deploy_template
   stage: deploy-staging
   variables:
-    TARGET_ENV: staging
     N8N_API_KEY: ${N8N_STAGING_API_KEY}
     N8N_URL: ${N8N_STAGING_URL}
   environment:
     name: staging
-    url: $N8N_STAGING_URL
   when: manual
-  allow_failure: false
   rules:
     - if: '$CI_COMMIT_BRANCH == "staging"'
 
@@ -112,14 +111,11 @@ deploy-production:
   extends: .deploy_template
   stage: deploy-production
   variables:
-    TARGET_ENV: production
     N8N_API_KEY: ${N8N_PROD_API_KEY}
     N8N_URL: ${N8N_PROD_URL}
   environment:
     name: production
-    url: $N8N_PROD_URL
   when: manual
-  allow_failure: false
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
@@ -128,14 +124,11 @@ rollback-production:
   extends: .deploy_template
   stage: deploy-production
   variables:
-    TARGET_ENV: production
     N8N_API_KEY: ${N8N_PROD_API_KEY}
     N8N_URL: ${N8N_PROD_URL}
   environment:
     name: production
-    url: $N8N_PROD_URL
   when: manual
-  allow_failure: false
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
