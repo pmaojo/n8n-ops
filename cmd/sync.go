@@ -14,6 +14,7 @@ import (
 
 	"github.com/pmaojo/n8n-ops/internal/client"
 	"github.com/pmaojo/n8n-ops/internal/git"
+	"github.com/pmaojo/n8n-ops/internal/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -141,7 +142,7 @@ func runSync(cmd *cobra.Command, args []string) error {
 	syncedCount := 0
 	for _, workflow := range workflows {
 		// Generate filename
-		filename := fmt.Sprintf("%s_%s.json", sanitizeFilename(workflow.Name), workflow.ID)
+		filename := fmt.Sprintf("%s_%s.json", utils.SanitizeFilename(workflow.Name), workflow.ID)
 		filepath := filepath.Join(outputDir, filename)
 
 		// Add sync metadata
@@ -192,19 +193,6 @@ func runSync(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("✅ Sync completed: %d workflows synced to %s\n", syncedCount, outputDir)
 	return nil
-}
-
-func sanitizeFilename(name string) string {
-	// Replace spaces and special characters with underscores
-	result := ""
-	for _, char := range name {
-		if (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || (char >= '0' && char <= '9') {
-			result += string(char)
-		} else {
-			result += "_"
-		}
-	}
-	return result
 }
 
 func writeWorkflowFile(data interface{}, filepath string) error {
