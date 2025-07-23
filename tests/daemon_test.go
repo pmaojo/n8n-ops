@@ -1,27 +1,27 @@
 package tests
 
 import (
-        "bytes"
-        "encoding/json"
-        "fmt"
-        "io"
-        "net/http"
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
-        "testing"
-        "time"
+	"testing"
+	"time"
 
-        "github.com/stretchr/testify/assert"
-        "github.com/stretchr/testify/require"
-        "github.com/pmaojo/n8n-ops/internal/testutil"
+	"github.com/pmaojo/n8n-ops/internal/testutil"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var stopServer func()
 
 func TestMain(m *testing.M) {
 	var err error
-        stopServer, err = testutil.StartMockServer()
+	stopServer, err = testutil.StartMockServer()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
