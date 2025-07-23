@@ -120,3 +120,4 @@ func OnboardingNextSteps() string {
    Cyan, Green,
    Reset)
 }
+

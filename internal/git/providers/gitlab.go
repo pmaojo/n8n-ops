@@ -99,10 +99,10 @@ func (g *GitLabProvider) GetCurrentUser() (*User, error) {
 	}
 
 	var gitlabUser struct {
-		ID       int    `json:"id"`
-		Username string `json:"username"`
-		Email    string `json:"email"`
-		Name     string `json:"name"`
+		ID        int    `json:"id"`
+		Username  string `json:"username"`
+		Email     string `json:"email"`
+		Name      string `json:"name"`
 		AvatarURL string `json:"avatar_url"`
 	}
 
@@ -144,17 +144,17 @@ func (g *GitLabProvider) GetRepository(repoID string) (*Repository, error) {
 	}
 
 	var gitlabProject struct {
-		ID          int    `json:"id"`
-		Name        string `json:"name"`
-		Path        string `json:"path"`
-		PathWithNamespace string `json:"path_with_namespace"`
-		Description string `json:"description"`
-		WebURL      string `json:"web_url"`
-		HTTPURLToRepo string `json:"http_url_to_repo"`
-		DefaultBranch string `json:"default_branch"`
-		Visibility    string `json:"visibility"`
-		CreatedAt     time.Time `json:"created_at"`
-		LastActivityAt time.Time `json:"last_activity_at"`
+		ID                int       `json:"id"`
+		Name              string    `json:"name"`
+		Path              string    `json:"path"`
+		PathWithNamespace string    `json:"path_with_namespace"`
+		Description       string    `json:"description"`
+		WebURL            string    `json:"web_url"`
+		HTTPURLToRepo     string    `json:"http_url_to_repo"`
+		DefaultBranch     string    `json:"default_branch"`
+		Visibility        string    `json:"visibility"`
+		CreatedAt         time.Time `json:"created_at"`
+		LastActivityAt    time.Time `json:"last_activity_at"`
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&gitlabProject); err != nil {
@@ -162,16 +162,16 @@ func (g *GitLabProvider) GetRepository(repoID string) (*Repository, error) {
 	}
 
 	return &Repository{
-		ID:          strconv.Itoa(gitlabProject.ID),
-		Name:        gitlabProject.Name,
-		FullName:    gitlabProject.PathWithNamespace,
-		Description: gitlabProject.Description,
-		WebURL:      gitlabProject.WebURL,
-		CloneURL:    gitlabProject.HTTPURLToRepo,
+		ID:            strconv.Itoa(gitlabProject.ID),
+		Name:          gitlabProject.Name,
+		FullName:      gitlabProject.PathWithNamespace,
+		Description:   gitlabProject.Description,
+		WebURL:        gitlabProject.WebURL,
+		CloneURL:      gitlabProject.HTTPURLToRepo,
 		DefaultBranch: gitlabProject.DefaultBranch,
-		Private:     gitlabProject.Visibility == "private",
-		CreatedAt:   gitlabProject.CreatedAt,
-		UpdatedAt:   gitlabProject.LastActivityAt,
+		Private:       gitlabProject.Visibility == "private",
+		CreatedAt:     gitlabProject.CreatedAt,
+		UpdatedAt:     gitlabProject.LastActivityAt,
 	}, nil
 }
 
@@ -196,16 +196,16 @@ func (g *GitLabProvider) ListRepositories() ([]*Repository, error) {
 	}
 
 	var gitlabProjects []struct {
-		ID          int    `json:"id"`
-		Name        string `json:"name"`
-		PathWithNamespace string `json:"path_with_namespace"`
-		Description string `json:"description"`
-		WebURL      string `json:"web_url"`
-		HTTPURLToRepo string `json:"http_url_to_repo"`
-		DefaultBranch string `json:"default_branch"`
-		Visibility    string `json:"visibility"`
-		CreatedAt     time.Time `json:"created_at"`
-		LastActivityAt time.Time `json:"last_activity_at"`
+		ID                int       `json:"id"`
+		Name              string    `json:"name"`
+		PathWithNamespace string    `json:"path_with_namespace"`
+		Description       string    `json:"description"`
+		WebURL            string    `json:"web_url"`
+		HTTPURLToRepo     string    `json:"http_url_to_repo"`
+		DefaultBranch     string    `json:"default_branch"`
+		Visibility        string    `json:"visibility"`
+		CreatedAt         time.Time `json:"created_at"`
+		LastActivityAt    time.Time `json:"last_activity_at"`
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&gitlabProjects); err != nil {
@@ -215,16 +215,16 @@ func (g *GitLabProvider) ListRepositories() ([]*Repository, error) {
 	repositories := make([]*Repository, len(gitlabProjects))
 	for i, project := range gitlabProjects {
 		repositories[i] = &Repository{
-			ID:          strconv.Itoa(project.ID),
-			Name:        project.Name,
-			FullName:    project.PathWithNamespace,
-			Description: project.Description,
-			WebURL:      project.WebURL,
-			CloneURL:    project.HTTPURLToRepo,
+			ID:            strconv.Itoa(project.ID),
+			Name:          project.Name,
+			FullName:      project.PathWithNamespace,
+			Description:   project.Description,
+			WebURL:        project.WebURL,
+			CloneURL:      project.HTTPURLToRepo,
 			DefaultBranch: project.DefaultBranch,
-			Private:     project.Visibility == "private",
-			CreatedAt:   project.CreatedAt,
-			UpdatedAt:   project.LastActivityAt,
+			Private:       project.Visibility == "private",
+			CreatedAt:     project.CreatedAt,
+			UpdatedAt:     project.LastActivityAt,
 		}
 	}
 
@@ -262,14 +262,14 @@ func (g *GitLabProvider) GetCommits(repoID, branch string, limit int) ([]*Commit
 	}
 
 	var gitlabCommits []struct {
-		ID         string    `json:"id"`
-		ShortID    string    `json:"short_id"`
-		Title      string    `json:"title"`
-		Message    string    `json:"message"`
-		AuthorName string    `json:"author_name"`
-		AuthorEmail string   `json:"author_email"`
-		CreatedAt  time.Time `json:"created_at"`
-		WebURL     string    `json:"web_url"`
+		ID          string    `json:"id"`
+		ShortID     string    `json:"short_id"`
+		Title       string    `json:"title"`
+		Message     string    `json:"message"`
+		AuthorName  string    `json:"author_name"`
+		AuthorEmail string    `json:"author_email"`
+		CreatedAt   time.Time `json:"created_at"`
+		WebURL      string    `json:"web_url"`
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&gitlabCommits); err != nil {
@@ -318,12 +318,12 @@ func (g *GitLabProvider) GetCommit(repoID, commitSHA string) (*Commit, error) {
 	}
 
 	var gitlabCommit struct {
-		ID         string    `json:"id"`
-		Message    string    `json:"message"`
-		AuthorName string    `json:"author_name"`
-		AuthorEmail string   `json:"author_email"`
-		CreatedAt  time.Time `json:"created_at"`
-		WebURL     string    `json:"web_url"`
+		ID          string    `json:"id"`
+		Message     string    `json:"message"`
+		AuthorName  string    `json:"author_name"`
+		AuthorEmail string    `json:"author_email"`
+		CreatedAt   time.Time `json:"created_at"`
+		WebURL      string    `json:"web_url"`
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&gitlabCommit); err != nil {
@@ -492,10 +492,10 @@ func (g *GitLabProvider) UpdateFile(repoID, filePath, branch, content, message s
 	}
 
 	encodedPath := strings.ReplaceAll(filePath, "/", "%2F")
-	
+
 	payload := map[string]string{
-		"branch":        branch,
-		"content":       content,
+		"branch":         branch,
+		"content":        content,
 		"commit_message": message,
 	}
 
@@ -675,16 +675,16 @@ func (g *GitLabProvider) CreatePullRequest(req *CreatePullRequestInput) (*PullRe
 	}
 
 	var gitlabMR struct {
-		ID          int       `json:"id"`
-		IID         int       `json:"iid"`
-		Title       string    `json:"title"`
-		Description string    `json:"description"`
-		State       string    `json:"state"`
-		SourceBranch string   `json:"source_branch"`
-		TargetBranch string   `json:"target_branch"`
-		WebURL      string    `json:"web_url"`
-		CreatedAt   time.Time `json:"created_at"`
-		UpdatedAt   time.Time `json:"updated_at"`
+		ID           int       `json:"id"`
+		IID          int       `json:"iid"`
+		Title        string    `json:"title"`
+		Description  string    `json:"description"`
+		State        string    `json:"state"`
+		SourceBranch string    `json:"source_branch"`
+		TargetBranch string    `json:"target_branch"`
+		WebURL       string    `json:"web_url"`
+		CreatedAt    time.Time `json:"created_at"`
+		UpdatedAt    time.Time `json:"updated_at"`
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&gitlabMR); err != nil {
@@ -732,16 +732,16 @@ func (g *GitLabProvider) ListPullRequests(repoID string, state PullRequestState)
 	}
 
 	var gitlabMRs []struct {
-		ID          int       `json:"id"`
-		IID         int       `json:"iid"`
-		Title       string    `json:"title"`
-		Description string    `json:"description"`
-		State       string    `json:"state"`
-		SourceBranch string   `json:"source_branch"`
-		TargetBranch string   `json:"target_branch"`
-		WebURL      string    `json:"web_url"`
-		CreatedAt   time.Time `json:"created_at"`
-		UpdatedAt   time.Time `json:"updated_at"`
+		ID           int       `json:"id"`
+		IID          int       `json:"iid"`
+		Title        string    `json:"title"`
+		Description  string    `json:"description"`
+		State        string    `json:"state"`
+		SourceBranch string    `json:"source_branch"`
+		TargetBranch string    `json:"target_branch"`
+		WebURL       string    `json:"web_url"`
+		CreatedAt    time.Time `json:"created_at"`
+		UpdatedAt    time.Time `json:"updated_at"`
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&gitlabMRs); err != nil {

@@ -18,22 +18,22 @@ func NewLogger() *logrus.Logger {
 	}
 
 	logger := logrus.New()
-	
+
 	// Default configuration
 	logger.SetFormatter(&logrus.TextFormatter{
 		FullTimestamp:   true,
 		TimestampFormat: "2006-01-02 15:04:05",
 		ForceColors:     true,
 	})
-	
+
 	logger.SetLevel(logrus.InfoLevel)
 	logger.SetOutput(os.Stdout)
 
 	globalLogger = logger
-	
+
 	// Configure from environment or config if available
 	configureLogger(logger)
-	
+
 	return logger
 }
 
@@ -200,11 +200,11 @@ func Notice(args ...interface{}) {
 func LogOperation(operation string, fn func() error) error {
 	logger := GetLogger().WithField("operation", operation)
 	logger.Info("Starting operation")
-	
+
 	start := time.Now()
 	err := fn()
 	duration := time.Since(start)
-	
+
 	if err != nil {
 		logger.WithFields(logrus.Fields{
 			"duration": duration,
@@ -213,7 +213,7 @@ func LogOperation(operation string, fn func() error) error {
 	} else {
 		logger.WithField("duration", duration).Info("Operation completed successfully")
 	}
-	
+
 	return err
 }
 
@@ -221,11 +221,11 @@ func LogOperation(operation string, fn func() error) error {
 func LogWithDuration(message string, start time.Time, fields ...logrus.Fields) {
 	duration := time.Since(start)
 	entry := GetLogger().WithField("duration", duration)
-	
+
 	if len(fields) > 0 {
 		entry = entry.WithFields(fields[0])
 	}
-	
+
 	entry.Info(message)
 }
 

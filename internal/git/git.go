@@ -14,12 +14,12 @@ func GetCurrentBranch() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to get current branch: %w", err)
 	}
-	
+
 	branch := strings.TrimSpace(string(output))
 	if branch == "" {
 		return "main", nil // fallback to main if no branch detected
 	}
-	
+
 	return branch, nil
 }
 
@@ -34,7 +34,7 @@ func CheckoutBranch(branch string) error {
 		// Branch exists, switch to it
 		cmd = exec.Command("git", "checkout", branch)
 	}
-	
+
 	return cmd.Run()
 }
 
@@ -45,7 +45,7 @@ func GetBranchList() ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get branch list: %w", err)
 	}
-	
+
 	var branches []string
 	lines := strings.Split(string(output), "\n")
 	for _, line := range lines {
@@ -59,7 +59,7 @@ func GetBranchList() ([]string, error) {
 		}
 		branches = append(branches, line)
 	}
-	
+
 	return branches, nil
 }
 
@@ -76,7 +76,7 @@ func CommitChanges(message string) error {
 	if err := addCmd.Run(); err != nil {
 		return fmt.Errorf("failed to add changes: %w", err)
 	}
-	
+
 	// Commit changes
 	commitCmd := exec.Command("git", "commit", "-m", message)
 	return commitCmd.Run()
@@ -87,11 +87,11 @@ func PushBranch(branch string) error {
 	cmd := exec.Command("git", "push", "origin", branch)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
-	
+
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to push branch %s: %w\nOutput: %s", branch, err, stderr.String())
 	}
-	
+
 	return nil
 }
 

@@ -1,18 +1,18 @@
 package cmd
 
 import (
-        "fmt"
-        "html/template"
-        "net/http"
-        "time"
+	"fmt"
+	"html/template"
+	"net/http"
+	"time"
 
-        "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
 var uiCmd = &cobra.Command{
-        Use:   "ui",
-        Short: "Launch the web UI for n8n-ops",
-        Long: `Launch a web-based user interface for managing n8n workflows.
+	Use:   "ui",
+	Short: "Launch the web UI for n8n-ops",
+	Long: `Launch a web-based user interface for managing n8n workflows.
 
 The UI provides:
 • Visual workflow management
@@ -26,98 +26,98 @@ Examples:
   n8n-ops ui                    # Launch UI on default port 5000
   n8n-ops ui --port 8080        # Launch UI on custom port
   n8n-ops ui --open             # Launch UI and open browser`,
-        RunE: runUI,
+	RunE: runUI,
 }
 
 var (
-        uiPort int
-        openBrowser bool
+	uiPort      int
+	openBrowser bool
 )
 
 func init() {
-        rootCmd.AddCommand(uiCmd)
-        uiCmd.Flags().IntVar(&uiPort, "port", 5000, "port to run the web UI")
-        uiCmd.Flags().BoolVar(&openBrowser, "open", false, "open browser automatically")
+	rootCmd.AddCommand(uiCmd)
+	uiCmd.Flags().IntVar(&uiPort, "port", 5000, "port to run the web UI")
+	uiCmd.Flags().BoolVar(&openBrowser, "open", false, "open browser automatically")
 }
 
 func runUI(cmd *cobra.Command, args []string) error {
-        fmt.Printf("🚀 Starting n8n-ops Web UI on port %d\n", uiPort)
-        fmt.Printf("📱 Access at: http://localhost:%d\n", uiPort)
-        fmt.Printf("🔧 Environment: %s\n", environment)
-        
-        if openBrowser {
-                // In a real implementation, we'd open the browser
-                fmt.Printf("🌐 Opening browser...\n")
-        }
+	fmt.Printf("🚀 Starting n8n-ops Web UI on port %d\n", uiPort)
+	fmt.Printf("📱 Access at: http://localhost:%d\n", uiPort)
+	fmt.Printf("🔧 Environment: %s\n", environment)
 
-        // Create a simple UI server
-        return startUIServer(environment, uiPort)
+	if openBrowser {
+		// In a real implementation, we'd open the browser
+		fmt.Printf("🌐 Opening browser...\n")
+	}
+
+	// Create a simple UI server
+	return startUIServer(environment, uiPort)
 }
 
 func startUIServer(env string, port int) error {
-        // Check for real uncommitted workflow changes (remove demo simulation)
-        hasRealUncommittedChanges := false
-        realUncommittedWorkflows := []struct {
-                WorkflowName string
-                Status       string
-                Environment  string
-                FilePath     string
-        }{}
-        
-        // For now, show clean state until real Git integration is implemented
-        // In production, this would check actual Git status
-        
-        // Simple dashboard data
-        dashboardData := struct {
-                Environment string
-                Status      string
-                Workflows   []struct {
-                        Name   string
-                        Status string
-                        Branch string
-                }
-                Credentials []struct {
-                        Name   string
-                        Status string
-                }
-                LastSync time.Time
-                HasUncommittedChanges bool
-                UncommittedWorkflows []struct {
-                        WorkflowName string
-                        Status       string
-                        Environment  string
-                        FilePath     string
-                }
-                GitBranch string
-        }{
-                Environment: env,
-                Status:      "connected",
-                LastSync:    time.Now(),
-                HasUncommittedChanges: hasRealUncommittedChanges,
-                UncommittedWorkflows: realUncommittedWorkflows,
-                GitBranch: "main", // Default branch
-                Workflows: []struct {
-                        Name   string
-                        Status string
-                        Branch string
-                }{
-                        {"Customer Onboarding Process", "active", "main"},
-                        {"Email Notification System", "active", "main"},
-                        {"Payment Processing", "active", "main"},
-                },
-                Credentials: []struct {
-                        Name   string
-                        Status string
-                }{
-                        {"N8N API", "missing"},
-                        {"SMTP", "missing"},
-                        {"PostgreSQL", "missing"},
-                        {"Stripe", "missing"},
-                },
-        }
+	// Check for real uncommitted workflow changes (remove demo simulation)
+	hasRealUncommittedChanges := false
+	realUncommittedWorkflows := []struct {
+		WorkflowName string
+		Status       string
+		Environment  string
+		FilePath     string
+	}{}
 
-        // Simple HTML template
-        tmpl := template.Must(template.New("dashboard").Parse(`
+	// For now, show clean state until real Git integration is implemented
+	// In production, this would check actual Git status
+
+	// Simple dashboard data
+	dashboardData := struct {
+		Environment string
+		Status      string
+		Workflows   []struct {
+			Name   string
+			Status string
+			Branch string
+		}
+		Credentials []struct {
+			Name   string
+			Status string
+		}
+		LastSync              time.Time
+		HasUncommittedChanges bool
+		UncommittedWorkflows  []struct {
+			WorkflowName string
+			Status       string
+			Environment  string
+			FilePath     string
+		}
+		GitBranch string
+	}{
+		Environment:           env,
+		Status:                "connected",
+		LastSync:              time.Now(),
+		HasUncommittedChanges: hasRealUncommittedChanges,
+		UncommittedWorkflows:  realUncommittedWorkflows,
+		GitBranch:             "main", // Default branch
+		Workflows: []struct {
+			Name   string
+			Status string
+			Branch string
+		}{
+			{"Customer Onboarding Process", "active", "main"},
+			{"Email Notification System", "active", "main"},
+			{"Payment Processing", "active", "main"},
+		},
+		Credentials: []struct {
+			Name   string
+			Status string
+		}{
+			{"N8N API", "missing"},
+			{"SMTP", "missing"},
+			{"PostgreSQL", "missing"},
+			{"Stripe", "missing"},
+		},
+	}
+
+	// Simple HTML template
+	tmpl := template.Must(template.New("dashboard").Parse(`
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -294,10 +294,10 @@ func startUIServer(env string, port int) error {
 </html>
 `))
 
-        http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-                tmpl.Execute(w, dashboardData)
-        })
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		tmpl.Execute(w, dashboardData)
+	})
 
-        fmt.Printf("🎯 n8n-ops Web UI ready at http://localhost:%d\n", port)
-        return http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
+	fmt.Printf("🎯 n8n-ops Web UI ready at http://localhost:%d\n", port)
+	return http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
 }

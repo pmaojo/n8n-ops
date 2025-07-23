@@ -144,16 +144,16 @@ func (g *GitHubProvider) GetRepository(repoID string) (*Repository, error) {
 	}
 
 	var githubRepo struct {
-		ID          int    `json:"id"`
-		Name        string `json:"name"`
-		FullName    string `json:"full_name"`
-		Description string `json:"description"`
-		HTMLURL     string `json:"html_url"`
-		CloneURL    string `json:"clone_url"`
-		DefaultBranch string `json:"default_branch"`
-		Private     bool   `json:"private"`
-		CreatedAt   time.Time `json:"created_at"`
-		UpdatedAt   time.Time `json:"updated_at"`
+		ID            int       `json:"id"`
+		Name          string    `json:"name"`
+		FullName      string    `json:"full_name"`
+		Description   string    `json:"description"`
+		HTMLURL       string    `json:"html_url"`
+		CloneURL      string    `json:"clone_url"`
+		DefaultBranch string    `json:"default_branch"`
+		Private       bool      `json:"private"`
+		CreatedAt     time.Time `json:"created_at"`
+		UpdatedAt     time.Time `json:"updated_at"`
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&githubRepo); err != nil {
@@ -161,16 +161,16 @@ func (g *GitHubProvider) GetRepository(repoID string) (*Repository, error) {
 	}
 
 	return &Repository{
-		ID:          strconv.Itoa(githubRepo.ID),
-		Name:        githubRepo.Name,
-		FullName:    githubRepo.FullName,
-		Description: githubRepo.Description,
-		WebURL:      githubRepo.HTMLURL,
-		CloneURL:    githubRepo.CloneURL,
+		ID:            strconv.Itoa(githubRepo.ID),
+		Name:          githubRepo.Name,
+		FullName:      githubRepo.FullName,
+		Description:   githubRepo.Description,
+		WebURL:        githubRepo.HTMLURL,
+		CloneURL:      githubRepo.CloneURL,
 		DefaultBranch: githubRepo.DefaultBranch,
-		Private:     githubRepo.Private,
-		CreatedAt:   githubRepo.CreatedAt,
-		UpdatedAt:   githubRepo.UpdatedAt,
+		Private:       githubRepo.Private,
+		CreatedAt:     githubRepo.CreatedAt,
+		UpdatedAt:     githubRepo.UpdatedAt,
 	}, nil
 }
 
@@ -195,16 +195,16 @@ func (g *GitHubProvider) ListRepositories() ([]*Repository, error) {
 	}
 
 	var githubRepos []struct {
-		ID          int    `json:"id"`
-		Name        string `json:"name"`
-		FullName    string `json:"full_name"`
-		Description string `json:"description"`
-		HTMLURL     string `json:"html_url"`
-		CloneURL    string `json:"clone_url"`
-		DefaultBranch string `json:"default_branch"`
-		Private     bool   `json:"private"`
-		CreatedAt   time.Time `json:"created_at"`
-		UpdatedAt   time.Time `json:"updated_at"`
+		ID            int       `json:"id"`
+		Name          string    `json:"name"`
+		FullName      string    `json:"full_name"`
+		Description   string    `json:"description"`
+		HTMLURL       string    `json:"html_url"`
+		CloneURL      string    `json:"clone_url"`
+		DefaultBranch string    `json:"default_branch"`
+		Private       bool      `json:"private"`
+		CreatedAt     time.Time `json:"created_at"`
+		UpdatedAt     time.Time `json:"updated_at"`
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&githubRepos); err != nil {
@@ -214,16 +214,16 @@ func (g *GitHubProvider) ListRepositories() ([]*Repository, error) {
 	repositories := make([]*Repository, len(githubRepos))
 	for i, repo := range githubRepos {
 		repositories[i] = &Repository{
-			ID:          strconv.Itoa(repo.ID),
-			Name:        repo.Name,
-			FullName:    repo.FullName,
-			Description: repo.Description,
-			WebURL:      repo.HTMLURL,
-			CloneURL:    repo.CloneURL,
+			ID:            strconv.Itoa(repo.ID),
+			Name:          repo.Name,
+			FullName:      repo.FullName,
+			Description:   repo.Description,
+			WebURL:        repo.HTMLURL,
+			CloneURL:      repo.CloneURL,
 			DefaultBranch: repo.DefaultBranch,
-			Private:     repo.Private,
-			CreatedAt:   repo.CreatedAt,
-			UpdatedAt:   repo.UpdatedAt,
+			Private:       repo.Private,
+			CreatedAt:     repo.CreatedAt,
+			UpdatedAt:     repo.UpdatedAt,
 		}
 	}
 
