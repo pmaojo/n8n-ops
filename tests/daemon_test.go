@@ -441,17 +441,22 @@ func TestDaemonCompleteValidation(t *testing.T) {
 	failed := 0
 
 	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
+		test := test
+		success := t.Run(test.name, func(t *testing.T) {
 			defer func() {
 				if r := recover(); r != nil {
 					t.Errorf("❌ Test %s falló con panic: %v", test.name, r)
-					failed++
 				}
 			}()
 
 			test.testFunc(t)
-			passed++
 		})
+
+		if success {
+			passed++
+		} else {
+			failed++
+		}
 	}
 
 	t.Log("=" + strings.Repeat("=", 50))
@@ -459,5 +464,7 @@ func TestDaemonCompleteValidation(t *testing.T) {
 
 	if failed == 0 {
 		t.Log("🎉 ¡TODOS LOS TESTS PASARON! EL DAEMON FUNCIONA PERFECTAMENTE")
+	} else {
+		t.Fail()
 	}
 }
