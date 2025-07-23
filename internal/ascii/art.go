@@ -128,18 +128,15 @@ func ProgressBar(current, total int, message string) string {
 `, Purple, Bold, Cyan, message, Purple, Green, bar, Purple, Yellow, percentage, Purple, Dim, current, total, Purple, Reset)
 }
 
-// WorkflowInfo displays workflow information in a futuristic format
+// WorkflowInfo displays workflow information in a simple format
 func WorkflowInfo(name, status, env string) string {
         statusColor := getStatusColor(status)
         envColor := getEnvironmentColor(env)
         
-        return fmt.Sprintf(`%s
-    ┌─────────────────────────────────────────────────────────────────┐
-    │  %sWorkflow: %s%-20s%s                                         │
-    │  %sStatus:   %s%-20s%s                                         │
-    │  %sEnv:      %s%-20s%s                                         │
-    └─────────────────────────────────────────────────────────────────┘%s
-`, Dim, Cyan, name, Dim, Cyan, statusColor, status, Dim, Cyan, envColor, env, Dim, Reset)
+        return fmt.Sprintf("Workflow: %s%s%s | Status: %s%s%s | Env: %s%s%s",
+                Cyan, name, Reset,
+                statusColor, status, Reset,
+                envColor, env, Reset)
 }
 
 // CommandHelp creates futuristic help display
@@ -194,21 +191,18 @@ func getStatusColor(status string) string {
         }
 }
 
-// WelcomeScreen creates the main welcome display
+// WelcomeScreen creates a simple welcome display
 func WelcomeScreen() string {
         return fmt.Sprintf(`%s
-%s
-%s%s╔══════════════════════════════════════════════════════════════════════╗
-║                                                                      ║
-║  %sWelcome to the Future of Workflow Automation%s                      ║
-║                                                                      ║
-║  %s🔮 Powered by n8n Technology%s                                      ║
-║  %s⚡ Lightning-fast Git Integration%s                                 ║
-║  %s🚀 Multi-environment Support%s                                      ║
-║  %s🛡️  Enterprise-grade Security%s                                     ║
-║                                                                      ║
-╚══════════════════════════════════════════════════════════════════════╝%s
 
-%sType '%sn8n-ops --help%s' to begin your journey...%s
-`, MatrixEffect(), N8nLogo(), Purple, Bold, Cyan, Purple, Green, Purple, Blue, Purple, Yellow, Purple, Red, Purple, Reset, Dim, Cyan, Bold, Dim, Reset)
+%sWelcome to n8n Operations Tool%s
+
+Features:
+- Powered by n8n Technology
+- Lightning-fast Git Integration  
+- Multi-environment Support
+- Enterprise-grade Security
+
+%sType 'n8n-ops --help' to get started...%s
+`, N8nLogo(), Cyan + Bold, Reset, Dim, Reset)
 }
