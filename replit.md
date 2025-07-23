@@ -134,6 +134,17 @@ The system is designed to be enterprise-ready with comprehensive error handling,
 
 ## Recent Changes (Latest)
 
+### Developer Guidelines and Architecture Documentation (July 23, 2025)
+- **Completed**: Comprehensive developer guidelines for production system deployment
+- **Repository Architecture**: One repository = one project model with multiple related workflows
+- **Flexible Branching**: No forced 1:1 correspondence between branches and environments
+- **Development Workflow**: Complete GitOps workflow from development to production
+- **CLI-First Approach**: Best practices for using CLI for workflow creation and management  
+- **Security Guidelines**: Credential management, access control, and compliance practices
+- **Monitoring Integration**: Full observability setup with automated alerting
+- **Troubleshooting Guide**: Common issues and resolution strategies
+- **Production Ready**: Enterprise-grade practices for team collaboration and deployment
+
 ### Ultimate Dashboard Implementation - Complete System Integration (July 23, 2025)
 - **Completed**: Ultimate retro-futuristic MS-DOS style dashboard with all system components
 - **Real Mock Server Data**: Live integration with mock n8n server (port 3001) showing authentic workflow failures
