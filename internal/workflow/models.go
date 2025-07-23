@@ -54,6 +54,17 @@ type SyncMetadata struct {
         PipelineURL string    `json:"pipelineUrl,omitempty"`
 }
 
+// ExecutionResult represents the result of a workflow execution
+type ExecutionResult struct {
+        ID         string                 `json:"id"`
+        WorkflowID string                 `json:"workflowId"`
+        Mode       string                 `json:"mode"`
+        Status     string                 `json:"status"`
+        StartedAt  time.Time             `json:"startedAt"`
+        StoppedAt  time.Time             `json:"stoppedAt"`
+        Data       map[string]interface{} `json:"data,omitempty"`
+}
+
 // Connection represents a connection between nodes
 type Connection struct {
         Node  string `json:"node"`
