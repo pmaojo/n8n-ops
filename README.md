@@ -30,4 +30,4 @@ Run `n8n-ops --help` for command information or check the documentation.
 
 ## CI/CD
 
-All build, validation, and deployment stages run through a single GitLab pipeline defined in `.gitlab-ci.yml`.
+Automated builds and tests run on both GitLab CI/CD and GitHub Actions. The GitLab pipeline remains in `.gitlab-ci.yml` while GitHub uses `.github/workflows/ci.yml` for pull request checks.
