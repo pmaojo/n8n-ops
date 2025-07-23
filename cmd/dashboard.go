@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
+
+	"github.com/pmaojo/n8n-ops/internal/credentials"
 
 	"github.com/pmaojo/n8n-ops/internal/client"
 	"github.com/sirupsen/logrus"
@@ -136,7 +137,14 @@ func serveDashboard(w http.ResponseWriter, r *http.Request) {
 
 	data := DashboardData{
 		Environment: environment,
-		N8nURL:      getN8nURL(),
+		N8nURL: func() string {
+			cm := credentials.NewCredentialManager(environment)
+			url, _, _ := cm.GetN8nCredentials()
+			if url == "" {
+				return "http://localhost:5678"
+			}
+			return url
+		}(),
 		SystemStatus: map[string]string{
 			"CLI":     "ONLINE",
 			"DAEMON":  "ACTIVE",
@@ -166,16 +174,23 @@ func serveDashboard(w http.ResponseWriter, r *http.Request) {
 
 func serveAPIData(w http.ResponseWriter, r *http.Request) {
 	// Connect to n8n to get real data
-	var n8nURL string
+	var n8nURL, apiKey string
 	if demoMode {
 		n8nURL = "http://localhost:3001"
+		apiKey = "n8n_api_mock_development"
 	} else {
-		n8nURL = getN8nURL()
-	}
-
-	apiKey := "n8n_api_mock_development"
-	if !demoMode {
-		apiKey = os.Getenv("N8N_API_KEY")
+		cm := credentials.NewCredentialManager(environment)
+		var err error
+		n8nURL, apiKey, err = cm.GetN8nCredentials()
+		if err != nil {
+			logger.Warn("failed to load credentials, using demo data")
+		}
+		if n8nURL == "" {
+			n8nURL = "http://localhost:5678"
+		}
+		if apiKey == "" {
+			apiKey = "n8n_api_mock_development"
+		}
 	}
 
 	// Try to get real data
@@ -201,17 +216,4 @@ func serveAPIData(w http.ResponseWriter, r *http.Request) {
                 "timestamp": "%s",
                 "environment": "%s"
         }`, time.Now().Format("15:04:05"), environment)
-}
-
-func getN8nURL() string {
-	switch environment {
-	case "development":
-		return "http://localhost:5678"
-	case "staging":
-		return "https://n8n-staging.example.com"
-	case "production":
-		return "https://n8n-prod.example.com"
-	default:
-		return "http://localhost:5678"
-	}
 }

@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pmaojo/n8n-ops/internal/credentials"
+
 	"github.com/pmaojo/n8n-ops/internal/git"
 	"github.com/spf13/cobra"
 )
@@ -178,8 +180,8 @@ func runStatusHuman() error {
 	fmt.Printf("\n🌍 Environment Status\n")
 	fmt.Printf("===================\n")
 
-	n8nURL := os.Getenv(fmt.Sprintf("N8N_URL_%s", strings.ToUpper(environment)))
-	n8nAPIKey := os.Getenv(fmt.Sprintf("N8N_API_KEY_%s", strings.ToUpper(environment)))
+	cm := credentials.NewCredentialManager(environment)
+	n8nURL, n8nAPIKey, _ := cm.GetN8nCredentials()
 
 	if n8nURL != "" {
 		fmt.Printf("N8N URL:    %s\n", n8nURL)

@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
+
+	"github.com/pmaojo/n8n-ops/internal/credentials"
 
 	"github.com/pmaojo/n8n-ops/internal/client"
 	"github.com/sirupsen/logrus"
@@ -58,13 +61,16 @@ func runWatch(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create n8n client using environment configuration
-	n8nURL := os.Getenv("N8N_DEV_URL")
+	cm := credentials.NewCredentialManager(environment)
+	n8nURL, apiKey, err := cm.GetN8nCredentials()
+	if err != nil {
+		return fmt.Errorf("failed to load credentials: %w", err)
+	}
 	if n8nURL == "" {
 		n8nURL = "http://localhost:5678"
 	}
-	apiKey := os.Getenv("N8N_DEV_API_KEY")
 	if apiKey == "" {
-		return fmt.Errorf("N8N_DEV_API_KEY environment variable not set")
+		return fmt.Errorf("N8N_%s_API_KEY environment variable not set", strings.ToUpper(environment))
 	}
 
 	n8nClient, err := client.New(n8nURL, apiKey, nil)

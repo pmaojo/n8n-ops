@@ -132,6 +132,15 @@ func (cm *CredentialManager) ValidateCredentials(creds *EnvironmentCredentials) 
 	return nil
 }
 
+// GetN8nCredentials returns the n8n URL and API key for the current environment.
+func (cm *CredentialManager) GetN8nCredentials() (string, string, error) {
+	creds, err := cm.GetEnvironmentCredentials()
+	if err != nil {
+		return "", "", err
+	}
+	return creds.N8nURL, creds.N8nAPIKey, nil
+}
+
 // SetCredential stores a credential for the current environment
 func (cm *CredentialManager) SetCredential(key, value string) error {
 	viper.SetConfigFile(cm.ConfigPath)

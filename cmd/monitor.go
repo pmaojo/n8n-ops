@@ -9,6 +9,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/pmaojo/n8n-ops/internal/credentials"
+
 	"github.com/pmaojo/n8n-ops/internal/client"
 	"github.com/pmaojo/n8n-ops/internal/issues"
 	"github.com/pmaojo/n8n-ops/internal/monitoring"
@@ -79,44 +81,11 @@ func runMonitor(cmd *cobra.Command, args []string) error {
 		n8nURL = "http://localhost:3001"
 		apiKey = "n8n_api_mock_development"
 	} else {
-		// Get credentials using cascading environment variable approach
-		envSuffix := strings.ToUpper(environment)
-		n8nURL = os.Getenv(fmt.Sprintf("N8N_%s_URL", envSuffix))
-		apiKey = os.Getenv(fmt.Sprintf("N8N_%s_API_KEY", envSuffix))
-
-		// Fallback to short forms for common environments
-		if n8nURL == "" || apiKey == "" {
-			switch environment {
-			case "development":
-				if n8nURL == "" {
-					n8nURL = os.Getenv("N8N_DEV_URL")
-				}
-				if apiKey == "" {
-					apiKey = os.Getenv("N8N_DEV_API_KEY")
-				}
-			case "staging":
-				if n8nURL == "" {
-					n8nURL = os.Getenv("N8N_STAGING_URL")
-				}
-				if apiKey == "" {
-					apiKey = os.Getenv("N8N_STAGING_API_KEY")
-				}
-			case "production":
-				if n8nURL == "" {
-					n8nURL = os.Getenv("N8N_PROD_URL")
-				}
-				if apiKey == "" {
-					apiKey = os.Getenv("N8N_PROD_API_KEY")
-				}
-			}
-		}
-
-		// Final fallback to generic variables
-		if n8nURL == "" {
-			n8nURL = os.Getenv("N8N_URL")
-		}
-		if apiKey == "" {
-			apiKey = os.Getenv("N8N_API_KEY")
+		cm := credentials.NewCredentialManager(environment)
+		var err error
+		n8nURL, apiKey, err = cm.GetN8nCredentials()
+		if err != nil {
+			return fmt.Errorf("failed to load credentials: %w", err)
 		}
 		if n8nURL == "" || apiKey == "" {
 			return fmt.Errorf("n8n credentials not configured for %s environment. Set N8N_%s_URL and N8N_%s_API_KEY or use --demo",
