@@ -47,11 +47,11 @@ func (s *SentryIntegration) Initialize() error {
 }
 
 // CaptureWorkflowFailure reports workflow failures to Sentry (mock)
-func (s *SentryIntegration) CaptureWorkflowFailure(workflowID, workflowName, error string, ctx context.Context) {
+func (s *SentryIntegration) CaptureWorkflowFailure(workflowID, workflowName, errMsg string, ctx context.Context) {
 	s.logger.WithFields(logrus.Fields{
 		"workflow_id":   workflowID,
 		"workflow_name": workflowName,
-		"error":         error,
+		"error":         errMsg,
 		"environment":   s.config.Environment,
 	}).Info("Workflow failure captured in Sentry (mock)")
 }

@@ -652,7 +652,7 @@ func (g *GitHubProvider) TriggerPipeline(repoID, branch string) (*Pipeline, erro
 
 	// GitHub doesn't have direct pipeline triggering like GitLab
 	// This would require workflow dispatch events
-	return nil, fmt.Errorf("GitHub pipeline triggering requires workflow_dispatch configuration")
+	return nil, fmt.Errorf("GitHub pipeline triggering for repo %s requires workflow_dispatch configuration", repoID)
 }
 
 // CreatePullRequest creates a pull request in GitHub
