@@ -1,4 +1,4 @@
-module github.com/n8n-workflows/n8n-ops
+module github.com/pmaojo/n8n-ops
 
 go 1.19
 

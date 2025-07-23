@@ -1,23 +1,23 @@
 package cmd
 
 import (
-        "encoding/json"
-        "fmt"
-        "os"
-        "os/exec"
-        "path/filepath"
-        "strings"
-        "time"
+	"encoding/json"
+	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"time"
 
-        "github.com/spf13/cobra"
-        "github.com/n8n-workflows/n8n-ops/internal/client"
-        "github.com/n8n-workflows/n8n-ops/internal/git"
+	"github.com/pmaojo/n8n-ops/internal/client"
+	"github.com/pmaojo/n8n-ops/internal/git"
+	"github.com/spf13/cobra"
 )
 
 var syncCmd = &cobra.Command{
-        Use:   "sync",
-        Short: "Sync workflows bidirectionally between n8n and local filesystem", 
-        Long: `Sync performs intelligent bidirectional synchronization between your n8n instance and Git repository.
+	Use:   "sync",
+	Short: "Sync workflows bidirectionally between n8n and local filesystem",
+	Long: `Sync performs intelligent bidirectional synchronization between your n8n instance and Git repository.
 
 DETECTION MODES:
 • FROM n8n TO Git: Downloads workflows modified in n8n UI to local files
@@ -35,249 +35,249 @@ Examples:
   n8n-ops sync --from-n8n          # Only download from n8n to Git
   n8n-ops sync --to-n8n            # Only upload from Git to n8n  
   n8n-ops sync --force             # Force sync, auto-resolve conflicts`,
-        RunE: runSync,
+	RunE: runSync,
 }
 
 var (
-        force      bool
-        outputDir  string
-        branch     string
-        fromN8n    bool
-        toN8n      bool
-        syncDryRun bool
+	force      bool
+	outputDir  string
+	branch     string
+	fromN8n    bool
+	toN8n      bool
+	syncDryRun bool
 )
 
 func init() {
-        rootCmd.AddCommand(syncCmd)
-        
-        syncCmd.Flags().BoolVarP(&force, "force", "f", false, "force sync, overwriting conflicts")
-        syncCmd.Flags().StringVarP(&outputDir, "output", "o", "", "output directory (default: workflows/<environment>)")
-        syncCmd.Flags().StringVarP(&branch, "branch", "b", "", "git branch (defaults to current branch)")
-        syncCmd.Flags().BoolVar(&fromN8n, "from-n8n", false, "sync only from n8n to local files")
-        syncCmd.Flags().BoolVar(&toN8n, "to-n8n", false, "sync only from local files to n8n")
-        syncCmd.Flags().BoolVar(&syncDryRun, "dry-run", false, "show what would be synced without making changes")
+	rootCmd.AddCommand(syncCmd)
+
+	syncCmd.Flags().BoolVarP(&force, "force", "f", false, "force sync, overwriting conflicts")
+	syncCmd.Flags().StringVarP(&outputDir, "output", "o", "", "output directory (default: workflows/<environment>)")
+	syncCmd.Flags().StringVarP(&branch, "branch", "b", "", "git branch (defaults to current branch)")
+	syncCmd.Flags().BoolVar(&fromN8n, "from-n8n", false, "sync only from n8n to local files")
+	syncCmd.Flags().BoolVar(&toN8n, "to-n8n", false, "sync only from local files to n8n")
+	syncCmd.Flags().BoolVar(&syncDryRun, "dry-run", false, "show what would be synced without making changes")
 }
 
 func runSync(cmd *cobra.Command, args []string) error {
-        // Check for uncommitted changes before sync
-        if !force {
-                checker := git.NewGitStatusChecker(".")
-                if err := checker.CheckBeforeSync(); err != nil {
-                        fmt.Printf("\n❌ Sync blocked: %s\n\n", err.Error())
-                        fmt.Printf("Use --force to sync anyway (⚠️  may overwrite local changes)\n")
-                        return nil
-                }
-        }
-        logger.Info("Starting workflow sync", "environment", environment)
-        fmt.Printf("🔄 Syncing workflows from %s environment...\n", environment)
+	// Check for uncommitted changes before sync
+	if !force {
+		checker := git.NewGitStatusChecker(".")
+		if err := checker.CheckBeforeSync(); err != nil {
+			fmt.Printf("\n❌ Sync blocked: %s\n\n", err.Error())
+			fmt.Printf("Use --force to sync anyway (⚠️  may overwrite local changes)\n")
+			return nil
+		}
+	}
+	logger.Info("Starting workflow sync", "environment", environment)
+	fmt.Printf("🔄 Syncing workflows from %s environment...\n", environment)
 
-        // Set output directory
-        if outputDir == "" {
-                outputDir = filepath.Join("workflows", environment)
-        }
+	// Set output directory
+	if outputDir == "" {
+		outputDir = filepath.Join("workflows", environment)
+	}
 
-        // Create output directory if it doesn't exist
-        if err := os.MkdirAll(outputDir, 0755); err != nil {
-                return fmt.Errorf("failed to create output directory: %w", err)
-        }
+	// Create output directory if it doesn't exist
+	if err := os.MkdirAll(outputDir, 0755); err != nil {
+		return fmt.Errorf("failed to create output directory: %w", err)
+	}
 
-        // Get n8n configuration from environment (or use demo mode)
-        var apiURL, apiKey string
-        
-        if demoMode {
-                fmt.Printf("🎭 Demo mode enabled - using mock n8n data\n")
-                apiURL = "demo://localhost"
-                apiKey = "demo-key"
-        } else {
-                // Get credentials using cascading environment variable approach
-                envSuffix := strings.ToUpper(environment)
-                apiURL = os.Getenv(fmt.Sprintf("N8N_%s_URL", envSuffix))
-                apiKey = os.Getenv(fmt.Sprintf("N8N_%s_API_KEY", envSuffix))
-                
-                // Fallback to short forms for common environments
-                if apiURL == "" || apiKey == "" {
-                        switch environment {
-                        case "development":
-                                if apiURL == "" {
-                                        apiURL = os.Getenv("N8N_DEV_URL")
-                                }
-                                if apiKey == "" {
-                                        apiKey = os.Getenv("N8N_DEV_API_KEY")
-                                }
-                        case "staging":
-                                if apiURL == "" {
-                                        apiURL = os.Getenv("N8N_STAGING_URL")
-                                }
-                                if apiKey == "" {
-                                        apiKey = os.Getenv("N8N_STAGING_API_KEY")
-                                }
-                        case "production":
-                                if apiURL == "" {
-                                        apiURL = os.Getenv("N8N_PROD_URL")
-                                }
-                                if apiKey == "" {
-                                        apiKey = os.Getenv("N8N_PROD_API_KEY")
-                                }
-                        }
-                }
-                
-                // Final fallback to generic variables
-                if apiURL == "" {
-                        apiURL = os.Getenv("N8N_URL")
-                }
-                if apiKey == "" {
-                        apiKey = os.Getenv("N8N_API_KEY")
-                }
-                
-                if apiURL == "" || apiKey == "" {
-                        fmt.Printf("⚠️  n8n credentials not configured for %s environment\n", environment)
-                        fmt.Printf("💡 Set environment variables or use --demo flag:\n")
-                        fmt.Printf("   export N8N_%s_URL=http://localhost:3001\n", envSuffix)
-                        fmt.Printf("   export N8N_%s_API_KEY=n8n_api_mock_%s\n", envSuffix, environment)
-                        fmt.Printf("   OR: ./n8n-ops sync --demo\n")
-                        return nil
-                }
-        }
+	// Get n8n configuration from environment (or use demo mode)
+	var apiURL, apiKey string
 
-        // Initialize n8n client (with demo mode support)
-        n8nClient := client.NewN8nClientWithDemo(apiURL, apiKey, demoMode)
-        
-        // Test connection
-        fmt.Printf("🔗 Connecting to n8n API: %s\n", apiURL)
-        err := n8nClient.TestConnection()
-        if err != nil {
-                return fmt.Errorf("failed to connect to n8n API: %w", err)
-        }
-        fmt.Printf("✅ Connected successfully\n")
+	if demoMode {
+		fmt.Printf("🎭 Demo mode enabled - using mock n8n data\n")
+		apiURL = "demo://localhost"
+		apiKey = "demo-key"
+	} else {
+		// Get credentials using cascading environment variable approach
+		envSuffix := strings.ToUpper(environment)
+		apiURL = os.Getenv(fmt.Sprintf("N8N_%s_URL", envSuffix))
+		apiKey = os.Getenv(fmt.Sprintf("N8N_%s_API_KEY", envSuffix))
 
-        // Get workflows from n8n
-        workflows, err := n8nClient.GetWorkflows()
-        if err != nil {
-                return fmt.Errorf("failed to fetch workflows: %w", err)
-        }
+		// Fallback to short forms for common environments
+		if apiURL == "" || apiKey == "" {
+			switch environment {
+			case "development":
+				if apiURL == "" {
+					apiURL = os.Getenv("N8N_DEV_URL")
+				}
+				if apiKey == "" {
+					apiKey = os.Getenv("N8N_DEV_API_KEY")
+				}
+			case "staging":
+				if apiURL == "" {
+					apiURL = os.Getenv("N8N_STAGING_URL")
+				}
+				if apiKey == "" {
+					apiKey = os.Getenv("N8N_STAGING_API_KEY")
+				}
+			case "production":
+				if apiURL == "" {
+					apiURL = os.Getenv("N8N_PROD_URL")
+				}
+				if apiKey == "" {
+					apiKey = os.Getenv("N8N_PROD_API_KEY")
+				}
+			}
+		}
 
-        fmt.Printf("📋 Found %d workflows in n8n instance\n", len(workflows))
+		// Final fallback to generic variables
+		if apiURL == "" {
+			apiURL = os.Getenv("N8N_URL")
+		}
+		if apiKey == "" {
+			apiKey = os.Getenv("N8N_API_KEY")
+		}
 
-        // Process each workflow
-        syncedCount := 0
-        for _, workflow := range workflows {
-                // Generate filename
-                filename := fmt.Sprintf("%s_%s.json", sanitizeFilename(workflow.Name), workflow.ID)
-                filepath := filepath.Join(outputDir, filename)
+		if apiURL == "" || apiKey == "" {
+			fmt.Printf("⚠️  n8n credentials not configured for %s environment\n", environment)
+			fmt.Printf("💡 Set environment variables or use --demo flag:\n")
+			fmt.Printf("   export N8N_%s_URL=http://localhost:3001\n", envSuffix)
+			fmt.Printf("   export N8N_%s_API_KEY=n8n_api_mock_%s\n", envSuffix, environment)
+			fmt.Printf("   OR: ./n8n-ops sync --demo\n")
+			return nil
+		}
+	}
 
-                // Add sync metadata
-                workflowData := map[string]interface{}{
-                        "id":          workflow.ID,
-                        "name":        workflow.Name,
-                        "active":      workflow.Active,
-                        "nodes":       workflow.Nodes,
-                        "connections": workflow.Connections,
-                        "createdAt":   workflow.CreatedAt,
-                        "updatedAt":   workflow.UpdatedAt,
-                        "versionId":   workflow.VersionId,
-                        "tags":        workflow.Tags,
-                        "syncMetadata": map[string]interface{}{
-                                "syncDate":    time.Now(),
-                                "environment": environment,
-                                "syncedBy":    getSyncUser(),
-                                "gitCommit":   os.Getenv("CI_COMMIT_SHA"),
-                        },
-                }
+	// Initialize n8n client (with demo mode support)
+	n8nClient := client.NewN8nClientWithDemo(apiURL, apiKey, demoMode)
 
-                // Write workflow to file
-                if err := writeWorkflowFile(workflowData, filepath); err != nil {
-                        logger.Error("Failed to write workflow file", "workflow", workflow.Name, "error", err)
-                        if !force {
-                                return fmt.Errorf("failed to write workflow %s: %w", workflow.Name, err)
-                        }
-                        continue
-                }
+	// Test connection
+	fmt.Printf("🔗 Connecting to n8n API: %s\n", apiURL)
+	err := n8nClient.TestConnection()
+	if err != nil {
+		return fmt.Errorf("failed to connect to n8n API: %w", err)
+	}
+	fmt.Printf("✅ Connected successfully\n")
 
-                fmt.Printf("📝 Synced: %s → %s\n", workflow.Name, filename)
-                syncedCount++
-        }
+	// Get workflows from n8n
+	workflows, err := n8nClient.GetWorkflows()
+	if err != nil {
+		return fmt.Errorf("failed to fetch workflows: %w", err)
+	}
 
-        // Generate sync metadata
-        metadata := map[string]interface{}{
-                "lastSync":        time.Now(),
-                "environment":     environment,
-                "totalWorkflows":  len(workflows),
-                "syncedWorkflows": syncedCount,
-                "n8nURL":          apiURL,
-                "syncedBy":        getSyncUser(),
-                "gitCommit":       os.Getenv("CI_COMMIT_SHA"),
-        }
+	fmt.Printf("📋 Found %d workflows in n8n instance\n", len(workflows))
 
-        metadataPath := filepath.Join(outputDir, "_sync_metadata.json")
-        if err := writeWorkflowFile(metadata, metadataPath); err != nil {
-                logger.Warn("Failed to write sync metadata", "error", err)
-        }
+	// Process each workflow
+	syncedCount := 0
+	for _, workflow := range workflows {
+		// Generate filename
+		filename := fmt.Sprintf("%s_%s.json", sanitizeFilename(workflow.Name), workflow.ID)
+		filepath := filepath.Join(outputDir, filename)
 
-        fmt.Printf("✅ Sync completed: %d workflows synced to %s\n", syncedCount, outputDir)
-        return nil
+		// Add sync metadata
+		workflowData := map[string]interface{}{
+			"id":          workflow.ID,
+			"name":        workflow.Name,
+			"active":      workflow.Active,
+			"nodes":       workflow.Nodes,
+			"connections": workflow.Connections,
+			"createdAt":   workflow.CreatedAt,
+			"updatedAt":   workflow.UpdatedAt,
+			"versionId":   workflow.VersionId,
+			"tags":        workflow.Tags,
+			"syncMetadata": map[string]interface{}{
+				"syncDate":    time.Now(),
+				"environment": environment,
+				"syncedBy":    getSyncUser(),
+				"gitCommit":   os.Getenv("CI_COMMIT_SHA"),
+			},
+		}
+
+		// Write workflow to file
+		if err := writeWorkflowFile(workflowData, filepath); err != nil {
+			logger.Error("Failed to write workflow file", "workflow", workflow.Name, "error", err)
+			if !force {
+				return fmt.Errorf("failed to write workflow %s: %w", workflow.Name, err)
+			}
+			continue
+		}
+
+		fmt.Printf("📝 Synced: %s → %s\n", workflow.Name, filename)
+		syncedCount++
+	}
+
+	// Generate sync metadata
+	metadata := map[string]interface{}{
+		"lastSync":        time.Now(),
+		"environment":     environment,
+		"totalWorkflows":  len(workflows),
+		"syncedWorkflows": syncedCount,
+		"n8nURL":          apiURL,
+		"syncedBy":        getSyncUser(),
+		"gitCommit":       os.Getenv("CI_COMMIT_SHA"),
+	}
+
+	metadataPath := filepath.Join(outputDir, "_sync_metadata.json")
+	if err := writeWorkflowFile(metadata, metadataPath); err != nil {
+		logger.Warn("Failed to write sync metadata", "error", err)
+	}
+
+	fmt.Printf("✅ Sync completed: %d workflows synced to %s\n", syncedCount, outputDir)
+	return nil
 }
 
 func sanitizeFilename(name string) string {
-        // Replace spaces and special characters with underscores
-        result := ""
-        for _, char := range name {
-                if (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || (char >= '0' && char <= '9') {
-                        result += string(char)
-                } else {
-                        result += "_"
-                }
-        }
-        return result
+	// Replace spaces and special characters with underscores
+	result := ""
+	for _, char := range name {
+		if (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || (char >= '0' && char <= '9') {
+			result += string(char)
+		} else {
+			result += "_"
+		}
+	}
+	return result
 }
 
 func writeWorkflowFile(data interface{}, filepath string) error {
-        file, err := os.Create(filepath)
-        if err != nil {
-                return fmt.Errorf("failed to create file: %w", err)
-        }
-        defer file.Close()
+	file, err := os.Create(filepath)
+	if err != nil {
+		return fmt.Errorf("failed to create file: %w", err)
+	}
+	defer file.Close()
 
-        encoder := json.NewEncoder(file)
-        encoder.SetIndent("", "  ")
-        if err := encoder.Encode(data); err != nil {
-                return fmt.Errorf("failed to encode JSON: %w", err)
-        }
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(data); err != nil {
+		return fmt.Errorf("failed to encode JSON: %w", err)
+	}
 
-        return nil
+	return nil
 }
 
 // getSyncUser returns the user information for sync metadata
 func getSyncUser() string {
-        // Try to get user from GitLab CI/CD environment variables
-        if gitlabUser := os.Getenv("GITLAB_USER_EMAIL"); gitlabUser != "" {
-                return gitlabUser
-        }
-        
-        if gitlabUser := os.Getenv("CI_COMMIT_AUTHOR_EMAIL"); gitlabUser != "" {
-                return gitlabUser
-        }
-        
-        // Try to get user from Git configuration
-        if gitUser := getGitUser(); gitUser != "" {
-                return gitUser
-        }
-        
-        // Try to get system user
-        if systemUser := os.Getenv("USER"); systemUser != "" {
-                return systemUser + "@local"
-        }
-        
-        // Fallback
-        return "n8n-ops-user"
+	// Try to get user from GitLab CI/CD environment variables
+	if gitlabUser := os.Getenv("GITLAB_USER_EMAIL"); gitlabUser != "" {
+		return gitlabUser
+	}
+
+	if gitlabUser := os.Getenv("CI_COMMIT_AUTHOR_EMAIL"); gitlabUser != "" {
+		return gitlabUser
+	}
+
+	// Try to get user from Git configuration
+	if gitUser := getGitUser(); gitUser != "" {
+		return gitUser
+	}
+
+	// Try to get system user
+	if systemUser := os.Getenv("USER"); systemUser != "" {
+		return systemUser + "@local"
+	}
+
+	// Fallback
+	return "n8n-ops-user"
 }
 
 // getGitUser tries to get the Git user email from local Git config
 func getGitUser() string {
-        // Try to get Git user email
-        cmd := exec.Command("git", "config", "user.email")
-        output, err := cmd.Output()
-        if err == nil && len(output) > 0 {
-                return strings.TrimSpace(string(output))
-        }
-        return ""
+	// Try to get Git user email
+	cmd := exec.Command("git", "config", "user.email")
+	output, err := cmd.Output()
+	if err == nil && len(output) > 0 {
+		return strings.TrimSpace(string(output))
+	}
+	return ""
 }

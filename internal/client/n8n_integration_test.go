@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package client
@@ -7,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/n8n-workflows/n8n-ops/internal/workflow"
+	"github.com/pmaojo/n8n-ops/internal/workflow"
 )
 
 // Integration tests - run with: go test -tags=integration
@@ -60,9 +61,9 @@ func TestIntegrationCreateAndDeleteWorkflow(t *testing.T) {
 		Active: false,
 		Nodes: []workflow.Node{
 			{
-				Name: "Start",
-				Type: "n8n-nodes-base.start",
-				Position: []float64{240, 300},
+				Name:       "Start",
+				Type:       "n8n-nodes-base.start",
+				Position:   []float64{240, 300},
 				Parameters: make(map[string]interface{}),
 			},
 		},

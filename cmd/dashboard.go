@@ -1,27 +1,27 @@
 package cmd
 
 import (
-        "context"
-        "embed"
-        "fmt"
-        "html/template"
-        "net/http"
-        "os"
-        "strconv"
-        "time"
+	"context"
+	"embed"
+	"fmt"
+	"html/template"
+	"net/http"
+	"os"
+	"strconv"
+	"time"
 
-        "github.com/n8n-workflows/n8n-ops/internal/client"
-        "github.com/sirupsen/logrus"
-        "github.com/spf13/cobra"
+	"github.com/pmaojo/n8n-ops/internal/client"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 )
 
 //go:embed templates/dashboard.html
 var dashboardFS embed.FS
 
 var dashboardCmd = &cobra.Command{
-        Use:   "dashboard",
-        Short: "Launch retro-futuristic monitoring dashboard",
-        Long: `Launch a retro-futuristic MS-DOS style dashboard that displays real-time
+	Use:   "dashboard",
+	Short: "Launch retro-futuristic monitoring dashboard",
+	Long: `Launch a retro-futuristic MS-DOS style dashboard that displays real-time
 monitoring data from the n8n-ops system. Shows workflow failures, GitLab issues,
 system metrics, and live event streams in a terminal-style interface.
 
@@ -31,58 +31,58 @@ Examples:
   n8n-ops dashboard                    # Launch dashboard on port 5000
   n8n-ops dashboard --port 8080       # Launch on custom port
   n8n-ops dashboard --env production   # Production environment data`,
-        RunE: runDashboard,
+	RunE: runDashboard,
 }
 
 var dashboardPort int
 
 func init() {
-        rootCmd.AddCommand(dashboardCmd)
-        dashboardCmd.Flags().IntVar(&dashboardPort, "port", 5000, "port to serve dashboard")
+	rootCmd.AddCommand(dashboardCmd)
+	dashboardCmd.Flags().IntVar(&dashboardPort, "port", 5000, "port to serve dashboard")
 }
 
 type DashboardData struct {
-        Environment    string
-        N8nURL        string
-        SystemStatus  map[string]string
-        Workflows     []DashboardWorkflowStatus
-        Metrics       Metrics
-        Timestamp     string
+	Environment  string
+	N8nURL       string
+	SystemStatus map[string]string
+	Workflows    []DashboardWorkflowStatus
+	Metrics      Metrics
+	Timestamp    string
 }
 
 type DashboardWorkflowStatus struct {
-        ID     string
-        Name   string
-        Status string
-        Errors int
+	ID     string
+	Name   string
+	Status string
+	Errors int
 }
 
 type Metrics struct {
-        TotalFailures   int
-        IssuesCreated   int
-        ActiveWorkflows int
-        Uptime         string
-        Threshold      int
-        CheckInterval  string
+	TotalFailures   int
+	IssuesCreated   int
+	ActiveWorkflows int
+	Uptime          string
+	Threshold       int
+	CheckInterval   string
 }
 
 func runDashboard(cmd *cobra.Command, args []string) error {
-        logger := logrus.New()
-        logger.SetLevel(logrus.InfoLevel)
-        if verbose {
-                logger.SetLevel(logrus.DebugLevel)
-        }
+	logger := logrus.New()
+	logger.SetLevel(logrus.InfoLevel)
+	if verbose {
+		logger.SetLevel(logrus.DebugLevel)
+	}
 
-        logEntry := logger.WithFields(logrus.Fields{
-                "command": "dashboard",
-                "env":     environment,
-                "port":    dashboardPort,
-        })
+	logEntry := logger.WithFields(logrus.Fields{
+		"command": "dashboard",
+		"env":     environment,
+		"port":    dashboardPort,
+	})
 
-        logEntry.Info("Starting retro-futuristic dashboard")
+	logEntry.Info("Starting retro-futuristic dashboard")
 
-        // ASCII Art Header
-        fmt.Print(`
+	// ASCII Art Header
+	fmt.Print(`
 ██████╗  █████╗ ███████╗██╗  ██╗██████╗  ██████╗  █████╗ ██████╗ ██████╗ 
 ██╔══██╗██╔══██╗██╔════╝██║  ██║██╔══██╗██╔═══██╗██╔══██╗██╔══██╗██╔══██╗
 ██║  ██║███████║███████╗███████║██████╔╝██║   ██║███████║██████╔╝██║  ██║
@@ -94,108 +94,108 @@ func runDashboard(cmd *cobra.Command, args []string) error {
     ================================================
 `)
 
-        if language == "es" {
-                fmt.Printf("🌐 Iniciando dashboard en puerto %d\n", dashboardPort)
-                fmt.Printf("📊 Ambiente: %s\n", environment)
-                fmt.Printf("🔗 URL: http://localhost:%d\n", dashboardPort)
-        } else {
-                fmt.Printf("🌐 Starting dashboard on port %d\n", dashboardPort)
-                fmt.Printf("📊 Environment: %s\n", environment)
-                fmt.Printf("🔗 URL: http://localhost:%d\n", dashboardPort)
-        }
+	if language == "es" {
+		fmt.Printf("🌐 Iniciando dashboard en puerto %d\n", dashboardPort)
+		fmt.Printf("📊 Ambiente: %s\n", environment)
+		fmt.Printf("🔗 URL: http://localhost:%d\n", dashboardPort)
+	} else {
+		fmt.Printf("🌐 Starting dashboard on port %d\n", dashboardPort)
+		fmt.Printf("📊 Environment: %s\n", environment)
+		fmt.Printf("🔗 URL: http://localhost:%d\n", dashboardPort)
+	}
 
-        // Setup HTTP handlers
-        http.HandleFunc("/", serveDashboard)
-        http.HandleFunc("/api/data", serveAPIData)
-        http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-                w.WriteHeader(http.StatusOK)
-                w.Write([]byte("OK"))
-        })
+	// Setup HTTP handlers
+	http.HandleFunc("/", serveDashboard)
+	http.HandleFunc("/api/data", serveAPIData)
+	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	})
 
-        fmt.Printf("\n⚡ Dashboard ready! Access at: http://localhost:%d\n", dashboardPort)
-        fmt.Println("⏹️  Press Ctrl+C to stop")
+	fmt.Printf("\n⚡ Dashboard ready! Access at: http://localhost:%d\n", dashboardPort)
+	fmt.Println("⏹️  Press Ctrl+C to stop")
 
-        // Start server
-        return http.ListenAndServe(":"+strconv.Itoa(dashboardPort), nil)
+	// Start server
+	return http.ListenAndServe(":"+strconv.Itoa(dashboardPort), nil)
 }
 
 func serveDashboard(w http.ResponseWriter, r *http.Request) {
-        // Read embedded template
-        templateContent, err := dashboardFS.ReadFile("templates/dashboard.html")
-        if err != nil {
-                // Fallback to external file
-                http.ServeFile(w, r, "dashboard.html")
-                return
-        }
+	// Read embedded template
+	templateContent, err := dashboardFS.ReadFile("templates/dashboard.html")
+	if err != nil {
+		// Fallback to external file
+		http.ServeFile(w, r, "dashboard.html")
+		return
+	}
 
-        tmpl, err := template.New("dashboard").Parse(string(templateContent))
-        if err != nil {
-                http.Error(w, "Template error", http.StatusInternalServerError)
-                return
-        }
+	tmpl, err := template.New("dashboard").Parse(string(templateContent))
+	if err != nil {
+		http.Error(w, "Template error", http.StatusInternalServerError)
+		return
+	}
 
-        data := DashboardData{
-                Environment: environment,
-                N8nURL:     getN8nURL(),
-                SystemStatus: map[string]string{
-                        "CLI":     "ONLINE",
-                        "DAEMON":  "ACTIVE", 
-                        "MONITOR": "DETECTING",
-                        "GITLAB":  "CONNECTED",
-                        "SENTRY":  "READY",
-                },
-                Workflows: []DashboardWorkflowStatus{
-                        {ID: "1001", Name: "Customer_Onboarding", Status: "HEALTHY", Errors: 0},
-                        {ID: "1002", Name: "Payment_Processing", Status: "CRITICAL", Errors: 47},
-                        {ID: "1003", Name: "Order_Fulfillment", Status: "HEALTHY", Errors: 0},
-                },
-                Metrics: Metrics{
-                        TotalFailures:   47,
-                        IssuesCreated:   12,
-                        ActiveWorkflows: 3,
-                        Uptime:         "14:23",
-                        Threshold:      2,
-                        CheckInterval:  "10s",
-                },
-                Timestamp: time.Now().Format("15:04:05"),
-        }
+	data := DashboardData{
+		Environment: environment,
+		N8nURL:      getN8nURL(),
+		SystemStatus: map[string]string{
+			"CLI":     "ONLINE",
+			"DAEMON":  "ACTIVE",
+			"MONITOR": "DETECTING",
+			"GITLAB":  "CONNECTED",
+			"SENTRY":  "READY",
+		},
+		Workflows: []DashboardWorkflowStatus{
+			{ID: "1001", Name: "Customer_Onboarding", Status: "HEALTHY", Errors: 0},
+			{ID: "1002", Name: "Payment_Processing", Status: "CRITICAL", Errors: 47},
+			{ID: "1003", Name: "Order_Fulfillment", Status: "HEALTHY", Errors: 0},
+		},
+		Metrics: Metrics{
+			TotalFailures:   47,
+			IssuesCreated:   12,
+			ActiveWorkflows: 3,
+			Uptime:          "14:23",
+			Threshold:       2,
+			CheckInterval:   "10s",
+		},
+		Timestamp: time.Now().Format("15:04:05"),
+	}
 
-        w.Header().Set("Content-Type", "text/html")
-        tmpl.Execute(w, data)
+	w.Header().Set("Content-Type", "text/html")
+	tmpl.Execute(w, data)
 }
 
 func serveAPIData(w http.ResponseWriter, r *http.Request) {
-        // Connect to n8n to get real data
-        var n8nURL string
-        if demoMode {
-                n8nURL = "http://localhost:3001"
-        } else {
-                n8nURL = getN8nURL()
-        }
+	// Connect to n8n to get real data
+	var n8nURL string
+	if demoMode {
+		n8nURL = "http://localhost:3001"
+	} else {
+		n8nURL = getN8nURL()
+	}
 
-        apiKey := "n8n_api_mock_development"
-        if !demoMode {
-                apiKey = os.Getenv("N8N_API_KEY")
-        }
+	apiKey := "n8n_api_mock_development"
+	if !demoMode {
+		apiKey = os.Getenv("N8N_API_KEY")
+	}
 
-        // Try to get real data
-        if n8nClient, err := client.New(n8nURL, apiKey, nil); err == nil {
-                ctx := context.Background()
-                if workflows, err := n8nClient.GetWorkflows(ctx); err == nil {
-                        w.Header().Set("Content-Type", "application/json")
-                        fmt.Fprintf(w, `{
+	// Try to get real data
+	if n8nClient, err := client.New(n8nURL, apiKey, nil); err == nil {
+		ctx := context.Background()
+		if workflows, err := n8nClient.GetWorkflows(ctx); err == nil {
+			w.Header().Set("Content-Type", "application/json")
+			fmt.Fprintf(w, `{
                                 "workflows": %d,
                                 "status": "connected",
                                 "timestamp": "%s",
                                 "environment": "%s"
                         }`, len(workflows), time.Now().Format("15:04:05"), environment)
-                        return
-                }
-        }
+			return
+		}
+	}
 
-        // Fallback data
-        w.Header().Set("Content-Type", "application/json")
-        fmt.Fprintf(w, `{
+	// Fallback data
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, `{
                 "workflows": 3,
                 "status": "demo_mode",
                 "timestamp": "%s",
@@ -204,14 +204,14 @@ func serveAPIData(w http.ResponseWriter, r *http.Request) {
 }
 
 func getN8nURL() string {
-        switch environment {
-        case "development":
-                return "http://localhost:5678"
-        case "staging":
-                return "https://n8n-staging.example.com"
-        case "production":
-                return "https://n8n-prod.example.com"
-        default:
-                return "http://localhost:5678"
-        }
+	switch environment {
+	case "development":
+		return "http://localhost:5678"
+	case "staging":
+		return "https://n8n-staging.example.com"
+	case "production":
+		return "https://n8n-prod.example.com"
+	default:
+		return "http://localhost:5678"
+	}
 }

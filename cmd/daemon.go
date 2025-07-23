@@ -1,301 +1,297 @@
 package cmd
 
 import (
-        "context"
-        "encoding/json"
-        "fmt"
-        "io/ioutil"
-        "os"
-        "os/signal"
-        "path/filepath"
-        "strings"
-        "syscall"
-        "time"
+	"context"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"os/signal"
+	"path/filepath"
+	"strings"
+	"syscall"
+	"time"
 
-        "github.com/fsnotify/fsnotify"
-        "github.com/n8n-workflows/n8n-ops/internal/client"
-        "github.com/n8n-workflows/n8n-ops/internal/workflow"
-        "github.com/sirupsen/logrus"
+	"github.com/fsnotify/fsnotify"
+	"github.com/pmaojo/n8n-ops/internal/client"
+	"github.com/pmaojo/n8n-ops/internal/workflow"
+	"github.com/sirupsen/logrus"
 )
-
-
 
 // BackupInfo stores backup metadata
 type BackupInfo struct {
-        OriginalFile string    `json:"originalFile"`
-        BackupFile   string    `json:"backupFile"`
-        Timestamp    time.Time `json:"timestamp"`
-        Environment  string    `json:"environment"`
-        WorkflowID   string    `json:"workflowId"`
-        WorkflowName string    `json:"workflowName"`
+	OriginalFile string    `json:"originalFile"`
+	BackupFile   string    `json:"backupFile"`
+	Timestamp    time.Time `json:"timestamp"`
+	Environment  string    `json:"environment"`
+	WorkflowID   string    `json:"workflowId"`
+	WorkflowName string    `json:"workflowName"`
 }
 
 func runDaemonMode() {
-        logger := logrus.WithFields(logrus.Fields{
-                "command": "daemon",
-                "env":     environment,
-        })
+	logger := logrus.WithFields(logrus.Fields{
+		"command": "daemon",
+		"env":     environment,
+	})
 
-        logger.Info("Starting n8n-ops daemon mode")
+	logger.Info("Starting n8n-ops daemon mode")
 
-        if language == "es" {
-                fmt.Printf("🤖 Modo daemon iniciado - %s\n", environment)
-                fmt.Printf("👁️ Monitoreando archivos JSON en ./workflows/%s/\n", environment)
-                fmt.Printf("💾 Creando backups automáticos antes de actualizar workflows\n")
-        } else {
-                fmt.Printf("🤖 Daemon mode started - %s environment\n", environment)
-                fmt.Printf("👁️ Watching JSON files in ./workflows/%s/\n", environment)
-                fmt.Printf("💾 Creating automatic backups before updating workflows\n")
-        }
+	if language == "es" {
+		fmt.Printf("🤖 Modo daemon iniciado - %s\n", environment)
+		fmt.Printf("👁️ Monitoreando archivos JSON en ./workflows/%s/\n", environment)
+		fmt.Printf("💾 Creando backups automáticos antes de actualizar workflows\n")
+	} else {
+		fmt.Printf("🤖 Daemon mode started - %s environment\n", environment)
+		fmt.Printf("👁️ Watching JSON files in ./workflows/%s/\n", environment)
+		fmt.Printf("💾 Creating automatic backups before updating workflows\n")
+	}
 
-        // Create n8n client with proper URL for demo mode
-        var n8nURL string
-        if demoMode {
-                n8nURL = "http://localhost:3001"
-        } else {
-                // Use environment-specific URL from config
-                switch environment {
-                case "development":
-                        n8nURL = "http://localhost:5678"
-                case "staging":
-                        n8nURL = "https://n8n-staging.example.com"
-                case "production":
-                        n8nURL = "https://n8n-prod.example.com"
-                default:
-                        n8nURL = "http://localhost:5678"
-                }
-        }
-        
-        n8nClient, err := client.New(n8nURL, "n8n_api_mock_development", nil)
-        if err != nil {
-                logger.WithError(err).Fatal("Failed to create n8n client")
-                return
-        }
+	// Create n8n client with proper URL for demo mode
+	var n8nURL string
+	if demoMode {
+		n8nURL = "http://localhost:3001"
+	} else {
+		// Use environment-specific URL from config
+		switch environment {
+		case "development":
+			n8nURL = "http://localhost:5678"
+		case "staging":
+			n8nURL = "https://n8n-staging.example.com"
+		case "production":
+			n8nURL = "https://n8n-prod.example.com"
+		default:
+			n8nURL = "http://localhost:5678"
+		}
+	}
 
-        // Test connection
-        if err := testN8nConnectionDaemon(n8nClient); err != nil {
-                logger.WithError(err).Fatal("Failed to connect to n8n API")
-                return
-        }
+	n8nClient, err := client.New(n8nURL, "n8n_api_mock_development", nil)
+	if err != nil {
+		logger.WithError(err).Fatal("Failed to create n8n client")
+		return
+	}
 
-        // Setup file watcher
-        watcher, err := fsnotify.NewWatcher()
-        if err != nil {
-                logger.WithError(err).Fatal("Failed to create file watcher")
-                return
-        }
-        defer watcher.Close()
+	// Test connection
+	if err := testN8nConnectionDaemon(n8nClient); err != nil {
+		logger.WithError(err).Fatal("Failed to connect to n8n API")
+		return
+	}
 
-        // Watch directory
-        watchDir := fmt.Sprintf("./workflows/%s", environment)
-        if err := setupDirectoryWatch(watcher, watchDir); err != nil {
-                logger.WithError(err).Fatal("Failed to setup directory watch")
-                return
-        }
+	// Setup file watcher
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		logger.WithError(err).Fatal("Failed to create file watcher")
+		return
+	}
+	defer watcher.Close()
 
-        // Setup signal handling for graceful shutdown
-        sigChan := make(chan os.Signal, 1)
-        signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	// Watch directory
+	watchDir := fmt.Sprintf("./workflows/%s", environment)
+	if err := setupDirectoryWatch(watcher, watchDir); err != nil {
+		logger.WithError(err).Fatal("Failed to setup directory watch")
+		return
+	}
 
-        fmt.Printf("✅ Connected to n8n API. Daemon ready!\n")
-        fmt.Printf("⏹️ Press Ctrl+C to stop daemon\n\n")
+	// Setup signal handling for graceful shutdown
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
-        // Main daemon loop
-        for {
-                select {
-                case event, ok := <-watcher.Events:
-                        if !ok {
-                                return
-                        }
-                        handleFileEvent(event, n8nClient, logger)
+	fmt.Printf("✅ Connected to n8n API. Daemon ready!\n")
+	fmt.Printf("⏹️ Press Ctrl+C to stop daemon\n\n")
 
-                case err, ok := <-watcher.Errors:
-                        if !ok {
-                                return
-                        }
-                        logger.WithError(err).Error("File watcher error")
+	// Main daemon loop
+	for {
+		select {
+		case event, ok := <-watcher.Events:
+			if !ok {
+				return
+			}
+			handleFileEvent(event, n8nClient, logger)
 
-                case sig := <-sigChan:
-                        fmt.Printf("\n🛑 Received signal %v, stopping daemon...\n", sig)
-                        return
-                }
-        }
+		case err, ok := <-watcher.Errors:
+			if !ok {
+				return
+			}
+			logger.WithError(err).Error("File watcher error")
+
+		case sig := <-sigChan:
+			fmt.Printf("\n🛑 Received signal %v, stopping daemon...\n", sig)
+			return
+		}
+	}
 }
 
 func setupDirectoryWatch(watcher *fsnotify.Watcher, watchDir string) error {
-        // Create directory if it doesn't exist
-        if err := os.MkdirAll(watchDir, 0755); err != nil {
-                return fmt.Errorf("failed to create watch directory: %w", err)
-        }
+	// Create directory if it doesn't exist
+	if err := os.MkdirAll(watchDir, 0755); err != nil {
+		return fmt.Errorf("failed to create watch directory: %w", err)
+	}
 
-        // Add directory to watcher
-        if err := watcher.Add(watchDir); err != nil {
-                return fmt.Errorf("failed to add directory to watcher: %w", err)
-        }
+	// Add directory to watcher
+	if err := watcher.Add(watchDir); err != nil {
+		return fmt.Errorf("failed to add directory to watcher: %w", err)
+	}
 
-        return nil
+	return nil
 }
 
 func handleFileEvent(event fsnotify.Event, n8nClient client.Client, logger *logrus.Entry) {
-        // Only process JSON files
-        if !strings.HasSuffix(event.Name, ".json") {
-                return
-        }
+	// Only process JSON files
+	if !strings.HasSuffix(event.Name, ".json") {
+		return
+	}
 
-        // Only process write events (ignore create/remove for now)
-        if event.Op&fsnotify.Write == 0 {
-                return
-        }
+	// Only process write events (ignore create/remove for now)
+	if event.Op&fsnotify.Write == 0 {
+		return
+	}
 
-        logger.WithField("file", event.Name).Info("JSON file modified")
-        fmt.Printf("📝 File changed: %s\n", filepath.Base(event.Name))
+	logger.WithField("file", event.Name).Info("JSON file modified")
+	fmt.Printf("📝 File changed: %s\n", filepath.Base(event.Name))
 
-        // Process the file change
-        if err := processJSONFileChange(event.Name, n8nClient, logger); err != nil {
-                logger.WithError(err).Error("Failed to process JSON file change")
-                fmt.Printf("❌ Error processing %s: %v\n", filepath.Base(event.Name), err)
-        }
+	// Process the file change
+	if err := processJSONFileChange(event.Name, n8nClient, logger); err != nil {
+		logger.WithError(err).Error("Failed to process JSON file change")
+		fmt.Printf("❌ Error processing %s: %v\n", filepath.Base(event.Name), err)
+	}
 }
 
 func processJSONFileChange(filePath string, n8nClient client.Client, logger *logrus.Entry) error {
-        // Read and parse JSON file
-        workflowData, err := readJSONWorkflow(filePath)
-        if err != nil {
-                return fmt.Errorf("failed to read JSON workflow: %w", err)
-        }
+	// Read and parse JSON file
+	workflowData, err := readJSONWorkflow(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to read JSON workflow: %w", err)
+	}
 
-        // Validate workflow
-        workflowID, ok := workflowData["id"].(string)
-        if !ok || workflowID == "" {
-                return fmt.Errorf("workflow ID is required")
-        }
+	// Validate workflow
+	workflowID, ok := workflowData["id"].(string)
+	if !ok || workflowID == "" {
+		return fmt.Errorf("workflow ID is required")
+	}
 
-        // Create backup of existing workflow
-        if err := createWorkflowBackup(workflowID, n8nClient); err != nil {
-                logger.WithError(err).Warn("Failed to create workflow backup")
-        }
+	// Create backup of existing workflow
+	if err := createWorkflowBackup(workflowID, n8nClient); err != nil {
+		logger.WithError(err).Warn("Failed to create workflow backup")
+	}
 
-        // Update workflow in n8n
-        if err := updateWorkflowInN8n(workflowData, n8nClient, logger); err != nil {
-                return fmt.Errorf("failed to update workflow in n8n: %w", err)
-        }
+	// Update workflow in n8n
+	if err := updateWorkflowInN8n(workflowData, n8nClient, logger); err != nil {
+		return fmt.Errorf("failed to update workflow in n8n: %w", err)
+	}
 
-        workflowName := workflowData["name"].(string)
-        fmt.Printf("✅ Workflow '%s' updated in n8n\n", workflowName)
-        return nil
+	workflowName := workflowData["name"].(string)
+	fmt.Printf("✅ Workflow '%s' updated in n8n\n", workflowName)
+	return nil
 }
 
 func readJSONWorkflow(filePath string) (map[string]interface{}, error) {
-        data, err := ioutil.ReadFile(filePath)
-        if err != nil {
-                return nil, err
-        }
+	data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
 
-        var workflow map[string]interface{}
-        if err := json.Unmarshal(data, &workflow); err != nil {
-                return nil, err
-        }
+	var workflow map[string]interface{}
+	if err := json.Unmarshal(data, &workflow); err != nil {
+		return nil, err
+	}
 
-        return workflow, nil
+	return workflow, nil
 }
 
 func createWorkflowBackup(workflowID string, n8nClient client.Client) error {
-        // Get current workflow from n8n
-        ctx := context.Background()
-        currentWorkflow, err := n8nClient.GetWorkflow(ctx, workflowID)
-        if err != nil {
-                // If workflow doesn't exist, no backup needed
-                return nil
-        }
+	// Get current workflow from n8n
+	ctx := context.Background()
+	currentWorkflow, err := n8nClient.GetWorkflow(ctx, workflowID)
+	if err != nil {
+		// If workflow doesn't exist, no backup needed
+		return nil
+	}
 
-        // Create backups directory
-        backupDir := fmt.Sprintf("./backups/%s", environment)
-        if err := os.MkdirAll(backupDir, 0755); err != nil {
-                return err
-        }
+	// Create backups directory
+	backupDir := fmt.Sprintf("./backups/%s", environment)
+	if err := os.MkdirAll(backupDir, 0755); err != nil {
+		return err
+	}
 
-        // Generate backup filename with timestamp
-        timestamp := time.Now().Format("20060102-150405")
-        backupFile := fmt.Sprintf("%s/%s_%s_backup.json", backupDir, workflowID, timestamp)
+	// Generate backup filename with timestamp
+	timestamp := time.Now().Format("20060102-150405")
+	backupFile := fmt.Sprintf("%s/%s_%s_backup.json", backupDir, workflowID, timestamp)
 
-        // Save current workflow as backup
-        backupData, err := json.MarshalIndent(currentWorkflow, "", "  ")
-        if err != nil {
-                return err
-        }
+	// Save current workflow as backup
+	backupData, err := json.MarshalIndent(currentWorkflow, "", "  ")
+	if err != nil {
+		return err
+	}
 
-        if err := ioutil.WriteFile(backupFile, backupData, 0644); err != nil {
-                return err
-        }
+	if err := ioutil.WriteFile(backupFile, backupData, 0644); err != nil {
+		return err
+	}
 
-        // Save backup metadata
-        backupInfo := BackupInfo{
-                OriginalFile: fmt.Sprintf("./workflows/%s/%s.json", environment, workflowID),
-                BackupFile:   backupFile,
-                Timestamp:    time.Now(),
-                Environment:  environment,
-                WorkflowID:   workflowID,
-                WorkflowName: currentWorkflow.Name,
-        }
+	// Save backup metadata
+	backupInfo := BackupInfo{
+		OriginalFile: fmt.Sprintf("./workflows/%s/%s.json", environment, workflowID),
+		BackupFile:   backupFile,
+		Timestamp:    time.Now(),
+		Environment:  environment,
+		WorkflowID:   workflowID,
+		WorkflowName: currentWorkflow.Name,
+	}
 
-        metadataFile := fmt.Sprintf("%s/%s_%s_backup.meta.json", backupDir, workflowID, timestamp)
-        metadataData, err := json.MarshalIndent(backupInfo, "", "  ")
-        if err != nil {
-                return err
-        }
+	metadataFile := fmt.Sprintf("%s/%s_%s_backup.meta.json", backupDir, workflowID, timestamp)
+	metadataData, err := json.MarshalIndent(backupInfo, "", "  ")
+	if err != nil {
+		return err
+	}
 
-        if err := ioutil.WriteFile(metadataFile, metadataData, 0644); err != nil {
-                return err
-        }
+	if err := ioutil.WriteFile(metadataFile, metadataData, 0644); err != nil {
+		return err
+	}
 
-        fmt.Printf("💾 Backup created: %s\n", filepath.Base(backupFile))
-        return nil
+	fmt.Printf("💾 Backup created: %s\n", filepath.Base(backupFile))
+	return nil
 }
 
-
-
 func updateWorkflowInN8n(jsonWorkflow map[string]interface{}, n8nClient client.Client, logger *logrus.Entry) error {
-        workflowID := jsonWorkflow["id"].(string)
+	workflowID := jsonWorkflow["id"].(string)
 
-        // Convert map to workflow struct
-        jsonData, err := json.Marshal(jsonWorkflow)
-        if err != nil {
-                return fmt.Errorf("failed to marshal workflow: %w", err)
-        }
+	// Convert map to workflow struct
+	jsonData, err := json.Marshal(jsonWorkflow)
+	if err != nil {
+		return fmt.Errorf("failed to marshal workflow: %w", err)
+	}
 
-        var wf workflow.Workflow
-        if err := json.Unmarshal(jsonData, &wf); err != nil {
-                return fmt.Errorf("failed to unmarshal workflow: %w", err)
-        }
+	var wf workflow.Workflow
+	if err := json.Unmarshal(jsonData, &wf); err != nil {
+		return fmt.Errorf("failed to unmarshal workflow: %w", err)
+	}
 
-        // Set updated timestamp in original JSON if not provided
-        if _, exists := jsonWorkflow["updatedAt"]; !exists || jsonWorkflow["updatedAt"] == "" {
-                jsonWorkflow["updatedAt"] = time.Now().Format(time.RFC3339)
-        }
+	// Set updated timestamp in original JSON if not provided
+	if _, exists := jsonWorkflow["updatedAt"]; !exists || jsonWorkflow["updatedAt"] == "" {
+		jsonWorkflow["updatedAt"] = time.Now().Format(time.RFC3339)
+	}
 
-        // Check if workflow exists
-        ctx := context.Background()
-        _, err = n8nClient.GetWorkflow(ctx, workflowID)
-        if err != nil {
-                // Workflow doesn't exist, create new one
-                logger.WithField("workflowId", workflowID).Info("Creating new workflow")
-                _, err = n8nClient.CreateWorkflow(ctx, &wf)
-                return err
-        }
+	// Check if workflow exists
+	ctx := context.Background()
+	_, err = n8nClient.GetWorkflow(ctx, workflowID)
+	if err != nil {
+		// Workflow doesn't exist, create new one
+		logger.WithField("workflowId", workflowID).Info("Creating new workflow")
+		_, err = n8nClient.CreateWorkflow(ctx, &wf)
+		return err
+	}
 
-        // Workflow exists, update it
-        logger.WithField("workflowId", workflowID).Info("Updating existing workflow")
-        _, err = n8nClient.UpdateWorkflow(ctx, workflowID, &wf)
-        return err
+	// Workflow exists, update it
+	logger.WithField("workflowId", workflowID).Info("Updating existing workflow")
+	_, err = n8nClient.UpdateWorkflow(ctx, workflowID, &wf)
+	return err
 }
 
 func testN8nConnectionDaemon(n8nClient client.Client) error {
-        ctx := context.Background()
-        err := n8nClient.HealthCheck(ctx)
-        if err != nil {
-                return fmt.Errorf("health check failed: %w", err)
-        }
+	ctx := context.Background()
+	err := n8nClient.HealthCheck(ctx)
+	if err != nil {
+		return fmt.Errorf("health check failed: %w", err)
+	}
 
-        fmt.Printf("🔗 Connected to n8n API\n")
-        return nil
+	fmt.Printf("🔗 Connected to n8n API\n")
+	return nil
 }

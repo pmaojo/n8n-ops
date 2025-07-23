@@ -15,9 +15,9 @@ echo "Build Date: $BUILD_DATE"
 
 # Build with version information
 go build -ldflags "\
-  -X 'github.com/n8n-workflows/n8n-ops/cmd.Version=$VERSION' \
-  -X 'github.com/n8n-workflows/n8n-ops/cmd.GitCommit=$GIT_COMMIT' \
-  -X 'github.com/n8n-workflows/n8n-ops/cmd.BuildDate=$BUILD_DATE'" \
+  -X 'github.com/pmaojo/n8n-ops/cmd.Version=$VERSION' \
+  -X 'github.com/pmaojo/n8n-ops/cmd.GitCommit=$GIT_COMMIT' \
+  -X 'github.com/pmaojo/n8n-ops/cmd.BuildDate=$BUILD_DATE'" \
   -o n8n-ops main.go
 
 # Make executable
