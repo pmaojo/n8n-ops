@@ -12,7 +12,7 @@ stages:
 variables:
   GO_VERSION: "1.19"
   CLI_BINARY: "n8n-ops"
-  GOMODCACHE: "$CI_PROJECT_DIR/.cache/go/pkg/mod"
+  GOMODCACHE: "$CI_PROJECT_DIR/.cache"
 
 # Base template for all deployment jobs
 .deploy_template:
@@ -34,6 +34,12 @@ variables:
 build-cli:
   stage: build
   image: golang:${GO_VERSION}
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - ${GOMODCACHE}
+      - go.sum
+      - go.sum
   script:
     - echo "Building n8n CLI tool..."
     - go mod tidy
@@ -52,6 +58,11 @@ build-cli:
 validate-workflows:
   stage: validate
   image: golang:${GO_VERSION}
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - ${GOMODCACHE}
+      - go.sum
   dependencies:
     - build-cli
   script:
@@ -66,6 +77,11 @@ validate-workflows:
 test-cli-functions:
   stage: test
   image: golang:${GO_VERSION}
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - ${GOMODCACHE}
+      - go.sum
   dependencies:
     - build-cli
   script:
