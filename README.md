@@ -27,3 +27,7 @@ This project contains n8n workflows managed with the n8n-ops tool for collaborat
 ## Need Help?
 
 Run `n8n-ops --help` for command information or check the documentation.
+
+## CI/CD
+
+All build, validation, and deployment stages run through a single GitLab pipeline defined in `.gitlab-ci.yml`.

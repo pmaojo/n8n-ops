@@ -167,3 +167,19 @@ rollback-production:
   when: manual
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
+# Notification job (runs after deployments)
+notify-deployment:
+  stage: deploy-production
+  image: alpine:latest
+  dependencies:
+    - build-cli
+  script:
+    - echo "Sending deployment notification..."
+    - echo "Deployment completed for environment: $CI_ENVIRONMENT_NAME"
+    - echo "Branch: $CI_COMMIT_BRANCH"
+    - echo "Commit: $CI_COMMIT_SHA"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+    - if: '$CI_COMMIT_BRANCH == "staging"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  when: on_success
