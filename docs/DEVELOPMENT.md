@@ -148,16 +148,40 @@ variables:
   dependencies:
     - build-cli
   script:
-    - echo "Syncing workflows from $TARGET_ENV..."
-    - ./n8n-ops sync --env $TARGET_ENV --verbose
-    - echo "Validating workflows..."
-    - ./n8n-ops validate ./workflows/$TARGET_ENV/
-    - echo "Running dry-run..."
-    - ./n8n-ops deploy --env $TARGET_ENV --dry-run --verbose
-    - echo "Deploying..."
-    - ./n8n-ops deploy --env $TARGET_ENV --verbose
+    - go build -o n8n-ops main.go
+    - ./n8n-ops validate ./workflows/
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH'
 
-# Deploy to development (automatic)
+# Test CLI functions
+test-cli-functions:
+  stage: test
+  image: golang:${GO_VERSION}
+  script:
+    - go build -o n8n-ops main.go
+    - ./n8n-ops --help
+    - ./n8n-ops welcome
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH'
+
+# Run Go unit tests
+unit-tests:
+  stage: test
+  image: golang:${GO_VERSION}
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - ${GOMODCACHE}
+  script:
+    - go vet ./...
+    - go test ./...
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH'
+
+# Deploy to development (automatic on develop branch)
 deploy-development:
   extends: .deploy_template
   stage: deploy-dev

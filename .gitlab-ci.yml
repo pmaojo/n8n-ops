@@ -12,6 +12,7 @@ stages:
 variables:
   GO_VERSION: "1.19"
   CLI_BINARY: "n8n-ops"
+  GOMODCACHE: "$CI_PROJECT_DIR/.cache/go/pkg/mod"
 
 # Base template for all deployment jobs
 .deploy_template:
@@ -73,6 +74,25 @@ test-cli-functions:
     - ./${CLI_BINARY} --lang es welcome
     - ./${CLI_BINARY} branch current
     - echo "CLI tests completed"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH'
+
+# Run Go unit tests
+unit-tests:
+  stage: test
+  image: golang:${GO_VERSION}
+  dependencies:
+    - build-cli
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - ${GOMODCACHE}
+  script:
+    - echo "Running Go vet..."
+    - go vet ./...
+    - echo "Running unit tests..."
+    - go test ./...
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH'
