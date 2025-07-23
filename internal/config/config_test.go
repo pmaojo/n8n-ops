@@ -12,7 +12,6 @@ func prepareConfig(yaml string) {
 	viper.Reset()
 	viper.SetConfigType("yaml")
 	_ = viper.ReadConfig(strings.NewReader(yaml))
-	globalConfig = nil
 }
 
 func TestInitConfigLoadsConfiguration(t *testing.T) {
@@ -37,11 +36,11 @@ func TestInitConfigLoadsConfiguration(t *testing.T) {
 	prepareConfig(cfgYAML)
 	t.Setenv("TEST_KEY", "secret")
 
-	if err := InitConfig(); err != nil {
+	cfg, err := NewConfig()
+	if err != nil {
 		t.Fatalf("init config: %v", err)
 	}
 
-	cfg := GetConfig()
 	if cfg.Defaults.Environment != "test" {
 		t.Fatalf("expected default environment 'test', got '%s'", cfg.Defaults.Environment)
 	}
@@ -51,14 +50,14 @@ func TestInitConfigLoadsConfiguration(t *testing.T) {
 	if cfg.Defaults.Sync.AutoBackup {
 		t.Error("auto backup should be false")
 	}
-	envCfg, err := GetEnvironmentConfig("test")
+	envCfg, err := cfg.GetEnvironmentConfig("test")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if envCfg.APIKey != "secret" {
 		t.Errorf("expected API key 'secret', got '%s'", envCfg.APIKey)
 	}
-	logCfg := GetLoggingConfig()
+	logCfg := cfg.GetLoggingConfig()
 	if logCfg.Level != "debug" || logCfg.Format != "json" {
 		t.Errorf("unexpected logging config: %+v", logCfg)
 	}
@@ -66,10 +65,11 @@ func TestInitConfigLoadsConfiguration(t *testing.T) {
 
 func TestGetEnvironmentConfigErrors(t *testing.T) {
 	prepareConfig("environments: {}")
-	if err := InitConfig(); err != nil {
+	cfg, err := NewConfig()
+	if err != nil {
 		t.Fatalf("init config: %v", err)
 	}
-	if _, err := GetEnvironmentConfig("missing"); err == nil {
+	if _, err := cfg.GetEnvironmentConfig("missing"); err == nil {
 		t.Error("expected error for unknown environment")
 	}
 }

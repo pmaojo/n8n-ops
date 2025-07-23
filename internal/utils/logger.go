@@ -127,20 +127,12 @@ func configureLogger(logger *logrus.Logger) {
 	}
 }
 
-// GetLogger is a placeholder for refactoring.
-// It is recommended to pass logger instances instead of using a global logger.
-var globalLogger *logrus.Logger
-
-func GetLogger() *logrus.Logger {
-	if globalLogger == nil {
-		globalLogger = NewLogger()
-	}
-	return globalLogger
-}
-
 // LoggerWithFields creates a logger with predefined fields
-func LoggerWithFields(fields logrus.Fields) *logrus.Entry {
-	return GetLogger().WithFields(fields)
+func LoggerWithFields(logger *logrus.Logger, fields logrus.Fields) *logrus.Entry {
+	if logger == nil {
+		logger = NewLogger()
+	}
+	return logger.WithFields(fields)
 }
 
 // ContextLogger creates a logger with context fields
@@ -149,9 +141,12 @@ type ContextLogger struct {
 }
 
 // NewContextLogger creates a new context logger
-func NewContextLogger(context string) *ContextLogger {
+func NewContextLogger(logger *logrus.Logger, context string) *ContextLogger {
+	if logger == nil {
+		logger = NewLogger()
+	}
 	return &ContextLogger{
-		Entry: GetLogger().WithField("context", context),
+		Entry: logger.WithField("context", context),
 	}
 }
 
@@ -170,50 +165,68 @@ func (cl *ContextLogger) WithFields(fields logrus.Fields) *ContextLogger {
 }
 
 // Emergency log level for critical failures
-func Emergency(args ...interface{}) {
-	GetLogger().WithField("severity", "emergency").Fatal(args...)
+func Emergency(logger *logrus.Logger, args ...interface{}) {
+	if logger == nil {
+		logger = NewLogger()
+	}
+	logger.WithField("severity", "emergency").Fatal(args...)
 }
 
 // Alert log level for conditions requiring immediate action
-func Alert(args ...interface{}) {
-	GetLogger().WithField("severity", "alert").Error(args...)
+func Alert(logger *logrus.Logger, args ...interface{}) {
+	if logger == nil {
+		logger = NewLogger()
+	}
+	logger.WithField("severity", "alert").Error(args...)
 }
 
 // Critical log level for critical conditions
-func Critical(args ...interface{}) {
-	GetLogger().WithField("severity", "critical").Error(args...)
+func Critical(logger *logrus.Logger, args ...interface{}) {
+	if logger == nil {
+		logger = NewLogger()
+	}
+	logger.WithField("severity", "critical").Error(args...)
 }
 
 // Notice log level for normal but significant conditions
-func Notice(args ...interface{}) {
-	GetLogger().WithField("severity", "notice").Info(args...)
+func Notice(logger *logrus.Logger, args ...interface{}) {
+	if logger == nil {
+		logger = NewLogger()
+	}
+	logger.WithField("severity", "notice").Info(args...)
 }
 
 // LogOperation logs the start and end of an operation
-func LogOperation(operation string, fn func() error) error {
-	logger := GetLogger().WithField("operation", operation)
-	logger.Info("Starting operation")
+func LogOperation(logger *logrus.Logger, operation string, fn func() error) error {
+	if logger == nil {
+		logger = NewLogger()
+	}
+	entry := logger.WithField("operation", operation)
+	entry.Info("Starting operation")
 
 	start := time.Now()
 	err := fn()
 	duration := time.Since(start)
 
 	if err != nil {
-		logger.WithFields(logrus.Fields{
+		entry.WithFields(logrus.Fields{
 			"duration": duration,
 			"error":    err,
 		}).Error("Operation failed")
 	} else {
-		logger.WithField("duration", duration).Info("Operation completed successfully")
+		entry.WithField("duration", duration).Info("Operation completed successfully")
 	}
 
 	return err
 }
 
 // LogWithDuration logs with execution duration
-func LogWithDuration(message string, start time.Time, fields ...logrus.Fields) {
+func LogWithDuration(logger *logrus.Logger, message string, start time.Time, fields ...logrus.Fields) {
+	if logger == nil {
+		logger = NewLogger()
+	}
 	duration := time.Since(start)
-	entry := GetLogger().WithField("duration", duration)
+	entry := logger.WithField("duration", duration)
 
 	if len(fields) > 0 {
 		entry = entry.WithFields(fields[0])
@@ -230,8 +243,10 @@ type LogEvent struct {
 }
 
 // LogEvents logs multiple events in a structured way
-func LogEvents(events []LogEvent) {
-	logger := GetLogger()
+func LogEvents(logger *logrus.Logger, events []LogEvent) {
+	if logger == nil {
+		logger = NewLogger()
+	}
 	for _, event := range events {
 		entry := logger.WithFields(event.Fields)
 		entry.Log(event.Level, event.Message)
@@ -245,9 +260,12 @@ type PerformanceLogger struct {
 }
 
 // NewPerformanceLogger creates a performance logger
-func NewPerformanceLogger(operation string) *PerformanceLogger {
+func NewPerformanceLogger(logger *logrus.Logger, operation string) *PerformanceLogger {
+	if logger == nil {
+		logger = NewLogger()
+	}
 	return &PerformanceLogger{
-		logger: GetLogger().WithField("operation", operation),
+		logger: logger.WithField("operation", operation),
 		start:  time.Now(),
 	}
 }
