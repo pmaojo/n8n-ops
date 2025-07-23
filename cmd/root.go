@@ -124,10 +124,24 @@ func initConfig() {
 	}
 
 	// Initialize configuration
-	config.InitConfig()
+	cfg, err := config.NewConfig()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error initializing config: %v\n", err)
+		os.Exit(1)
+	}
 
-	// Set logger verbosity
+	// Setup logger
+	logger := utils.NewLogger()
+	loggingConfig := cfg.GetLoggingConfig()
+	utils.SetLogLevel(logger, loggingConfig.Level)
+	utils.SetLogFormat(logger, loggingConfig.Format)
+	if loggingConfig.File != "" {
+		if err := utils.SetLogFile(logger, loggingConfig.File); err != nil {
+			logger.Warnf("Failed to set log file: %v", err)
+		}
+	}
+
 	if viper.GetBool("verbose") {
-		utils.SetLogLevel("debug")
+		utils.SetLogLevel(logger, "debug")
 	}
 }
