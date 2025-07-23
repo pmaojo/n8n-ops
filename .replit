@@ -2,6 +2,7 @@ modules = ["go", "golang"]
 
 [nix]
 channel = "stable-24_05"
+packages = ["espeak"]
 
 [workflows]
 runButton = "Project"
