@@ -6,6 +6,7 @@ type MockExecutor struct {
 	LogFunc            func(branch, format string) (string, error)
 	LsTreeFunc         func(branch, path string) ([]string, error)
 	RemoteBranchesFunc func() ([]string, error)
+	UserEmailFunc      func() (string, error)
 }
 
 func (m *MockExecutor) CurrentBranch() (string, error) {
@@ -39,4 +40,11 @@ func (m *MockExecutor) RemoteBranches() ([]string, error) {
 		return m.RemoteBranchesFunc()
 	}
 	return nil, nil
+}
+
+func (m *MockExecutor) UserEmail() (string, error) {
+	if m.UserEmailFunc != nil {
+		return m.UserEmailFunc()
+	}
+	return "", nil
 }
