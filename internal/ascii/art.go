@@ -100,7 +100,7 @@ func ErrorMessage(err string) string {
     ║                                                                   ║
     ║  %s%s%s                                                             ║
     ╚═══════════════════════════════════════════════════════════════════╝%s
-`, Red, Bold, Yellow, Red, Dim, err, Reset)
+`, Red, Bold, Yellow, Red, Dim, err, Red, Reset)
 }
 
 // LoadingSpinner creates animated loading text
@@ -210,5 +210,5 @@ func WelcomeScreen() string {
 ╚══════════════════════════════════════════════════════════════════════╝%s
 
 %sType '%sn8n-ops --help%s' to begin your journey...%s
-`, MatrixEffect(), N8nLogo(), Purple, Bold, Cyan, Purple, Green, Purple, Blue, Purple, Yellow, Purple, Red, Purple, Reset, Dim, Cyan, Bold, Dim, Reset)
+`, MatrixEffect(), N8nLogo(), Purple, Bold, Cyan, Purple, Green, Purple, Blue, Purple, Yellow, Purple, Red, Purple, Purple, Reset, Dim, Cyan, Bold, Dim, Reset)
 }
