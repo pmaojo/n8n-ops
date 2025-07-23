@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/pmaojo/n8n-ops/internal/credentials"
+
 	"github.com/pmaojo/n8n-ops/internal/client"
 	"github.com/pmaojo/n8n-ops/internal/utils"
 	"github.com/sirupsen/logrus"
@@ -52,18 +54,22 @@ func runTerminalDashboard(cmd *cobra.Command, args []string) error {
 	defer cancel()
 
 	// Connect to n8n client
-	var n8nURL string
+	var n8nURL, apiKey string
 	if demoMode {
 		n8nURL = "http://localhost:3001"
+		apiKey = "n8n_api_mock_development"
 	} else {
-		n8nURL = getN8nURLForDashboard()
-	}
-
-	apiKey := "n8n_api_mock_development"
-	if !demoMode {
-		apiKey = os.Getenv("N8N_API_KEY")
+		cm := credentials.NewCredentialManager(environment)
+		var err error
+		n8nURL, apiKey, err = cm.GetN8nCredentials()
+		if err != nil {
+			return fmt.Errorf("failed to load credentials: %w", err)
+		}
+		if n8nURL == "" {
+			n8nURL = "http://localhost:5678"
+		}
 		if apiKey == "" {
-			return fmt.Errorf("N8N_API_KEY environment variable is required")
+			return fmt.Errorf("N8N_%s_API_KEY environment variable is required", strings.ToUpper(environment))
 		}
 	}
 
@@ -73,7 +79,9 @@ func runTerminalDashboard(cmd *cobra.Command, args []string) error {
 	}
 
 	// Initial clear screen
-	utils.ClearTerminalScreen()
+	if err := utils.ClearTerminalScreen(); err != nil {
+		return fmt.Errorf("failed to clear screen: %w", err)
+	}
 
 	// Main loop
 	ticker := time.NewTicker(refreshInterval)
@@ -87,11 +95,15 @@ func runTerminalDashboard(cmd *cobra.Command, args []string) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-sigChan:
-			utils.ClearTerminalScreen()
+			if err := utils.ClearTerminalScreen(); err != nil {
+				return fmt.Errorf("failed to clear screen: %w", err)
+			}
 			fmt.Println("🚀 Terminal dashboard stopped. Thanks for using n8n-ops!")
 			return nil
 		case <-ticker.C:
-			utils.ClearTerminalScreen()
+			if err := utils.ClearTerminalScreen(); err != nil {
+				return fmt.Errorf("failed to clear screen: %w", err)
+			}
 			displayDashboard(n8nClient, ctx)
 		}
 	}
@@ -246,18 +258,5 @@ func getStatusColor(status string) string {
 		return "yellow"
 	default:
 		return "cyan"
-	}
-}
-
-func getN8nURLForDashboard() string {
-	switch environment {
-	case "development":
-		return "http://localhost:5678"
-	case "staging":
-		return "https://n8n-staging.example.com"
-	case "production":
-		return "https://n8n-prod.example.com"
-	default:
-		return "http://localhost:5678"
 	}
 }
