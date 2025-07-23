@@ -217,7 +217,8 @@ func WelcomeScreen() string {
 ╚══════════════════════════════════════════════════════════════════════╝%s
 
 %sType '%sn8n-ops --help%s' to begin your journey...%s
-`, matrix, logo, Purple, Bold,
+`, matrix, logo,
+		Purple, Bold,
 		Cyan, Purple,
 		Green, Purple,
 		Blue, Purple,
