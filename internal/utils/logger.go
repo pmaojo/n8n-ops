@@ -9,7 +9,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var globalLogger *logrus.Logger
+var (
+	globalLogger  *logrus.Logger
+	logFileHandle *os.File
+)
 
 // NewLogger creates and configures a new logger instance
 func NewLogger() *logrus.Logger {
@@ -93,16 +96,33 @@ func SetLogFile(filename string) error {
 		return err
 	}
 
+	// Close previously opened file to avoid descriptor leaks
+	if logFileHandle != nil {
+		_ = logFileHandle.Close()
+		logFileHandle = nil
+	}
+
 	// Open log file
 	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		return err
 	}
+	logFileHandle = file
 
 	// Set output to both file and stdout
 	multiWriter := io.MultiWriter(os.Stdout, file)
 	globalLogger.SetOutput(multiWriter)
 
+	return nil
+}
+
+// CloseLogFile closes the active log file if one is open
+func CloseLogFile() error {
+	if logFileHandle != nil {
+		err := logFileHandle.Close()
+		logFileHandle = nil
+		return err
+	}
 	return nil
 }
 
@@ -134,6 +154,8 @@ func configureLogger(logger *logrus.Logger) {
 	// Check for log file in environment
 	if logFile := os.Getenv("LOG_FILE"); logFile != "" {
 		SetLogFile(logFile)
+	} else {
+		CloseLogFile()
 	}
 }
 
