@@ -140,7 +140,7 @@ The system is designed to be enterprise-ready with comprehensive error handling,
 - **Smart Resolution**: Supports N8N_DEVELOPMENT_*, N8N_DEV_*, and N8N_* naming patterns
 - **Clear Error Messages**: Provides specific guidance when credentials are missing
 - **GitLab Integration**: Real GitLab project (71860842) integration tested and working
-- **Token Validation**: Personal access token glpat-YQ_qPr2GOspWN1WmHARHjG86MQp1OmUxMTBhCw.01.120e1q1v3 validated
+- **Token Validation**: Personal access token glpat-xxxxxxxxxxxxxxxx validated
 - **Project Access**: Successfully connected to user's GitLab project "system-tests-copied-from-6880c09eed8ae72c2ef0fa56-BE34DE"
 - **Enterprise Ready**: Production-grade credential management with backward compatibility
 - **User Confirmed**: Both environment variable logic and GitLab adapter issues resolved
