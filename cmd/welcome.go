@@ -70,6 +70,6 @@ func showRobotTextAnimation(text string) {
                 time.Sleep(80 * time.Millisecond) // Robot-like typing speed
         }
         
-        fmt.Println("\n🎵 *BEEP BOOP BEEP*\n")
+        fmt.Println("\n🎵 *BEEP BOOP BEEP*")
         time.Sleep(500 * time.Millisecond)
 }
