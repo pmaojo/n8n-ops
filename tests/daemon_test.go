@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -48,7 +48,7 @@ func TestMockN8nServerRunning(t *testing.T) {
 	require.Equal(t, http.StatusOK, resp.StatusCode, "Health endpoint debe retornar 200")
 
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 
 	var health map[string]interface{}
@@ -92,7 +92,7 @@ func TestN8nAPIWorkflowOperations(t *testing.T) {
 
 	// Crear workflow via API
 	req, err := http.NewRequest("POST", mockN8nURL+"/api/v1/workflows",
-		ioutil.NopCloser(bytes.NewReader(workflowJSON)))
+		io.NopCloser(bytes.NewReader(workflowJSON)))
 	require.NoError(t, err)
 
 	req.Header.Set("X-N8N-API-KEY", testAPIKey)
@@ -147,14 +147,14 @@ func TestDaemonFileWatching(t *testing.T) {
 	initialJSON, err := json.MarshalIndent(initialWorkflow, "", "  ")
 	require.NoError(t, err)
 
-	err = ioutil.WriteFile(workflowFile, initialJSON, 0644)
+	err = os.WriteFile(workflowFile, initialJSON, 0644)
 	require.NoError(t, err)
 
 	// Verificar que el archivo se creó
 	assert.FileExists(t, workflowFile, "Archivo de workflow debe existir")
 
 	// Leer el archivo y verificar contenido
-	fileContent, err := ioutil.ReadFile(workflowFile)
+	fileContent, err := os.ReadFile(workflowFile)
 	require.NoError(t, err)
 
 	var readWorkflow TestWorkflow
@@ -203,7 +203,7 @@ func TestDaemonIntegration(t *testing.T) {
 	workflowJSON, err := json.MarshalIndent(workflow, "", "  ")
 	require.NoError(t, err)
 
-	err = ioutil.WriteFile(workflowFile, workflowJSON, 0644)
+	err = os.WriteFile(workflowFile, workflowJSON, 0644)
 	require.NoError(t, err)
 
 	t.Log("📝 Workflow inicial creado")
@@ -218,13 +218,13 @@ func TestDaemonIntegration(t *testing.T) {
 	updatedJSON, err := json.MarshalIndent(workflow, "", "  ")
 	require.NoError(t, err)
 
-	err = ioutil.WriteFile(workflowFile, updatedJSON, 0644)
+	err = os.WriteFile(workflowFile, updatedJSON, 0644)
 	require.NoError(t, err)
 
 	t.Log("📝 Workflow modificado")
 
 	// Verificar que los cambios se guardaron
-	fileContent, err := ioutil.ReadFile(workflowFile)
+	fileContent, err := os.ReadFile(workflowFile)
 	require.NoError(t, err)
 
 	var updatedWorkflow TestWorkflow
@@ -279,14 +279,14 @@ func TestDaemonMultipleFiles(t *testing.T) {
 		wfJSON, err := json.MarshalIndent(wf, "", "  ")
 		require.NoError(t, err)
 
-		err = ioutil.WriteFile(filePath, wfJSON, 0644)
+		err = os.WriteFile(filePath, wfJSON, 0644)
 		require.NoError(t, err)
 
 		assert.FileExists(t, filePath, "Archivo %s debe existir", fileName)
 	}
 
 	// Verificar que todos los archivos se crearon
-	files, err := ioutil.ReadDir(testWorkflowsDir)
+	files, err := os.ReadDir(testWorkflowsDir)
 	require.NoError(t, err)
 
 	jsonFiles := 0
@@ -328,7 +328,7 @@ func TestBackupStructure(t *testing.T) {
 	backupJSON, err := json.MarshalIndent(backupWorkflow, "", "  ")
 	require.NoError(t, err)
 
-	err = ioutil.WriteFile(backupFilePath, backupJSON, 0644)
+	err = os.WriteFile(backupFilePath, backupJSON, 0644)
 	require.NoError(t, err)
 
 	// Crear archivo de metadata
@@ -347,7 +347,7 @@ func TestBackupStructure(t *testing.T) {
 	metadataJSON, err := json.MarshalIndent(metadata, "", "  ")
 	require.NoError(t, err)
 
-	err = ioutil.WriteFile(metadataFilePath, metadataJSON, 0644)
+	err = os.WriteFile(metadataFilePath, metadataJSON, 0644)
 	require.NoError(t, err)
 
 	// Verificar que los archivos existen
@@ -355,7 +355,7 @@ func TestBackupStructure(t *testing.T) {
 	assert.FileExists(t, metadataFilePath, "Archivo de metadata debe existir")
 
 	// Verificar contenido del backup
-	backupContent, err := ioutil.ReadFile(backupFilePath)
+	backupContent, err := os.ReadFile(backupFilePath)
 	require.NoError(t, err)
 
 	var restoredWorkflow TestWorkflow
@@ -395,7 +395,7 @@ func TestDaemonPerformance(t *testing.T) {
 		workflowJSON, err := json.MarshalIndent(workflow, "", "  ")
 		require.NoError(t, err)
 
-		err = ioutil.WriteFile(workflowFile, workflowJSON, 0644)
+		err = os.WriteFile(workflowFile, workflowJSON, 0644)
 		require.NoError(t, err)
 
 		// Pequeña pausa entre modificaciones
@@ -405,7 +405,7 @@ func TestDaemonPerformance(t *testing.T) {
 	duration := time.Since(startTime)
 
 	// Verificar que el último cambio se guardó correctamente
-	finalContent, err := ioutil.ReadFile(workflowFile)
+	finalContent, err := os.ReadFile(workflowFile)
 	require.NoError(t, err)
 
 	var finalWorkflow TestWorkflow
