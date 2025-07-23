@@ -156,6 +156,9 @@ func TestCreateWorkflow(t *testing.T) {
 
 	// Test with valid workflow (will timeout, but tests signature)
 	result, err = client.CreateWorkflow(ctx, wf)
+	if err == nil {
+		t.Errorf("expected error due to timeout")
+	}
 
 	// We expect an error due to timeout, but method should exist
 	var _ *workflow.Workflow = result // This should compile
