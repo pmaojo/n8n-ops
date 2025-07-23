@@ -32,8 +32,16 @@ func TestUpdateEventList(t *testing.T) {
 }
 
 func TestBuildGrid(t *testing.T) {
-	grid := BuildGridWithSize(NewWorkflowTable(), NewMetricsParagraph(), NewEventList(), 80, 24)
+	grid := BuildGridWithSize(NewWorkflowTable(), NewMetricsParagraph(), NewEventList(), NewSummaryGauge(), 80, 24)
 	if grid == nil {
 		t.Fatal("grid should not be nil")
+	}
+}
+
+func TestUpdateSummaryGauge(t *testing.T) {
+	g := NewSummaryGauge()
+	UpdateSummaryGauge(g, 1, 2)
+	if g.Percent != 50 {
+		t.Fatalf("expected 50 percent, got %d", g.Percent)
 	}
 }

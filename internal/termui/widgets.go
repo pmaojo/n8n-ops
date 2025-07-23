@@ -20,8 +20,14 @@ func NewWorkflowTable() *widgets.Table {
 // UpdateWorkflowTable sets workflow data on the given table.
 func UpdateWorkflowTable(tbl *widgets.Table, workflows []WorkflowStatus) {
 	rows := [][]string{{"ID", "Name", "Status"}}
-	for _, wf := range workflows {
+	tbl.RowStyles = map[int]ui.Style{}
+	for i, wf := range workflows {
 		rows = append(rows, []string{wf.ID, wf.Name, wf.Status})
+		style := ui.NewStyle(ui.ColorRed)
+		if wf.Status == "active" {
+			style = ui.NewStyle(ui.ColorGreen)
+		}
+		tbl.RowStyles[i+1] = style
 	}
 	tbl.Rows = rows
 }
@@ -56,20 +62,41 @@ func UpdateEventList(l *widgets.List, events []string) {
 	l.Rows = events
 }
 
+// NewSummaryGauge creates a gauge indicating active workflow ratio.
+func NewSummaryGauge() *widgets.Gauge {
+	g := widgets.NewGauge()
+	g.Title = "Active Workflows"
+	g.BarColor = ui.ColorGreen
+	g.LabelStyle = ui.NewStyle(ui.ColorBlack)
+	return g
+}
+
+// UpdateSummaryGauge sets gauge values using active and total workflow counts.
+func UpdateSummaryGauge(g *widgets.Gauge, active, total int) {
+	if total == 0 {
+		g.Percent = 0
+		g.Label = "0/0"
+		return
+	}
+	g.Percent = int(float64(active) / float64(total) * 100)
+	g.Label = fmt.Sprintf("%d/%d active", active, total)
+}
+
 // BuildGrid arranges widgets using termui's grid system.
-func BuildGrid(tbl *widgets.Table, p *widgets.Paragraph, l *widgets.List) *ui.Grid {
+func BuildGrid(tbl *widgets.Table, p *widgets.Paragraph, l *widgets.List, g *widgets.Gauge) *ui.Grid {
 	w, h := ui.TerminalDimensions()
-	return BuildGridWithSize(tbl, p, l, w, h)
+	return BuildGridWithSize(tbl, p, l, g, w, h)
 }
 
 // BuildGridWithSize arranges widgets with explicit dimensions.
-func BuildGridWithSize(tbl *widgets.Table, p *widgets.Paragraph, l *widgets.List, width, height int) *ui.Grid {
+func BuildGridWithSize(tbl *widgets.Table, p *widgets.Paragraph, l *widgets.List, g *widgets.Gauge, width, height int) *ui.Grid {
 	grid := ui.NewGrid()
 	grid.SetRect(0, 0, width, height)
 	grid.Set(
-		ui.NewRow(0.5, tbl),
-		ui.NewRow(0.25, p),
-		ui.NewRow(0.25, l),
+		ui.NewRow(0.4, tbl),
+		ui.NewRow(0.2, p),
+		ui.NewRow(0.2, g),
+		ui.NewRow(0.2, l),
 	)
 	return grid
 }
