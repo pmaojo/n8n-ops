@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	"github.com/pmaojo/n8n-ops/internal/utils"
 )
 
 func TestSentryIntegration(t *testing.T) {
@@ -16,7 +16,7 @@ func TestSentryIntegration(t *testing.T) {
 		SampleRate:  1.0,
 	}
 
-	logger := logrus.New()
+	logger := utils.NewLogger()
 	sentry := NewSentryIntegration(config, logger)
 
 	if sentry == nil {
@@ -37,7 +37,7 @@ func TestGrafanaIntegration(t *testing.T) {
 		Dashboard: "n8n-ops-test",
 	}
 
-	logger := logrus.New()
+	logger := utils.NewLogger()
 	grafana := NewGrafanaIntegration(config, logger)
 
 	if grafana == nil {
