@@ -3,7 +3,6 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -124,7 +123,7 @@ func getLocalWorkflows(workflowDir string) ([]WorkflowData, error) {
 	}
 
 	// Read all JSON files in the workflow directory
-	files, err := ioutil.ReadDir(workflowDir)
+	files, err := os.ReadDir(workflowDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read workflow directory: %w", err)
 	}
@@ -132,7 +131,7 @@ func getLocalWorkflows(workflowDir string) ([]WorkflowData, error) {
 	for _, file := range files {
 		if !file.IsDir() && strings.HasSuffix(file.Name(), ".json") {
 			filePath := filepath.Join(workflowDir, file.Name())
-			data, err := ioutil.ReadFile(filePath)
+			data, err := os.ReadFile(filePath)
 			if err != nil {
 				continue // Skip files that can't be read
 			}

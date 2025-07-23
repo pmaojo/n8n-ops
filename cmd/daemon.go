@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -184,7 +183,7 @@ func processJSONFileChange(filePath string, n8nClient client.Client, logger *log
 }
 
 func readJSONWorkflow(filePath string) (map[string]interface{}, error) {
-	data, err := ioutil.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +221,7 @@ func createWorkflowBackup(workflowID string, n8nClient client.Client) error {
 		return err
 	}
 
-	if err := ioutil.WriteFile(backupFile, backupData, 0644); err != nil {
+	if err := os.WriteFile(backupFile, backupData, 0644); err != nil {
 		return err
 	}
 
@@ -242,7 +241,7 @@ func createWorkflowBackup(workflowID string, n8nClient client.Client) error {
 		return err
 	}
 
-	if err := ioutil.WriteFile(metadataFile, metadataData, 0644); err != nil {
+	if err := os.WriteFile(metadataFile, metadataData, 0644); err != nil {
 		return err
 	}
 
