@@ -11,22 +11,42 @@ import (
 	wf "github.com/pmaojo/n8n-ops/internal/workflow"
 )
 
-// RunTermuiDashboard starts the interactive dashboard.
-// It blocks until the context is canceled or the user presses 'q' or Ctrl+C.
-func RunTermuiDashboard(ctx context.Context, c client.Client) error {
+// Dashboard coordinates widgets and updates for the terminal UI.
+type Dashboard struct {
+	client  client.WorkflowReader
+	refresh time.Duration
+
+	table   *widgets.Table
+	metrics *widgets.Paragraph
+	events  *widgets.List
+	gauge   *widgets.Gauge
+	start   time.Time
+}
+
+// NewDashboard returns an initialized Dashboard.
+func NewDashboard(c client.WorkflowReader, refresh time.Duration) *Dashboard {
+	return &Dashboard{
+		client:  c,
+		refresh: refresh,
+		table:   NewWorkflowTable(),
+		metrics: NewMetricsParagraph(),
+		events:  NewEventList(),
+		gauge:   NewSummaryGauge(),
+		start:   time.Now(),
+	}
+}
+
+// Run launches the dashboard event loop.
+func (d *Dashboard) Run(ctx context.Context) error {
 	if err := ui.Init(); err != nil {
 		return err
 	}
 	defer ui.Close()
 
-	tbl := NewWorkflowTable()
-	metrics := NewMetricsParagraph()
-	events := NewEventList()
-	grid := BuildGrid(tbl, metrics, events)
+	grid := BuildGrid(d.table, d.metrics, d.events, d.gauge)
 	ui.Render(grid)
 
-	start := time.Now()
-	ticker := time.NewTicker(3 * time.Second)
+	ticker := time.NewTicker(d.refresh)
 	defer ticker.Stop()
 
 	uiEvents := ui.PollEvents()
@@ -39,34 +59,51 @@ func RunTermuiDashboard(ctx context.Context, c client.Client) error {
 				return nil
 			}
 		case <-ticker.C:
-			updateData(ctx, c, tbl, metrics, events, start)
+			d.update(ctx)
 			ui.Render(grid)
 		}
 	}
 }
 
-func updateData(ctx context.Context, c client.Client, tbl *widgets.Table, p *widgets.Paragraph, l *widgets.List, start time.Time) {
-	var workflows []*wf.Workflow
-	if c != nil {
-		if w, err := c.GetWorkflows(ctx); err == nil {
-			workflows = w
-		}
-	}
+func (d *Dashboard) update(ctx context.Context) {
+	workflows := d.fetchWorkflows(ctx)
+
 	statuses := make([]WorkflowStatus, 0, len(workflows))
+	active := 0
 	for _, wf := range workflows {
 		status := "inactive"
 		if wf.Active {
 			status = "active"
+			active++
 		}
 		statuses = append(statuses, WorkflowStatus{ID: wf.ID, Name: wf.Name, Status: status})
 	}
-	UpdateWorkflowTable(tbl, statuses)
+	UpdateWorkflowTable(d.table, statuses)
+
+	UpdateSummaryGauge(d.gauge, active, len(workflows))
 
 	m := Metrics{
 		Workflows: len(workflows),
-		Uptime:    time.Since(start).Truncate(time.Second).String(),
+		Uptime:    time.Since(d.start).Truncate(time.Second).String(),
 	}
-	UpdateMetrics(p, m)
+	UpdateMetrics(d.metrics, m)
 
-	UpdateEventList(l, []string{time.Now().Format("15:04:05") + " dashboard refreshed"})
+	UpdateEventList(d.events, []string{time.Now().Format("15:04:05") + " dashboard refreshed"})
+}
+
+func (d *Dashboard) fetchWorkflows(ctx context.Context) []*wf.Workflow {
+	if d.client == nil {
+		return nil
+	}
+	workflows, err := d.client.GetWorkflows(ctx)
+	if err != nil {
+		return nil
+	}
+	return workflows
+}
+
+// RunTermuiDashboard starts the interactive dashboard with default settings.
+func RunTermuiDashboard(ctx context.Context, c client.Client) error {
+	db := NewDashboard(c, 3*time.Second)
+	return db.Run(ctx)
 }
