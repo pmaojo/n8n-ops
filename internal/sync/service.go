@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/pmaojo/n8n-ops/internal/client"
@@ -138,9 +136,9 @@ func getSyncUser() string {
 }
 
 func getGitUser() string {
-	out, err := exec.Command("git", "config", "user.email").Output()
-	if err == nil && len(out) > 0 {
-		return strings.TrimSpace(string(out))
+	email, err := git.NewExecutor("").UserEmail()
+	if err == nil && email != "" {
+		return email
 	}
 	return ""
 }

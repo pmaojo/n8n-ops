@@ -21,6 +21,7 @@ type Executor interface {
 	Log(branch, format string) (string, error)
 	LsTree(branch, path string) ([]string, error)
 	RemoteBranches() ([]string, error)
+	UserEmail() (string, error)
 }
 
 type execExecutor struct {
@@ -170,4 +171,12 @@ func (e *execExecutor) RemoteBranches() ([]string, error) {
 
 func (e *execExecutor) IsRepository() bool {
 	return e.gitCmd("rev-parse", "--git-dir").Run() == nil
+}
+
+func (e *execExecutor) UserEmail() (string, error) {
+	out, err := e.gitCmd("config", "user.email").Output()
+	if err != nil {
+		return "", fmt.Errorf("get git user email: %w", err)
+	}
+	return strings.TrimSpace(string(out)), nil
 }

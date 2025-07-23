@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/pmaojo/n8n-ops/internal/credentials"
-
 	"github.com/pmaojo/n8n-ops/internal/client"
+	"github.com/pmaojo/n8n-ops/internal/credentials"
+	"github.com/pmaojo/n8n-ops/internal/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -68,10 +68,10 @@ type Metrics struct {
 }
 
 func runDashboard(cmd *cobra.Command, args []string) error {
-	logger := logrus.New()
-	logger.SetLevel(logrus.InfoLevel)
+	logger := utils.NewLogger()
+	utils.SetLogLevel(logger, "info")
 	if verbose {
-		logger.SetLevel(logrus.DebugLevel)
+		utils.SetLogLevel(logger, "debug")
 	}
 
 	logEntry := logger.WithFields(logrus.Fields{

@@ -15,7 +15,6 @@ import (
 
 	"github.com/pmaojo/n8n-ops/internal/client"
 	"github.com/pmaojo/n8n-ops/internal/utils"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -135,8 +134,8 @@ func init() {
 }
 
 func runTerminalDashboard(cmd *cobra.Command, args []string) error {
-	logger := logrus.New()
-	logger.SetLevel(logrus.ErrorLevel) // Minimize log noise
+	logger := utils.NewLogger()
+	utils.SetLogLevel(logger, "error") // Minimize log noise
 
 	// Setup signal handling
 	sigChan := make(chan os.Signal, 1)

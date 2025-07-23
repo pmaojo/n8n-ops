@@ -28,12 +28,12 @@ type BackupInfo struct {
 }
 
 func runDaemonMode() {
-	logger := logrus.WithFields(logrus.Fields{
+	logEntry := logger.WithFields(logrus.Fields{
 		"command": "daemon",
 		"env":     environment,
 	})
 
-	logger.Info("Starting n8n-ops daemon mode")
+	logEntry.Info("Starting n8n-ops daemon mode")
 
 	if language == "es" {
 		fmt.Printf("🤖 Modo daemon iniciado - %s\n", environment)
@@ -65,20 +65,20 @@ func runDaemonMode() {
 
 	n8nClient, err := client.New(n8nURL, "n8n_api_mock_development", nil)
 	if err != nil {
-		logger.WithError(err).Fatal("Failed to create n8n client")
+		logEntry.WithError(err).Fatal("Failed to create n8n client")
 		return
 	}
 
 	// Test connection
 	if err := testN8nConnectionDaemon(n8nClient); err != nil {
-		logger.WithError(err).Fatal("Failed to connect to n8n API")
+		logEntry.WithError(err).Fatal("Failed to connect to n8n API")
 		return
 	}
 
 	// Setup file watcher
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		logger.WithError(err).Fatal("Failed to create file watcher")
+		logEntry.WithError(err).Fatal("Failed to create file watcher")
 		return
 	}
 	defer watcher.Close()
@@ -86,7 +86,7 @@ func runDaemonMode() {
 	// Watch directory
 	watchDir := fmt.Sprintf("./workflows/%s", environment)
 	if err := setupDirectoryWatch(watcher, watchDir); err != nil {
-		logger.WithError(err).Fatal("Failed to setup directory watch")
+		logEntry.WithError(err).Fatal("Failed to setup directory watch")
 		return
 	}
 
@@ -104,13 +104,13 @@ func runDaemonMode() {
 			if !ok {
 				return
 			}
-			handleFileEvent(event, n8nClient, logger)
+			handleFileEvent(event, n8nClient, logEntry)
 
 		case err, ok := <-watcher.Errors:
 			if !ok {
 				return
 			}
-			logger.WithError(err).Error("File watcher error")
+			logEntry.WithError(err).Error("File watcher error")
 
 		case sig := <-sigChan:
 			fmt.Printf("\n🛑 Received signal %v, stopping daemon...\n", sig)
@@ -133,7 +133,7 @@ func setupDirectoryWatch(watcher *fsnotify.Watcher, watchDir string) error {
 	return nil
 }
 
-func handleFileEvent(event fsnotify.Event, n8nClient client.Client, logger *logrus.Entry) {
+func handleFileEvent(event fsnotify.Event, n8nClient client.Client, logEntry *logrus.Entry) {
 	// Only process JSON files
 	if !strings.HasSuffix(event.Name, ".json") {
 		return
@@ -144,17 +144,17 @@ func handleFileEvent(event fsnotify.Event, n8nClient client.Client, logger *logr
 		return
 	}
 
-	logger.WithField("file", event.Name).Info("JSON file modified")
+	logEntry.WithField("file", event.Name).Info("JSON file modified")
 	fmt.Printf("📝 File changed: %s\n", filepath.Base(event.Name))
 
 	// Process the file change
-	if err := processJSONFileChange(event.Name, n8nClient, logger); err != nil {
-		logger.WithError(err).Error("Failed to process JSON file change")
+	if err := processJSONFileChange(event.Name, n8nClient, logEntry); err != nil {
+		logEntry.WithError(err).Error("Failed to process JSON file change")
 		fmt.Printf("❌ Error processing %s: %v\n", filepath.Base(event.Name), err)
 	}
 }
 
-func processJSONFileChange(filePath string, n8nClient client.Client, logger *logrus.Entry) error {
+func processJSONFileChange(filePath string, n8nClient client.Client, logEntry *logrus.Entry) error {
 	// Read and parse JSON file
 	workflowData, err := readJSONWorkflow(filePath)
 	if err != nil {
@@ -169,11 +169,11 @@ func processJSONFileChange(filePath string, n8nClient client.Client, logger *log
 
 	// Create backup of existing workflow
 	if err := createWorkflowBackup(workflowID, n8nClient); err != nil {
-		logger.WithError(err).Warn("Failed to create workflow backup")
+		logEntry.WithError(err).Warn("Failed to create workflow backup")
 	}
 
 	// Update workflow in n8n
-	if err := updateWorkflowInN8n(workflowData, n8nClient, logger); err != nil {
+	if err := updateWorkflowInN8n(workflowData, n8nClient, logEntry); err != nil {
 		return fmt.Errorf("failed to update workflow in n8n: %w", err)
 	}
 
@@ -249,7 +249,7 @@ func createWorkflowBackup(workflowID string, n8nClient client.Client) error {
 	return nil
 }
 
-func updateWorkflowInN8n(jsonWorkflow map[string]interface{}, n8nClient client.Client, logger *logrus.Entry) error {
+func updateWorkflowInN8n(jsonWorkflow map[string]interface{}, n8nClient client.Client, logEntry *logrus.Entry) error {
 	workflowID := jsonWorkflow["id"].(string)
 
 	// Convert map to workflow struct
@@ -273,13 +273,13 @@ func updateWorkflowInN8n(jsonWorkflow map[string]interface{}, n8nClient client.C
 	_, err = n8nClient.GetWorkflow(ctx, workflowID)
 	if err != nil {
 		// Workflow doesn't exist, create new one
-		logger.WithField("workflowId", workflowID).Info("Creating new workflow")
+		logEntry.WithField("workflowId", workflowID).Info("Creating new workflow")
 		_, err = n8nClient.CreateWorkflow(ctx, &wf)
 		return err
 	}
 
 	// Workflow exists, update it
-	logger.WithField("workflowId", workflowID).Info("Updating existing workflow")
+	logEntry.WithField("workflowId", workflowID).Info("Updating existing workflow")
 	_, err = n8nClient.UpdateWorkflow(ctx, workflowID, &wf)
 	return err
 }
