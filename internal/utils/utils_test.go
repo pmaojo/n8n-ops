@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"github.com/pmaojo/n8n-ops/internal/workflow"
 	"path/filepath"
 	"testing"
 )
@@ -59,5 +60,41 @@ func TestEnvironmentHelpers(t *testing.T) {
 		if env == "" {
 			t.Error("Environment name should not be empty")
 		}
+	}
+}
+
+func TestHashWorkflow(t *testing.T) {
+	wf := &workflow.Workflow{
+		ID:    "test123",
+		Name:  "Test Workflow",
+		Nodes: []workflow.Node{},
+	}
+
+	hash, err := HashWorkflow(wf)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if hash == "" {
+		t.Error("hash should not be empty")
+	}
+
+	invalid := &workflow.Workflow{
+		ID:   "bad123",
+		Name: "Bad Workflow",
+		Nodes: []workflow.Node{
+			{
+				ID:       "1",
+				Name:     "bad",
+				Type:     "bad",
+				Position: []float64{0, 0},
+				Parameters: map[string]interface{}{
+					"bad": func() {},
+				},
+			},
+		},
+	}
+
+	if _, err := HashWorkflow(invalid); err == nil {
+		t.Error("expected error for invalid workflow")
 	}
 }

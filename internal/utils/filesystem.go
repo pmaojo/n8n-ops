@@ -132,8 +132,9 @@ func LoadJSONFile(filepath string, v interface{}) error {
 	return nil
 }
 
-// HashWorkflow generates a hash of the workflow for change detection
-func HashWorkflow(wf *workflow.Workflow) string {
+// HashWorkflow generates a deterministic hash of a workflow for change detection.
+// It returns an error if the workflow cannot be marshaled to JSON.
+func HashWorkflow(wf *workflow.Workflow) (string, error) {
 	// Create a copy without sync metadata for consistent hashing
 	wfCopy := *wf
 	wfCopy.SyncMetadata = nil
@@ -141,14 +142,13 @@ func HashWorkflow(wf *workflow.Workflow) string {
 	// Marshal to JSON
 	data, err := json.Marshal(wfCopy)
 	if err != nil {
-		// Fallback to simple hash if marshaling fails
-		return fmt.Sprintf("error_%d", time.Now().Unix())
+		return "", fmt.Errorf("failed to marshal workflow: %w", err)
 	}
 
 	// Generate SHA256 hash
 	hasher := sha256.New()
 	hasher.Write(data)
-	return hex.EncodeToString(hasher.Sum(nil))
+	return hex.EncodeToString(hasher.Sum(nil)), nil
 }
 
 // BackupFile creates a backup of a file with timestamp
