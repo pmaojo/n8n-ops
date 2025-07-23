@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -35,6 +36,98 @@ Examples:
 }
 
 var refreshInterval time.Duration
+
+type SystemStatus struct {
+	CLI     string
+	Daemon  string
+	Monitor string
+	Gitlab  string
+	Sentry  string
+	Grafana string
+}
+
+type WorkflowInfo struct {
+	ID     string
+	Name   string
+	Status string
+}
+
+type TerminalMetrics struct {
+	Failures    int
+	Issues      int
+	Workflows   int
+	Uptime      string
+	Threshold   int
+	Interval    string
+	Environment string
+}
+
+func renderHeader(env string, now time.Time, refresh time.Duration) {
+	fmt.Print(`
+██████╗  █████╗ ███████╗██╗  ██╗██████╗  ██████╗  █████╗ ██████╗ ██████╗
+██╔══██╗██╔══██╗██╔════╝██║  ██║██╔══██╗██╔═══██╗██╔══██╗██╔══██╗██╔══██╗
+██║  ██║███████║███████╗███████║██████╔╝██║   ██║███████║██████╔╝██║  ██║
+██║  ██║██╔══██║╚════██║██╔══██║██╔══██╗██║   ██║██╔══██║██╔══██╗██║  ██║
+██████╔╝██║  ██║███████║██║  ██║██████╔╝╚██████╔╝██║  ██║██║  ██║██████╔╝
+╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝`)
+	fmt.Printf("    🚀 n8n-ops MONITORING TERMINAL v1.0 - %s 🚀\n", strings.ToUpper(env))
+	fmt.Printf("    ════════════════════════════════════════════════════════════════════\n")
+	fmt.Printf("    📅 %s | ⏰ %s | 🔄 Auto-refresh: %v\n",
+		now.Format("2006-01-02"), now.Format("15:04:05"), refresh)
+	fmt.Println()
+}
+
+func renderSystemStatus(status SystemStatus) {
+	fmt.Println("██ SYSTEM STATUS")
+	fmt.Println("┌───────────────────────────────────────────────────────────┐")
+	fmt.Printf("│ CLI: %-10s │ DAEMON: %-10s │ MONITOR: %-10s │\n",
+		colorStatus(status.CLI, getStatusColor(status.CLI)),
+		colorStatus(status.Daemon, getStatusColor(status.Daemon)),
+		colorStatus(status.Monitor, getStatusColor(status.Monitor)))
+	fmt.Printf("│ GITLAB: %-7s │ SENTRY: %-10s │ GRAFANA: %-10s │\n",
+		colorStatus(status.Gitlab, getStatusColor(status.Gitlab)),
+		colorStatus(status.Sentry, getStatusColor(status.Sentry)),
+		colorStatus(status.Grafana, getStatusColor(status.Grafana)))
+	fmt.Println("└───────────────────────────────────────────────────────────┘")
+	fmt.Println()
+}
+
+func renderWorkflowStatus(workflows []WorkflowInfo) {
+	fmt.Println("██ WORKFLOW STATUS")
+	fmt.Println("┌───────────────────────────────────────────────────────────┐")
+	for _, wf := range workflows {
+		fmt.Printf("│ %s: %-30s [%s] │\n",
+			wf.ID, wf.Name, colorStatus(wf.Status, getStatusColor(wf.Status)))
+	}
+	fmt.Println("└───────────────────────────────────────────────────────────┘")
+	fmt.Println()
+}
+
+func renderMetrics(m TerminalMetrics) {
+	fmt.Println("██ LIVE METRICS")
+	fmt.Println("┌───────────────────────────────────────────────────────────┐")
+	fmt.Printf("│ FAILURES: %-5s │ ISSUES: %-5s │ WORKFLOWS: %-5s │ UPTIME: %-8s │\n",
+		colorMetric(strconv.Itoa(m.Failures), "red"),
+		colorMetric(strconv.Itoa(m.Issues), "yellow"),
+		colorMetric(strconv.Itoa(m.Workflows), "green"),
+		colorMetric(m.Uptime, "cyan"))
+	fmt.Printf("│ THRESHOLD: %-4s │ INTERVAL: %-4s │ ENVIRONMENT: %-12s │\n",
+		colorMetric(strconv.Itoa(m.Threshold), "cyan"),
+		colorMetric(m.Interval, "cyan"),
+		colorMetric(m.Environment, "green"))
+	fmt.Println("└───────────────────────────────────────────────────────────┘")
+	fmt.Println()
+}
+
+func renderEventStream(events []string) {
+	fmt.Println("██ LIVE EVENT STREAM")
+	fmt.Println("┌───────────────────────────────────────────────────────────┐")
+	for _, event := range events {
+		fmt.Printf("│ %s │\n", event)
+	}
+	fmt.Println("└───────────────────────────────────────────────────────────┘")
+	fmt.Println()
+}
 
 func init() {
 	rootCmd.AddCommand(terminalCmd)
@@ -112,106 +205,57 @@ func runTerminalDashboard(cmd *cobra.Command, args []string) error {
 func displayDashboard(n8nClient client.Client, ctx context.Context) {
 	now := time.Now()
 
-	// Header
-	fmt.Print(`
-██████╗  █████╗ ███████╗██╗  ██╗██████╗  ██████╗  █████╗ ██████╗ ██████╗ 
-██╔══██╗██╔══██╗██╔════╝██║  ██║██╔══██╗██╔═══██╗██╔══██╗██╔══██╗██╔══██╗
-██║  ██║███████║███████╗███████║██████╔╝██║   ██║███████║██████╔╝██║  ██║
-██║  ██║██╔══██║╚════██║██╔══██║██╔══██╗██║   ██║██╔══██║██╔══██╗██║  ██║
-██████╔╝██║  ██║███████║██║  ██║██████╔╝╚██████╔╝██║  ██║██║  ██║██████╔╝
-╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ 
-`)
+	renderHeader(environment, now, refreshInterval)
 
-	fmt.Printf("    🚀 n8n-ops MONITORING TERMINAL v1.0 - %s 🚀\n", strings.ToUpper(environment))
-	fmt.Printf("    ════════════════════════════════════════════════════════════════\n")
-	fmt.Printf("    📅 %s | ⏰ %s | 🔄 Auto-refresh: %v\n",
-		now.Format("2006-01-02"), now.Format("15:04:05"), refreshInterval)
-	fmt.Println()
+	status := SystemStatus{
+		CLI:     "ONLINE",
+		Daemon:  "ACTIVE",
+		Monitor: "DETECTING",
+		Gitlab:  "CONNECTED",
+		Sentry:  "READY",
+		Grafana: "READY",
+	}
+	renderSystemStatus(status)
 
-	// System Status Section
-	fmt.Println("██ SYSTEM STATUS")
-	fmt.Println("┌─────────────────────────────────────────────────────────────────┐")
-	fmt.Printf("│ CLI: %-10s │ DAEMON: %-10s │ MONITOR: %-10s │\n",
-		colorStatus("ONLINE", "green"),
-		colorStatus("ACTIVE", "green"),
-		colorStatus("DETECTING", "yellow"))
-	fmt.Printf("│ GITLAB: %-7s │ SENTRY: %-10s │ GRAFANA: %-10s │\n",
-		colorStatus("CONNECTED", "cyan"),
-		colorStatus("READY", "green"),
-		colorStatus("READY", "green"))
-	fmt.Println("└─────────────────────────────────────────────────────────────────┘")
-	fmt.Println()
-
-	// Workflow Status Section
-	fmt.Println("██ WORKFLOW STATUS")
-	fmt.Println("┌─────────────────────────────────────────────────────────────────┐")
-
-	// Try to get real workflows
+	var workflows []WorkflowInfo
 	if n8nClient != nil {
-		if workflows, err := n8nClient.GetWorkflows(ctx); err == nil && len(workflows) > 0 {
-			for _, wf := range workflows {
-				status := "HEALTHY"
+		if wfs, err := n8nClient.GetWorkflows(ctx); err == nil && len(wfs) > 0 {
+			for _, wf := range wfs {
+				wfStatus := "HEALTHY"
 				if wf.Name == "Payment Processing" {
-					status = "CRITICAL"
+					wfStatus = "CRITICAL"
 				}
-				fmt.Printf("│ %s: %-30s [%s] │\n",
-					wf.ID, wf.Name, colorStatus(status, getStatusColor(status)))
+				workflows = append(workflows, WorkflowInfo{ID: wf.ID, Name: wf.Name, Status: wfStatus})
 			}
 		} else {
-			// Fallback demo data
-			displayDemoWorkflows()
+			workflows = demoWorkflows()
 		}
 	} else {
-		displayDemoWorkflows()
+		workflows = demoWorkflows()
 	}
+	renderWorkflowStatus(workflows)
 
-	fmt.Println("└─────────────────────────────────────────────────────────────────┘")
-	fmt.Println()
-
-	// Live Metrics Section
-	fmt.Println("██ LIVE METRICS")
-	fmt.Println("┌─────────────────────────────────────────────────────────────────┐")
-	fmt.Printf("│ FAILURES: %-5s │ ISSUES: %-5s │ WORKFLOWS: %-5s │ UPTIME: %-8s │\n",
-		colorMetric("47", "red"),
-		colorMetric("12", "yellow"),
-		colorMetric("3", "green"),
-		colorMetric("14:23", "cyan"))
-	fmt.Printf("│ THRESHOLD: %-4s │ INTERVAL: %-4s │ ENVIRONMENT: %-12s │\n",
-		colorMetric("2", "cyan"),
-		colorMetric("10s", "cyan"),
-		colorMetric(strings.ToUpper(environment), "green"))
-	fmt.Println("└─────────────────────────────────────────────────────────────────┘")
-	fmt.Println()
-
-	// Live Event Stream
-	fmt.Println("██ LIVE EVENT STREAM")
-	fmt.Println("┌─────────────────────────────────────────────────────────────────┐")
-	events := getLiveEvents(now)
-	for _, event := range events {
-		fmt.Printf("│ %s │\n", event)
+	metrics := TerminalMetrics{
+		Failures:    47,
+		Issues:      12,
+		Workflows:   3,
+		Uptime:      "14:23",
+		Threshold:   2,
+		Interval:    "10s",
+		Environment: strings.ToUpper(environment),
 	}
-	fmt.Println("└─────────────────────────────────────────────────────────────────┘")
-	fmt.Println()
+	renderMetrics(metrics)
 
-	// Footer
+	renderEventStream(getLiveEvents(now))
+
 	fmt.Printf("    Press Ctrl+C to exit | Last updated: %s\n", now.Format("15:04:05"))
 	fmt.Println("    🤖 n8n-ops - Enterprise Workflow Management System")
 }
-
-func displayDemoWorkflows() {
-	workflows := []struct {
-		ID     string
-		Name   string
-		Status string
-	}{
-		{"1001", "Customer_Onboarding", "HEALTHY"},
-		{"1002", "Payment_Processing", "CRITICAL"},
-		{"1003", "Order_Fulfillment", "HEALTHY"},
-	}
-
-	for _, wf := range workflows {
-		fmt.Printf("│ %s: %-30s [%s] │\n",
-			wf.ID, wf.Name, colorStatus(wf.Status, getStatusColor(wf.Status)))
+func demoWorkflows() []WorkflowInfo {
+	return []WorkflowInfo{
+		{ID: "1001", Name: "Customer_Onboarding", Status: "HEALTHY"},
+		{ID: "1002", Name: "Payment_Processing", Status: "CRITICAL"},
+		{ID: "1003", Name: "Order_Fulfillment", Status: "HEALTHY"},
 	}
 }
 
