@@ -27,6 +27,10 @@ args = "Mock n8n Server"
 task = "workflow.run"
 args = "n8n-ops Daemon Test"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Monitoring Demo"
+
 [[workflows.workflow]]
 name = "Go CLI Server"
 author = "agent"
@@ -59,6 +63,14 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "go run main.go --daemon --demo --env development"
+
+[[workflows.workflow]]
+name = "Monitoring Demo"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "go run main.go monitor --demo --env development --check-interval 10s --failure-threshold 2"
 
 [deployment]
 deploymentTarget = "cloudrun"

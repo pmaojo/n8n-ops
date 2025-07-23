@@ -1,0 +1,80 @@
+# n8n-ops Monitoring Configuration Example
+
+# GitLab Integration
+gitlab:
+  url: "https://gitlab.com"
+  project_id: "12345"  # Your GitLab project ID
+  token: "${GITLAB_TOKEN}"  # GitLab personal access token with API permissions
+
+# Monitoring Settings  
+monitoring:
+  check_interval: "1m"      # How often to check for failures
+  failure_threshold: 3      # Create issue after N consecutive failures
+  auto_recovery: true       # Automatically close issues when workflows recover
+  
+# Issue Configuration
+issues:
+  labels:
+    - "workflow-failure"
+    - "automated"
+    - "ops"
+  assignees:
+    - "devops-team"
+  template: |
+    ## 🚨 Workflow Execution Failure
+    
+    **Workflow:** {{.WorkflowName}} ({{.WorkflowID}})
+    **Environment:** {{.Environment}}
+    **Failed At:** {{.FailedAt}}
+    **Error:** {{.ErrorMessage}}
+    
+    ### Investigation Steps
+    - [ ] Check n8n execution logs
+    - [ ] Verify data sources
+    - [ ] Test in development
+    - [ ] Review recent changes
+
+# Environment-specific settings
+environments:
+  development:
+    n8n_url: "http://localhost:5678"
+    api_key: "${DEV_N8N_API_KEY}"
+    create_issues: false  # Don't create issues for dev failures
+    
+  staging: 
+    n8n_url: "https://n8n-staging.company.com"
+    api_key: "${STAGING_N8N_API_KEY}"
+    create_issues: true
+    failure_threshold: 2  # More sensitive in staging
+    
+  production:
+    n8n_url: "https://n8n-prod.company.com" 
+    api_key: "${PROD_N8N_API_KEY}"
+    create_issues: true
+    failure_threshold: 3
+    priority: "high"  # Production issues get high priority
+
+# Notification Settings (Optional)
+notifications:
+  slack:
+    webhook_url: "${SLACK_WEBHOOK}"
+    channel: "#ops-alerts"
+    enabled: true
+    
+  email:
+    smtp_server: "smtp.company.com"
+    from: "n8n-ops@company.com"
+    recipients:
+      - "ops-team@company.com"
+    enabled: false
+
+# Workflow-specific overrides
+workflow_overrides:
+  "critical-payment-workflow":
+    failure_threshold: 1  # Immediate issue creation
+    priority: "critical"
+    assignees: ["payment-team"]
+    
+  "daily-reports":
+    failure_threshold: 5  # More tolerant of failures
+    priority: "low"
