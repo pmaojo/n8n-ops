@@ -166,6 +166,36 @@ func (c *n8nClient) UpdateWorkflow(ctx context.Context, id string, wf *workflow.
 	return result, nil
 }
 
+// ActivateWorkflow activates a workflow by ID.
+func (c *n8nClient) ActivateWorkflow(ctx context.Context, id string) (*workflow.Workflow, error) {
+	if id == "" {
+		return nil, ErrBadRequest
+	}
+
+	path := fmt.Sprintf("/api/v1/workflows/%s/activate", id)
+	result, err := doRequest[*workflow.Workflow](ctx, c, http.MethodPost, path, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to activate workflow %s: %w", id, err)
+	}
+
+	return result, nil
+}
+
+// DeactivateWorkflow deactivates a workflow by ID.
+func (c *n8nClient) DeactivateWorkflow(ctx context.Context, id string) (*workflow.Workflow, error) {
+	if id == "" {
+		return nil, ErrBadRequest
+	}
+
+	path := fmt.Sprintf("/api/v1/workflows/%s/deactivate", id)
+	result, err := doRequest[*workflow.Workflow](ctx, c, http.MethodPost, path, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to deactivate workflow %s: %w", id, err)
+	}
+
+	return result, nil
+}
+
 // DeleteWorkflow implements WorkflowWriter interface
 func (c *n8nClient) DeleteWorkflow(ctx context.Context, id string) error {
 	if id == "" {
