@@ -1,7 +1,7 @@
 {
   "environment": "development",
   "gitCommit": "",
-  "lastSync": "2025-07-23T01:57:52.258875506Z",
+  "lastSync": "2025-07-23T02:03:19.063311231Z",
   "n8nURL": "demo://localhost",
   "syncedBy": "demo@n8n-ops.example.com",
   "syncedWorkflows": 3,

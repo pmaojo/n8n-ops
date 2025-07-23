@@ -1,21 +1,7 @@
 {
-  "active": true,
-  "connections": {
-    "Payment Webhook": {
-      "main": [
-        [
-          {
-            "index": 0,
-            "node": "Process Payment",
-            "type": "main"
-          }
-        ]
-      ]
-    }
-  },
-  "createdAt": "2025-07-21T02:03:19.052602564Z",
   "id": "1002",
   "name": "Payment Processing",
+  "active": true,
   "nodes": [
     {
       "id": "webhook-1002",
@@ -45,16 +31,30 @@
       }
     }
   ],
-  "syncMetadata": {
-    "environment": "development",
-    "gitCommit": "",
-    "syncDate": "2025-07-23T02:03:19.062511021Z",
-    "syncedBy": "demo@n8n-ops.example.com"
+  "connections": {
+    "Payment Webhook": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Process Payment",
+            "type": "main"
+          }
+        ]
+      ]
+    }
   },
+  "versionId": 23,
   "tags": [
-    "payment",
-    "stripe"
-  ],
-  "updatedAt": "2025-07-23T01:53:19.052602634Z",
-  "versionId": 23
+    {
+      "name": "payment",
+      "createdAt": "0001-01-01T00:00:00Z",
+      "updatedAt": "0001-01-01T00:00:00Z"
+    },
+    {
+      "name": "stripe",
+      "createdAt": "0001-01-01T00:00:00Z",
+      "updatedAt": "0001-01-01T00:00:00Z"
+    }
+  ]
 }
