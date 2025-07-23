@@ -14,15 +14,21 @@ import (
 var checkCmd = &cobra.Command{
 	Use:   "check",
 	Short: "Check for workflows that need synchronization",
-	Long: `Check if there are workflows in n8n that have been modified but not yet 
-synchronized to the local filesystem. This helps detect changes made in the 
+	Long: `Check if there are workflows in n8n that have been modified but not yet
+synchronized to the local filesystem. This helps detect changes made in the
 n8n web interface that haven't been committed to Git.
 
 Examples:
   n8n-ops check --env development    # Check development environment
   n8n-ops check --env production --json  # JSON output for scripting
   n8n-ops check --env staging --quiet    # Silent mode (exit code only)`,
-	Run: runCheck,
+	Run: func(cmd *cobra.Command, args []string) {
+		exitCode, err := runCheck(cmd, args)
+		if err != nil && !quiet {
+			fmt.Printf("❌ %v\n", err)
+		}
+		os.Exit(exitCode)
+	},
 }
 
 var (
@@ -64,15 +70,12 @@ func init() {
 	checkCmd.Flags().BoolVar(&alertOnly, "alert-only", false, "only show alerts, don't suggest actions")
 }
 
-func runCheck(cmd *cobra.Command, args []string) {
+func runCheck(cmd *cobra.Command, args []string) (int, error) {
 	logger.WithField("env", environment).Info("Checking workflow sync status")
 
 	result, err := checkWorkflowSync()
 	if err != nil {
-		if !quiet {
-			fmt.Printf("❌ Error checking sync status: %v\n", err)
-		}
-		os.Exit(1)
+		return 1, fmt.Errorf("error checking sync status: %w", err)
 	}
 
 	if jsonOutput {
@@ -81,13 +84,11 @@ func runCheck(cmd *cobra.Command, args []string) {
 		printCheckResultTable(result)
 	}
 
-	// Exit with appropriate code
-	if failIfChanges && result.Modified > 0 {
-		os.Exit(1)
-	} else if result.Modified > 0 {
-		os.Exit(1) // Changes detected
+	if result.Modified > 0 {
+		return 1, nil
 	}
-	os.Exit(0) // All synchronized
+
+	return 0, nil
 }
 
 func checkWorkflowSync() (*CheckResult, error) {
