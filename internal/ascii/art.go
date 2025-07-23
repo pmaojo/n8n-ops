@@ -223,6 +223,6 @@ func WelcomeScreen() string {
    Blue, Purple, 
    Yellow, Purple, 
    Red, Purple, 
-   Purple, Reset, 
+   Reset, 
    Dim, Cyan + Bold, Dim, Reset)
 }
