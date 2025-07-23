@@ -1,6 +1,6 @@
 # n8n-ops ⚡
 
-**Enterprise-grade CLI tool for n8n workflow automation with futuristic interface and intelligent monitoring**
+**CLI tool for n8n workflow automation with futuristic interface and intelligent monitoring**
 
 [![Go Version](https://img.shields.io/badge/Go-1.19%2B-blue.svg)](https://golang.org)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -12,12 +12,6 @@
 n8n-ops is a comprehensive command-line tool built in Go for managing n8n workflows across multiple environments with enterprise-grade automation capabilities. Features spectacular Matrix-style ASCII art interface, robot voice integration, real-time workflow monitoring with automatic GitLab issue creation, daemon mode file watching, and complete GitOps workflow management with zero-downtime deployments.
 
 ## Features
-
-### 🎭 **Spectacular User Experience**
-- **Matrix-style ASCII Art** with animated cascading effects
-- **Robot Voice Integration** with cross-platform TTS (espeak, say, SAPI)
-- **Futuristic Welcome Screen** with colorful borders and effects
-- **Visual Robot Simulation** with typewriter animations
 
 ### 🚀 **Enterprise Workflow Management**
 - **Multi-environment sync** (development, staging, production)
