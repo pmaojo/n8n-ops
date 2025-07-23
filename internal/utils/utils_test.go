@@ -1,12 +1,13 @@
 package utils
 
 import (
-	"github.com/pmaojo/n8n-ops/internal/workflow"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/pmaojo/n8n-ops/internal/workflow"
 
 	wf "github.com/pmaojo/n8n-ops/internal/workflow"
 )

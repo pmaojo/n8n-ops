@@ -44,10 +44,10 @@ func SanitizeFilename(name string) string {
 }
 
 // WriteWorkflowToFile writes a workflow to a JSON file
-func WriteWorkflowToFile(wf *workflow.Workflow, filepath string) error {
+func WriteWorkflowToFile(wf *workflow.Workflow, filePath string) error {
 	// Create directory if it doesn't exist
-	dir := filepath[:strings.LastIndex(filepath, "/")]
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	dir := filepath.Dir(filePath)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
 
@@ -58,7 +58,7 @@ func WriteWorkflowToFile(wf *workflow.Workflow, filepath string) error {
 	}
 
 	// Write to file
-	if err := os.WriteFile(filepath, data, 0644); err != nil {
+	if err := os.WriteFile(filePath, data, 0o644); err != nil {
 		return fmt.Errorf("failed to write file: %w", err)
 	}
 
@@ -66,14 +66,14 @@ func WriteWorkflowToFile(wf *workflow.Workflow, filepath string) error {
 }
 
 // LoadWorkflowFromFile loads a workflow from a JSON file
-func LoadWorkflowFromFile(filepath string) (*workflow.Workflow, error) {
+func LoadWorkflowFromFile(filePath string) (*workflow.Workflow, error) {
 	// Check if file exists
-	if _, err := os.Stat(filepath); os.IsNotExist(err) {
-		return nil, fmt.Errorf("workflow file does not exist: %s", filepath)
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return nil, fmt.Errorf("workflow file does not exist: %s", filePath)
 	}
 
 	// Read file content
-	data, err := os.ReadFile(filepath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read workflow file: %w", err)
 	}
@@ -88,11 +88,11 @@ func LoadWorkflowFromFile(filepath string) (*workflow.Workflow, error) {
 }
 
 // WriteJSONFile writes any data structure to a JSON file
-func WriteJSONFile(data interface{}, filepath string) error {
+func WriteJSONFile(data interface{}, filePath string) error {
 	// Create directory if it doesn't exist
-	dir := filepath[:strings.LastIndex(filepath, "/")]
+	dir := filepath.Dir(filePath)
 	if dir != "" {
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
 			return fmt.Errorf("failed to create directory: %w", err)
 		}
 	}
@@ -104,7 +104,7 @@ func WriteJSONFile(data interface{}, filepath string) error {
 	}
 
 	// Write to file
-	if err := os.WriteFile(filepath, jsonData, 0644); err != nil {
+	if err := os.WriteFile(filePath, jsonData, 0o644); err != nil {
 		return fmt.Errorf("failed to write file: %w", err)
 	}
 
@@ -112,14 +112,14 @@ func WriteJSONFile(data interface{}, filepath string) error {
 }
 
 // LoadJSONFile loads JSON data from a file into the provided interface
-func LoadJSONFile(filepath string, v interface{}) error {
+func LoadJSONFile(filePath string, v interface{}) error {
 	// Check if file exists
-	if _, err := os.Stat(filepath); os.IsNotExist(err) {
-		return fmt.Errorf("file does not exist: %s", filepath)
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return fmt.Errorf("file does not exist: %s", filePath)
 	}
 
 	// Read file content
-	data, err := os.ReadFile(filepath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to read file: %w", err)
 	}
@@ -152,24 +152,24 @@ func HashWorkflow(wf *workflow.Workflow) (string, error) {
 }
 
 // BackupFile creates a backup of a file with timestamp
-func BackupFile(filepath string) error {
+func BackupFile(filePath string) error {
 	// Check if original file exists
-	if _, err := os.Stat(filepath); os.IsNotExist(err) {
-		return fmt.Errorf("original file does not exist: %s", filepath)
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return fmt.Errorf("original file does not exist: %s", filePath)
 	}
 
 	// Generate backup filename
 	timestamp := time.Now().Format("20060102_150405")
-	backupPath := fmt.Sprintf("%s.backup_%s", filepath, timestamp)
+	backupPath := fmt.Sprintf("%s.backup_%s", filePath, timestamp)
 
 	// Read original file
-	data, err := os.ReadFile(filepath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to read original file: %w", err)
 	}
 
 	// Write backup file
-	if err := os.WriteFile(backupPath, data, 0644); err != nil {
+	if err := os.WriteFile(backupPath, data, 0o644); err != nil {
 		return fmt.Errorf("failed to write backup file: %w", err)
 	}
 
@@ -178,15 +178,15 @@ func BackupFile(filepath string) error {
 
 // EnsureDirectory ensures a directory exists, creating it if necessary
 func EnsureDirectory(path string) error {
-	if err := os.MkdirAll(path, 0755); err != nil {
+	if err := os.MkdirAll(path, 0o755); err != nil {
 		return fmt.Errorf("failed to create directory %s: %w", path, err)
 	}
 	return nil
 }
 
 // FileExists checks if a file exists
-func FileExists(filepath string) bool {
-	_, err := os.Stat(filepath)
+func FileExists(path string) bool {
+	_, err := os.Stat(path)
 	return !os.IsNotExist(err)
 }
 
@@ -197,8 +197,8 @@ func DirectoryExists(path string) bool {
 }
 
 // GetFileModTime gets the modification time of a file
-func GetFileModTime(filepath string) (time.Time, error) {
-	info, err := os.Stat(filepath)
+func GetFileModTime(path string) (time.Time, error) {
+	info, err := os.Stat(path)
 	if err != nil {
 		return time.Time{}, err
 	}
@@ -206,8 +206,8 @@ func GetFileModTime(filepath string) (time.Time, error) {
 }
 
 // GetFileSize gets the size of a file in bytes
-func GetFileSize(filepath string) (int64, error) {
-	info, err := os.Stat(filepath)
+func GetFileSize(path string) (int64, error) {
+	info, err := os.Stat(path)
 	if err != nil {
 		return 0, err
 	}
@@ -335,7 +335,7 @@ func CopyFile(src, dst string) error {
 	}
 
 	// Write destination file
-	if err := os.WriteFile(dst, data, 0644); err != nil {
+	if err := os.WriteFile(dst, data, 0o644); err != nil {
 		return fmt.Errorf("failed to write destination file: %w", err)
 	}
 
