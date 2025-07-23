@@ -14,6 +14,22 @@ variables:
   CLI_BINARY: "n8n-ops"
   GOMODCACHE: "$CI_PROJECT_DIR/.cache/go/pkg/mod"
 
+# Base template for all deployment jobs
+.deploy_template:
+  image: golang:${GO_VERSION}
+  dependencies:
+    - build-cli
+  script:
+    - echo "Syncing workflows from $TARGET_ENV n8n instance..."
+    - ./${CLI_BINARY} sync --env $TARGET_ENV --verbose
+    - echo "Validating workflows before deployment..."
+    - ./${CLI_BINARY} validate ./workflows/$TARGET_ENV/
+    - echo "Running dry-run deployment..."
+    - ./${CLI_BINARY} deploy --env $TARGET_ENV --dry-run --verbose
+    - echo "Deploying workflows to $TARGET_ENV..."
+    - ./${CLI_BINARY} deploy --env $TARGET_ENV --verbose
+    - echo "$TARGET_ENV deployment completed"
+
 # Build the CLI tool
 build-cli:
   stage: build
@@ -83,28 +99,12 @@ unit-tests:
 
 # Deploy to Development Environment
 deploy-development:
+  extends: .deploy_template
   stage: deploy-dev
-  image: golang:${GO_VERSION}
-  dependencies:
-    - build-cli
-  before_script:
-    - echo "Configuring development environment..."
-    - export N8N_API_KEY="${N8N_DEV_API_KEY}"
-    - export N8N_URL="${N8N_DEV_URL}"
-  script:
-    - echo "Syncing workflows from development n8n instance..."
-    - ./${CLI_BINARY} sync --env development --verbose
-    
-    - echo "Validating workflows before deployment..."
-    - ./${CLI_BINARY} validate ./workflows/development/
-    
-    - echo "Running dry-run deployment..."
-    - ./${CLI_BINARY} deploy --env development --dry-run --verbose
-    
-    - echo "Deploying workflows to development..."
-    - ./${CLI_BINARY} deploy --env development --verbose
-    
-    - echo "Development deployment completed"
+  variables:
+    TARGET_ENV: development
+    N8N_API_KEY: ${N8N_DEV_API_KEY}
+    N8N_URL: ${N8N_DEV_URL}
   environment:
     name: development
     url: $N8N_DEV_URL
@@ -113,25 +113,12 @@ deploy-development:
 
 # Deploy to Staging Environment (Manual)
 deploy-staging:
+  extends: .deploy_template
   stage: deploy-staging
-  image: golang:${GO_VERSION}
-  dependencies:
-    - build-cli
-  before_script:
-    - echo "Configuring staging environment..."
-    - export N8N_API_KEY="${N8N_STAGING_API_KEY}"
-    - export N8N_URL="${N8N_STAGING_URL}"
-  script:
-    - echo "Validating workflows for staging deployment..."
-    - ./${CLI_BINARY} validate ./workflows/staging/
-    
-    - echo "Running staging dry-run..."
-    - ./${CLI_BINARY} deploy --env staging --dry-run --verbose
-    
-    - echo "Deploying workflows to staging..."
-    - ./${CLI_BINARY} deploy --env staging --verbose
-    
-    - echo "Staging deployment completed"
+  variables:
+    TARGET_ENV: staging
+    N8N_API_KEY: ${N8N_STAGING_API_KEY}
+    N8N_URL: ${N8N_STAGING_URL}
   environment:
     name: staging
     url: $N8N_STAGING_URL
@@ -142,28 +129,12 @@ deploy-staging:
 
 # Deploy to Production Environment (Manual + Protected)
 deploy-production:
+  extends: .deploy_template
   stage: deploy-production
-  image: golang:${GO_VERSION}
-  dependencies:
-    - build-cli
-  before_script:
-    - echo "Configuring production environment..."
-    - export N8N_API_KEY="${N8N_PROD_API_KEY}"
-    - export N8N_URL="${N8N_PROD_URL}"
-  script:
-    - echo "PRODUCTION DEPLOYMENT - Performing strict validation..."
-    - ./${CLI_BINARY} validate ./workflows/production/ --verbose
-    
-    - echo "Running production dry-run with detailed output..."
-    - ./${CLI_BINARY} deploy --env production --dry-run --verbose
-    
-    - echo "⚠️  DEPLOYING TO PRODUCTION ⚠️"
-    - echo "This will update live workflows. Ensure you have tested in staging."
-    - sleep 5
-    
-    - ./${CLI_BINARY} deploy --env production --verbose
-    
-    - echo "✅ Production deployment completed successfully"
+  variables:
+    TARGET_ENV: production
+    N8N_API_KEY: ${N8N_PROD_API_KEY}
+    N8N_URL: ${N8N_PROD_URL}
   environment:
     name: production
     url: $N8N_PROD_URL
@@ -174,17 +145,12 @@ deploy-production:
 
 # Rollback job (manual trigger only)
 rollback-production:
+  extends: .deploy_template
   stage: deploy-production
-  image: golang:${GO_VERSION}
-  dependencies:
-    - build-cli
-  before_script:
-    - export N8N_API_KEY="${N8N_PROD_API_KEY}"
-    - export N8N_URL="${N8N_PROD_URL}"
-  script:
-    - echo "⚠️  ROLLING BACK PRODUCTION ⚠️"
-    - ./${CLI_BINARY} rollback --env production --verbose
-    - echo "Rollback completed"
+  variables:
+    TARGET_ENV: production
+    N8N_API_KEY: ${N8N_PROD_API_KEY}
+    N8N_URL: ${N8N_PROD_URL}
   environment:
     name: production
     url: $N8N_PROD_URL
