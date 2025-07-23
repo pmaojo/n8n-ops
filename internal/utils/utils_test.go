@@ -1,63 +1,82 @@
 package utils
 
 import (
+	"os"
 	"path/filepath"
+	"reflect"
+	"strings"
 	"testing"
+
+	wf "github.com/pmaojo/n8n-ops/internal/workflow"
 )
 
-func TestFilePathOperations(t *testing.T) {
-	// Test file path operations
-	testPath := filepath.Join("workflows", "development", "test.json")
-
-	if testPath == "" {
-		t.Error("Test path should not be empty")
-	}
-
-	ext := filepath.Ext(testPath)
-	if ext != ".json" {
-		t.Errorf("Expected .json extension, got %s", ext)
+func TestSanitizeFilename(t *testing.T) {
+	name := "Invalid:File/Name*?"
+	sanitized := SanitizeFilename(name)
+	if strings.ContainsAny(sanitized, ":/*? ") {
+		t.Fatalf("sanitized name still contains invalid characters: %s", sanitized)
 	}
 }
 
-func TestStringUtilities(t *testing.T) {
-	// Test string utility functions
-	testString := "test-workflow-name"
-	expectedLength := len(testString)
-
-	if expectedLength == 0 {
-		t.Error("Test string should not be empty")
+func TestWriteAndLoadWorkflow(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "wf.json")
+	wfIn := &wf.Workflow{
+		Name:  "FileTest",
+		Nodes: []wf.Node{{Name: "Start", Type: "n8n-nodes-base.manualTrigger", Position: []float64{0, 0}}},
+	}
+	if err := WriteWorkflowToFile(wfIn, path); err != nil {
+		t.Fatalf("write workflow: %v", err)
 	}
 
-	if expectedLength != 18 {
-		t.Errorf("Expected length 18, got %d", expectedLength)
-	}
-}
-
-func TestValidationHelpers(t *testing.T) {
-	// Test validation helper functions
-	validWorkflowName := "Valid_Workflow_Name"
-	invalidWorkflowName := ""
-
-	if validWorkflowName == "" {
-		t.Error("Valid workflow name should not be empty")
+	wfOut, err := LoadWorkflowFromFile(path)
+	if err != nil {
+		t.Fatalf("load workflow: %v", err)
 	}
 
-	if invalidWorkflowName != "" {
-		t.Error("Invalid workflow name should be empty")
+	if !reflect.DeepEqual(wfIn, wfOut) {
+		t.Fatalf("loaded workflow does not match written one")
 	}
 }
 
-func TestEnvironmentHelpers(t *testing.T) {
-	// Test environment helper functions
-	environments := []string{"development", "staging", "production"}
+func TestLoadWorkflowFromFileNotFound(t *testing.T) {
+	if _, err := LoadWorkflowFromFile("/no/such/file.json"); err == nil {
+		t.Fatal("expected error for missing workflow file")
+	}
+}
 
-	if len(environments) != 3 {
-		t.Error("Should have exactly 3 environments")
+func TestBackupFile(t *testing.T) {
+	dir := t.TempDir()
+	file := filepath.Join(dir, "f.json")
+	os.WriteFile(file, []byte("{}"), 0o644)
+
+	if err := BackupFile(file); err != nil {
+		t.Fatalf("backup: %v", err)
+	}
+	matches, err := filepath.Glob(file + ".backup_*")
+	if err != nil || len(matches) == 0 {
+		t.Fatal("expected backup file to exist")
+	}
+}
+
+func TestCheckN8nCredentials(t *testing.T) {
+	oldURL := os.Getenv("N8N_DEVELOPMENT_URL")
+	oldKey := os.Getenv("N8N_DEVELOPMENT_API_KEY")
+	defer func() {
+		os.Setenv("N8N_DEVELOPMENT_URL", oldURL)
+		os.Setenv("N8N_DEVELOPMENT_API_KEY", oldKey)
+	}()
+
+	os.Setenv("N8N_DEVELOPMENT_URL", "http://localhost")
+	os.Setenv("N8N_DEVELOPMENT_API_KEY", "key")
+
+	if err := CheckN8nCredentials("development"); err != nil {
+		t.Fatalf("expected credentials to pass, got %v", err)
 	}
 
-	for _, env := range environments {
-		if env == "" {
-			t.Error("Environment name should not be empty")
-		}
+	os.Unsetenv("N8N_DEVELOPMENT_URL")
+	os.Unsetenv("N8N_DEVELOPMENT_API_KEY")
+	if err := CheckN8nCredentials("development"); err == nil {
+		t.Fatal("expected error when credentials are missing")
 	}
 }
