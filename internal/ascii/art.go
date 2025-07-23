@@ -9,15 +9,16 @@ import (
 
 // Colors for terminal output
 const (
-        Reset   = "\033[0m"
-        Cyan    = "\033[96m"
-        Blue    = "\033[94m"
-        Purple  = "\033[95m"
-        Green   = "\033[92m"
-        Yellow  = "\033[93m"
-        Red     = "\033[91m"
-        Bold    = "\033[1m"
-        Dim     = "\033[2m"
+        Reset     = "\033[0m"
+        Cyan      = "\033[96m"
+        Blue      = "\033[94m"
+        Purple    = "\033[95m"
+        Green     = "\033[92m"
+        Yellow    = "\033[93m"
+        Red       = "\033[91m"
+        Bold      = "\033[1m"
+        Dim       = "\033[2m"
+        Underline = "\033[4m"
 )
 
 // N8nLogo returns the main n8n CLI futuristic logo
@@ -56,15 +57,12 @@ P"Y8888P" Y8    888P"Y888    PI8 YY88888P    8P'"Y88    P"Y8888P"        P""Y88P
 // SmallLogo returns a compact version for headers
 func SmallLogo() string {
         return fmt.Sprintf(`%s%s
-        ad88888ba       88888888ba          ,ad8888ba,   
-       d8"     "8b      88      "8b        d8"'    "8b  
-       88       88      88      ,8P       d8'        8b 
-       Y8a     a8P      88aaaaaa8P'       88          88 
-        "Y8aaa8P"       88""""""8b,       88          88 
-         ,d8"""8b,      88       8b       Y8,        ,8P 
-        d8"     "8b     88      a8P        Y8a.    .a8P  
-        Y8a     a8P     88888888P"          "Y8888Y"   
-         "Y88888P"                                        
+              __                                                
+      /  |                / /                            
+ ___ (___| ___       ___   (___       ___       ___  ___ 
+|   )|   )|   )     |   )| |         |___ \   )|   )|    
+|  / |__/ |  /      |__/ | |__        __/  \_/ |  / |__  
+                    __/                     /                               
 %s`, Blue, Bold, Reset)
 }
 

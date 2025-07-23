@@ -33,6 +33,10 @@ n8n-ops is a command-line tool for managing n8n workflows across multiple enviro
 It supports syncing workflows from n8n instances, deploying local changes, validating workflow files,
 and integrating with GitLab CI/CD pipelines for collaborative development.
 
+Getting Started:
+  n8n-ops onboard                   # Interactive onboarding wizard (recommended)
+  n8n-ops init                      # Initialize a new project manually
+
 Examples:
   n8n-ops sync --env development    # Sync workflows from development environment
   n8n-ops deploy --env staging      # Deploy workflows to staging environment  

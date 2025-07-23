@@ -3,6 +3,7 @@
 ## 🏷️ Convención de Versionado
 
 ### Semantic Versioning (SemVer)
+
 Usamos **Semantic Versioning** para mantener consistencia:
 
 ```
@@ -10,6 +11,7 @@ MAJOR.MINOR.PATCH-ENVIRONMENT
 ```
 
 **Ejemplos:**
+
 - `v1.2.3` - Versión estable de producción
 - `v1.2.4-dev` - Versión en desarrollo
 - `v1.3.0-rc1` - Release candidate
@@ -18,16 +20,19 @@ MAJOR.MINOR.PATCH-ENVIRONMENT
 ### Estructura de Versiones
 
 #### 1. **MAJOR** (cambios incompatibles)
+
 - Cambios que rompen workflows existentes
 - Nuevas dependencias obligatorias
 - Cambios en estructura de datos
 
 #### 2. **MINOR** (nuevas funcionalidades)
+
 - Nuevos nodos o funcionalidades
 - Mejoras compatibles hacia atrás
 - Optimizaciones de performance
 
 #### 3. **PATCH** (correcciones)
+
 - Corrección de bugs
 - Pequeñas mejoras
 - Actualizaciones de seguridad
@@ -47,22 +52,26 @@ feature/nueva-funcionalidad ●─────●
 ```
 
 ### 1. **Branch: `main`** (Producción)
+
 - Solo código estable y probado
 - Deploy automático a producción
 - Protegida: requiere pull request + revisión
 - Versiones: `v1.0.0`, `v1.1.0`, `v2.0.0`
 
 ### 2. **Branch: `staging`** (Pruebas)
+
 - Testing antes de producción
 - Deploy automático a staging
 - Versiones: `v1.1.0-rc1`, `v1.1.0-rc2`
 
 ### 3. **Branch: `develop`** (Desarrollo)
+
 - Integración de nuevas funcionalidades
 - Deploy automático a development
 - Versiones: `v1.1.0-dev`, `v1.1.0-alpha`
 
 ### 4. **Feature Branches**
+
 - `feature/customer-onboarding`
 - `feature/payment-integration`
 - `hotfix/urgent-bug-fix`
@@ -100,6 +109,7 @@ feature/nueva-funcionalidad ●─────●
 ## 🎯 Comandos por Ambiente
 
 ### Development (Automático)
+
 ```bash
 # Verificar estado
 ./n8n-ops status --env development
@@ -112,6 +122,7 @@ git push origin develop
 ```
 
 ### Staging (Manual)
+
 ```bash
 # Verificar antes de deploy
 ./n8n-ops status --env staging
@@ -123,6 +134,7 @@ git push origin develop
 ```
 
 ### Production (Manual + Protegido)
+
 ```bash
 # Verificar estado actual
 ./n8n-ops status --env production
@@ -137,6 +149,7 @@ git push origin develop
 ## 📊 Tracking de Versiones
 
 ### Ver Versiones Actuales
+
 ```bash
 # Estado de todos los workflows
 ./n8n-ops status --env production --json
@@ -147,6 +160,7 @@ git push origin develop
 ```
 
 ### Ejemplo de Output
+
 ```
 Workflow Status - PRODUCTION Environment
 
@@ -160,15 +174,17 @@ Email Notifications     v1.0.5     2025-07-18    i7j8k9l      5
 ## 🔍 Convenciones de Nomenclatura
 
 ### Workflows
+
 ```
 kebab-case con propósito claro:
 - customer-onboarding
-- payment-processing  
+- payment-processing
 - email-notifications
 - data-backup-daily
 ```
 
 ### Git Tags
+
 ```
 v1.0.0      - Versión de producción
 v1.1.0-rc1  - Release candidate
@@ -177,9 +193,10 @@ v1.0.1      - Hotfix
 ```
 
 ### Commits
+
 ```
 feat: add customer onboarding workflow
-fix: resolve payment timeout issue  
+fix: resolve payment timeout issue
 docs: update deployment guide
 refactor: optimize email notification logic
 ```
@@ -187,6 +204,7 @@ refactor: optimize email notification logic
 ## 🚀 Mejores Prácticas
 
 ### 1. **Antes de cada Deploy**
+
 ```bash
 # Validar workflows
 ./n8n-ops validate ./workflows/production/
@@ -199,6 +217,7 @@ refactor: optimize email notification logic
 ```
 
 ### 2. **Después de cada Deploy**
+
 ```bash
 # Verificar que se desplegó correctamente
 ./n8n-ops status --env production
@@ -208,6 +227,7 @@ refactor: optimize email notification logic
 ```
 
 ### 3. **En caso de Problemas**
+
 ```bash
 # Rollback inmediato
 ./n8n-ops rollback --env production
