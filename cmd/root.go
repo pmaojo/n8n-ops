@@ -112,7 +112,7 @@ func initConfig() {
         }
 
         // Load .env file if it exists
-        utils.LoadEnvFile()
+        utils.LoadEnvFile(".env")
         
         viper.AutomaticEnv() // read in environment variables that match
 

@@ -89,7 +89,7 @@ func runSync(cmd *cobra.Command, args []string) error {
                 apiURL = "demo://localhost"
                 apiKey = "demo-key"
         } else {
-                // Try environment-specific variables first
+                // Get credentials using cascading environment variable approach
                 envSuffix := strings.ToUpper(environment)
                 apiURL = os.Getenv(fmt.Sprintf("N8N_%s_URL", envSuffix))
                 apiKey = os.Getenv(fmt.Sprintf("N8N_%s_API_KEY", envSuffix))
