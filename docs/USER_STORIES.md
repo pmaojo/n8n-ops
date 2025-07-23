@@ -88,11 +88,11 @@ n8n-ops --daemon --env production
 # Sends alerts on unauthorized changes
 
 # Check daemon status
-n8n-ops status --daemon
-# Shows: File watcher active, last sync, backup count
+n8n-ops status
+# Shows: file watcher active, last sync, backup count
 
-# View backup history
-n8n-ops status --backups
+# View backup history *(planned feature)*
+# n8n-ops status --backups
 # Lists all backups with timestamps and restore commands
 ```
 
@@ -239,36 +239,29 @@ deploy-production:
 
 ---
 
-### 8. Enterprise Operations - Multi-Tenant Management
+### 8. Enterprise Operations - Multi-Tenant Management *(Planned)*
 
 **As an enterprise operations manager, I want to manage workflows across multiple n8n instances and teams.**
 
-**Scenario:**
-- Multiple n8n instances for different business units
-- Different access controls per team
-- Centralized monitoring and reporting
-- Disaster recovery capabilities
+This capability is not yet available in the current codebase. The following commands are examples of the intended interface and may be implemented in a future release:
 
-**Solution:**
 ```bash
-# Configure multiple n8n instances
+# Planned: initialize multi-tenant configuration
 n8n-ops init --multi-tenant
-# Creates separate configurations for each business unit
 
-# Deploy to specific tenant environments
+# Planned: deploy to specific tenant environments
 n8n-ops sync --tenant sales --env production --deploy
 n8n-ops sync --tenant marketing --env production --deploy
 
-# Enterprise-wide status monitoring
-n8n-ops status --all-tenants --dashboard
-# Unified view across all instances and environments
+# Planned: enterprise-wide status monitoring
+n8n-ops dashboard
+# Multi-tenant dashboards are not yet supported
 
-# Disaster recovery backup
+# Planned: remote backup across all tenants
 n8n-ops backup --all-tenants --remote-storage
-# Complete backup to cloud storage with restoration procedures
 ```
 
-**Value:** Enterprise scalability with multi-tenant support and centralized management capabilities.
+**Value:** The proposed multi-tenant features will enable centralized management across business units.
 
 ---
 
