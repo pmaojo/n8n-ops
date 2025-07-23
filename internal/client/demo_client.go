@@ -21,22 +21,22 @@ func NewDemoN8nClient() *DemoN8nClient {
 			Tags:      []string{"customer", "onboarding"},
 			Nodes: []WorkflowNode{
 				{
-					ID:         "webhook-1001",
-					Name:       "Webhook",
-					Type:       "n8n-nodes-base.webhook",
+					ID:          "webhook-1001",
+					Name:        "Webhook",
+					Type:        "n8n-nodes-base.webhook",
 					TypeVersion: 1.0,
-					Position:   []int{250, 300},
+					Position:    []int{250, 300},
 					Parameters: map[string]interface{}{
 						"httpMethod": "POST",
 						"path":       "customer-signup",
 					},
 				},
 				{
-					ID:         "email-1001",
-					Name:       "Send Welcome Email",
-					Type:       "n8n-nodes-base.emailSend",
+					ID:          "email-1001",
+					Name:        "Send Welcome Email",
+					Type:        "n8n-nodes-base.emailSend",
 					TypeVersion: 1.0,
-					Position:   []int{450, 300},
+					Position:    []int{450, 300},
 					Parameters: map[string]interface{}{
 						"subject": "Welcome to our platform!",
 						"toEmail": "={{ $json.email }}",
@@ -48,8 +48,8 @@ func NewDemoN8nClient() *DemoN8nClient {
 					"main": [][]map[string]interface{}{
 						{
 							{
-								"node": "Send Welcome Email",
-								"type": "main",
+								"node":  "Send Welcome Email",
+								"type":  "main",
 								"index": 0,
 							},
 						},
@@ -67,22 +67,22 @@ func NewDemoN8nClient() *DemoN8nClient {
 			Tags:      []string{"payment", "stripe"},
 			Nodes: []WorkflowNode{
 				{
-					ID:         "webhook-1002",
-					Name:       "Payment Webhook",
-					Type:       "n8n-nodes-base.webhook",
+					ID:          "webhook-1002",
+					Name:        "Payment Webhook",
+					Type:        "n8n-nodes-base.webhook",
 					TypeVersion: 1.0,
-					Position:   []int{250, 200},
+					Position:    []int{250, 200},
 					Parameters: map[string]interface{}{
 						"httpMethod": "POST",
 						"path":       "stripe-webhook",
 					},
 				},
 				{
-					ID:         "stripe-1002",
-					Name:       "Process Payment",
-					Type:       "n8n-nodes-base.stripe",
+					ID:          "stripe-1002",
+					Name:        "Process Payment",
+					Type:        "n8n-nodes-base.stripe",
 					TypeVersion: 1.0,
-					Position:   []int{450, 200},
+					Position:    []int{450, 200},
 					Parameters: map[string]interface{}{
 						"operation": "charge",
 					},
@@ -93,8 +93,8 @@ func NewDemoN8nClient() *DemoN8nClient {
 					"main": [][]map[string]interface{}{
 						{
 							{
-								"node": "Process Payment",
-								"type": "main",
+								"node":  "Process Payment",
+								"type":  "main",
 								"index": 0,
 							},
 						},
@@ -112,11 +112,11 @@ func NewDemoN8nClient() *DemoN8nClient {
 			Tags:      []string{"orders", "fulfillment"},
 			Nodes: []WorkflowNode{
 				{
-					ID:         "trigger-1003",
-					Name:       "Order Created",
-					Type:       "n8n-nodes-base.httpRequest",
+					ID:          "trigger-1003",
+					Name:        "Order Created",
+					Type:        "n8n-nodes-base.httpRequest",
 					TypeVersion: 1.0,
-					Position:   []int{250, 400},
+					Position:    []int{250, 400},
 					Parameters: map[string]interface{}{
 						"method": "POST",
 					},
@@ -162,7 +162,7 @@ func (c *DemoN8nClient) CreateWorkflow(workflow *Workflow) (*Workflow, error) {
 	workflow.CreatedAt = time.Now()
 	workflow.UpdatedAt = time.Now()
 	workflow.VersionId = 1
-	
+
 	c.workflows[newID] = workflow
 	return workflow, nil
 }
@@ -172,12 +172,12 @@ func (c *DemoN8nClient) UpdateWorkflow(id string, workflow *Workflow) (*Workflow
 	if !exists {
 		return nil, fmt.Errorf("workflow not found: %s", id)
 	}
-	
+
 	workflow.ID = id
 	workflow.CreatedAt = existing.CreatedAt
 	workflow.UpdatedAt = time.Now()
 	workflow.VersionId = existing.VersionId + 1
-	
+
 	c.workflows[id] = workflow
 	return workflow, nil
 }
@@ -187,7 +187,7 @@ func (c *DemoN8nClient) ActivateWorkflow(id string) (*Workflow, error) {
 	if !exists {
 		return nil, fmt.Errorf("workflow not found: %s", id)
 	}
-	
+
 	workflow.Active = true
 	workflow.UpdatedAt = time.Now()
 	return workflow, nil
@@ -198,7 +198,7 @@ func (c *DemoN8nClient) DeactivateWorkflow(id string) (*Workflow, error) {
 	if !exists {
 		return nil, fmt.Errorf("workflow not found: %s", id)
 	}
-	
+
 	workflow.Active = false
 	workflow.UpdatedAt = time.Now()
 	return workflow, nil
@@ -208,7 +208,7 @@ func (c *DemoN8nClient) DeleteWorkflow(id string) error {
 	if _, exists := c.workflows[id]; !exists {
 		return fmt.Errorf("workflow not found: %s", id)
 	}
-	
+
 	delete(c.workflows, id)
 	return nil
 }

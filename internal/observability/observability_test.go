@@ -53,12 +53,12 @@ func TestGrafanaMetrics(t *testing.T) {
 	// Test metrics structure
 	metrics := GrafanaMetrics{
 		WorkflowExecutions: 10,
-		FailureRate:       0.1,
-		SyncOperations:    5,
-		ActiveWorkflows:   3,
-		ResponseTime:      150.5,
-		Environment:       "test",
-		Timestamp:         time.Now().Unix(),
+		FailureRate:        0.1,
+		SyncOperations:     5,
+		ActiveWorkflows:    3,
+		ResponseTime:       150.5,
+		Environment:        "test",
+		Timestamp:          time.Now().Unix(),
 	}
 
 	if metrics.WorkflowExecutions != 10 {

@@ -11,13 +11,13 @@ import (
 
 // GitStatus represents the status of files in Git
 type GitStatus struct {
-	ModifiedFiles   []string `json:"modifiedFiles"`
-	UntrackedFiles  []string `json:"untrackedFiles"`
-	StagedFiles     []string `json:"stagedFiles"`
-	WorkflowFiles   []string `json:"workflowFiles"`
-	HasChanges      bool     `json:"hasChanges"`
-	CurrentBranch   string   `json:"currentBranch"`
-	LastCommit      string   `json:"lastCommit"`
+	ModifiedFiles        []string         `json:"modifiedFiles"`
+	UntrackedFiles       []string         `json:"untrackedFiles"`
+	StagedFiles          []string         `json:"stagedFiles"`
+	WorkflowFiles        []string         `json:"workflowFiles"`
+	HasChanges           bool             `json:"hasChanges"`
+	CurrentBranch        string           `json:"currentBranch"`
+	LastCommit           string           `json:"lastCommit"`
 	UncommittedWorkflows []WorkflowChange `json:"uncommittedWorkflows"`
 }
 
@@ -91,10 +91,10 @@ func (gsc *GitStatusChecker) GetStatus() (*GitStatus, error) {
 
 		// Check if it's a workflow file
 		isWorkflowFile := gsc.isWorkflowFile(filePath)
-		
+
 		if isWorkflowFile {
 			status.WorkflowFiles = append(status.WorkflowFiles, filePath)
-			
+
 			workflowChange := WorkflowChange{
 				FilePath:     filePath,
 				WorkflowName: gsc.extractWorkflowName(filePath),
@@ -148,12 +148,12 @@ func (gsc *GitStatusChecker) extractWorkflowName(filePath string) string {
 	fileName := filepath.Base(filePath)
 	// Remove .json extension and version suffix
 	name := strings.TrimSuffix(fileName, ".json")
-	
+
 	// Remove version pattern (e.g., -v1.0.1234)
 	if idx := strings.LastIndex(name, "-v"); idx != -1 {
 		name = name[:idx]
 	}
-	
+
 	// Convert hyphens to spaces and capitalize
 	name = strings.ReplaceAll(name, "-", " ")
 	return strings.Title(name)
@@ -288,7 +288,7 @@ func (gsc *GitStatusChecker) CheckBeforeSync() error {
 
 		fmt.Printf("\nRecommendation: Commit your changes first:\n")
 		fmt.Printf("  git add . && git commit -m \"Save workflow changes\"\n\n")
-		
+
 		return fmt.Errorf("uncommitted workflow changes detected - commit before syncing")
 	}
 

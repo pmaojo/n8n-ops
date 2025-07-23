@@ -45,11 +45,11 @@ func WorkflowDiagram() string {
                           │               │
                           └───────────────┘%s
 `, Dim,
-   Green, Dim, Yellow, Dim, Cyan, Dim, Yellow, Dim, Green, Dim,
-   Blue, Dim, Purple, Dim, Blue, Dim,
-   Yellow, Dim,
-   Red, Dim,
-   Reset)
+		Green, Dim, Yellow, Dim, Cyan, Dim, Yellow, Dim, Green, Dim,
+		Blue, Dim, Purple, Dim, Blue, Dim,
+		Yellow, Dim,
+		Red, Dim,
+		Reset)
 }
 
 // QuickStartGuide returns a visual quick start guide
@@ -75,19 +75,19 @@ func QuickStartGuide() string {
 │     %sn8n-ops status --env production%s                               │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘%s
-`, Green, Bold, 
-   Yellow, Green,
-   Cyan, Green,
-   Dim, Green,
-   Cyan, Green,
-   Dim, Green,
-   Cyan, Green,
-   Dim, Green,
-   Cyan, Green,
-   Dim, Green,
-   Cyan, Green,
-   Dim, Green,
-   Reset)
+`, Green, Bold,
+		Yellow, Green,
+		Cyan, Green,
+		Dim, Green,
+		Cyan, Green,
+		Dim, Green,
+		Cyan, Green,
+		Dim, Green,
+		Cyan, Green,
+		Dim, Green,
+		Cyan, Green,
+		Dim, Green,
+		Reset)
 }
 
 // TutorialTip returns a formatted tip box
@@ -98,10 +98,10 @@ func TutorialTip(tip string) string {
 │                                                                     │
 │  %s%s%s                                                               │
 └─────────────────────────────────────────────────────────────────────┘%s
-`, Yellow, Bold, 
-   Green, Yellow,
-   Dim, tip, Yellow,
-   Reset)
+`, Yellow, Bold,
+		Green, Yellow,
+		Dim, tip, Yellow,
+		Reset)
 }
 
 // TutorialWarning returns a formatted warning box
@@ -112,10 +112,10 @@ func TutorialWarning(warning string) string {
 │                                                                     │
 │  %s%s%s                                                               │
 └─────────────────────────────────────────────────────────────────────┘%s
-`, Red, Bold, 
-   Yellow, Red,
-   Dim, warning, Red,
-   Reset)
+`, Red, Bold,
+		Yellow, Red,
+		Dim, warning, Red,
+		Reset)
 }
 
 // TutorialExample returns a formatted example box
@@ -126,21 +126,21 @@ func TutorialExample(title, content string) string {
 │                                                                     │
 %s%s%s                                                                   │
 └─────────────────────────────────────────────────────────────────────┘%s
-`, Cyan, Bold, 
-   Yellow, title, Cyan,
-   Dim, formatExampleContent(content), Cyan,
-   Reset)
+`, Cyan, Bold,
+		Yellow, title, Cyan,
+		Dim, formatExampleContent(content), Cyan,
+		Reset)
 }
 
 // Helper function to format example content with proper indentation
 func formatExampleContent(content string) string {
 	lines := strings.Split(content, "\n")
 	var result strings.Builder
-	
+
 	for _, line := range lines {
 		result.WriteString("│  " + line + "\n")
 	}
-	
+
 	return result.String()
 }
 
@@ -149,7 +149,7 @@ func TutorialProgress(current, total int) string {
 	percentage := float64(current) / float64(total) * 100
 	filled := int(percentage / 5) // 20 characters total
 	bar := strings.Repeat("█", filled) + strings.Repeat("░", 20-filled)
-	
+
 	return fmt.Sprintf(`%s%s
 ┌─────────────────────────────────────────────────────────────────────┐
 │                                                                     │
@@ -159,11 +159,11 @@ func TutorialProgress(current, total int) string {
 │  %sStep %d of %d%s                                                      │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘%s
-`, Purple, Bold, 
-   Cyan, Purple,
-   Green, bar, Purple, Yellow, percentage, Purple,
-   Dim, current, total, Purple,
-   Reset)
+`, Purple, Bold,
+		Cyan, Purple,
+		Green, bar, Purple, Yellow, percentage, Purple,
+		Dim, current, total, Purple,
+		Reset)
 }
 
 // TutorialComplete returns a completion message
@@ -202,19 +202,19 @@ func TutorialCommandReference() string {
 │  %s• n8n-ops <command> --help%s                                       │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘%s
-`, Blue, Bold, 
-   Yellow, Blue,
-   Cyan, Blue,
-   Green, Blue,
-   Green, Blue,
-   Green, Blue,
-   Green, Blue,
-   Cyan, Blue,
-   Green, Blue,
-   Green, Blue,
-   Green, Blue,
-   Green, Blue,
-   Cyan, Blue,
-   Green, Blue,
-   Reset)
+`, Blue, Bold,
+		Yellow, Blue,
+		Cyan, Blue,
+		Green, Blue,
+		Green, Blue,
+		Green, Blue,
+		Green, Blue,
+		Cyan, Blue,
+		Green, Blue,
+		Green, Blue,
+		Green, Blue,
+		Green, Blue,
+		Cyan, Blue,
+		Green, Blue,
+		Reset)
 }
