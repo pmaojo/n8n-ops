@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"text/tabwriter"
 	"time"
 
 	"github.com/spf13/cobra"
+
+	"github.com/pmaojo/n8n-ops/internal/git"
 )
 
 var (
@@ -62,9 +63,15 @@ Examples:
   n8n-ops branch                           # Show workflows in current branch
   n8n-ops branch --list                    # List all branches with workflows  
   n8n-ops branch --compare main            # Compare current branch with main
-  n8n-ops branch --list --active           # Show only branches with active workflows
+ n8n-ops branch --list --active           # Show only branches with active workflows
   n8n-ops branch --json                    # Export as JSON`,
-	RunE: runBranchCmd,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return fmt.Errorf("failed to get working directory: %w", err)
+		}
+		return runBranchCmd(cmd, args, git.NewExecutor(cwd))
+	},
 }
 
 func init() {
@@ -76,39 +83,33 @@ func init() {
 	branchCmd.Flags().BoolVar(&branchShowActive, "active", false, "Show only branches with active workflows")
 }
 
-func runBranchCmd(cmd *cobra.Command, args []string) error {
+func runBranchCmd(cmd *cobra.Command, args []string, executor git.Executor) error {
 	if language == "es" {
 		fmt.Println("🌿 Iniciando análisis de ramas...")
 	} else {
 		fmt.Println("🌿 Starting branch workflow analysis...")
 	}
 
-	// Get current working directory
-	workingDir, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("failed to get working directory: %w", err)
-	}
-
 	// Handle different command modes
 	switch {
 	case branchListAll:
-		return handleListAllBranches(workingDir)
+		return handleListAllBranches(executor)
 	case branchCompare != "":
-		return handleCompareBranches(workingDir, branchCompare)
+		return handleCompareBranches(executor, branchCompare)
 	default:
-		return handleCurrentBranch(workingDir)
+		return handleCurrentBranch(executor)
 	}
 }
 
-func handleCurrentBranch(workingDir string) error {
-	currentBranch, err := getCurrentBranch(workingDir)
+func handleCurrentBranch(exec git.Executor) error {
+	currentBranch, err := getCurrentBranch(exec)
 	if err != nil {
 		return fmt.Errorf("failed to get current branch: %w", err)
 	}
 
 	fmt.Printf("Analyzing current branch: %s\n", currentBranch)
 
-	branchInfo, err := getBranchWorkflows(workingDir, currentBranch)
+	branchInfo, err := getBranchWorkflows(exec, currentBranch)
 	if err != nil {
 		return fmt.Errorf("failed to analyze branch workflows: %w", err)
 	}
@@ -120,10 +121,10 @@ func handleCurrentBranch(workingDir string) error {
 	return displayBranchInfo(branchInfo)
 }
 
-func handleListAllBranches(workingDir string) error {
+func handleListAllBranches(exec git.Executor) error {
 	fmt.Println("Analyzing all branches...")
 
-	allBranches, err := getAllBranchesWorkflows(workingDir)
+	allBranches, err := getAllBranchesWorkflows(exec)
 	if err != nil {
 		return fmt.Errorf("failed to analyze all branches: %w", err)
 	}
@@ -152,20 +153,20 @@ func handleListAllBranches(workingDir string) error {
 	return displayAllBranches(allBranches)
 }
 
-func handleCompareBranches(workingDir, targetBranch string) error {
-	currentBranch, err := getCurrentBranch(workingDir)
+func handleCompareBranches(exec git.Executor, targetBranch string) error {
+	currentBranch, err := getCurrentBranch(exec)
 	if err != nil {
 		return fmt.Errorf("failed to get current branch: %w", err)
 	}
 
 	fmt.Printf("Comparing branches: %s vs %s\n", currentBranch, targetBranch)
 
-	branchInfoA, err := getBranchWorkflows(workingDir, currentBranch)
+	branchInfoA, err := getBranchWorkflows(exec, currentBranch)
 	if err != nil {
 		return fmt.Errorf("failed to get workflows for branch %s: %w", currentBranch, err)
 	}
 
-	branchInfoB, err := getBranchWorkflows(workingDir, targetBranch)
+	branchInfoB, err := getBranchWorkflows(exec, targetBranch)
 	if err != nil {
 		return fmt.Errorf("failed to get workflows for branch %s: %w", targetBranch, err)
 	}
@@ -180,34 +181,22 @@ func handleCompareBranches(workingDir, targetBranch string) error {
 }
 
 // Helper functions for branch operations
-func getCurrentBranch(workingDir string) (string, error) {
-	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
-	cmd.Dir = workingDir
-
-	output, err := cmd.Output()
-	if err != nil {
-		return "", err
-	}
-
-	return strings.TrimSpace(string(output)), nil
+func getCurrentBranch(exec git.Executor) (string, error) {
+	return exec.CurrentBranch()
 }
 
-func getBranchWorkflows(workingDir, branch string) (*BranchWorkflowInfo, error) {
-	// Get commit info
-	cmd := exec.Command("git", "log", "-1", "--format=%H|%s|%an|%ct", branch)
-	cmd.Dir = workingDir
-	output, err := cmd.Output()
+func getBranchWorkflows(exec git.Executor, branch string) (*BranchWorkflowInfo, error) {
+	output, err := exec.Log(branch, "%H|%s|%an|%ct")
 	if err != nil {
 		return nil, err
 	}
 
-	parts := strings.Split(strings.TrimSpace(string(output)), "|")
+	parts := strings.Split(strings.TrimSpace(output), "|")
 	if len(parts) < 4 {
 		return nil, fmt.Errorf("unexpected git log format")
 	}
 
-	// Find workflow files
-	workflowFiles, err := findWorkflowFiles(workingDir, branch)
+	workflowFiles, err := findWorkflowFiles(exec, branch)
 	if err != nil {
 		return nil, err
 	}
@@ -235,15 +224,15 @@ func getBranchWorkflows(workingDir, branch string) (*BranchWorkflowInfo, error) 
 	return branchInfo, nil
 }
 
-func getAllBranchesWorkflows(workingDir string) (map[string]*BranchWorkflowInfo, error) {
-	branches, err := getAllBranches(workingDir)
+func getAllBranchesWorkflows(exec git.Executor) (map[string]*BranchWorkflowInfo, error) {
+	branches, err := getAllBranches(exec)
 	if err != nil {
 		return nil, err
 	}
 
 	result := make(map[string]*BranchWorkflowInfo)
 	for _, branch := range branches {
-		branchInfo, err := getBranchWorkflows(workingDir, branch)
+		branchInfo, err := getBranchWorkflows(exec, branch)
 		if err != nil {
 			fmt.Printf("Warning: Failed to analyze branch %s: %v\n", branch, err)
 			continue
@@ -254,16 +243,11 @@ func getAllBranchesWorkflows(workingDir string) (map[string]*BranchWorkflowInfo,
 	return result, nil
 }
 
-func findWorkflowFiles(workingDir, branch string) ([]WorkflowFile, error) {
-	cmd := exec.Command("git", "ls-tree", "-r", "--name-only", branch, "workflows/")
-	cmd.Dir = workingDir
-
-	output, err := cmd.Output()
+func findWorkflowFiles(exec git.Executor, branch string) ([]WorkflowFile, error) {
+	files, err := exec.LsTree(branch, "workflows/")
 	if err != nil {
 		return []WorkflowFile{}, nil // No workflows directory
 	}
-
-	files := strings.Split(strings.TrimSpace(string(output)), "\n")
 	var workflowFiles []WorkflowFile
 
 	for _, file := range files {
@@ -282,25 +266,11 @@ func findWorkflowFiles(workingDir, branch string) ([]WorkflowFile, error) {
 	return workflowFiles, nil
 }
 
-func getAllBranches(workingDir string) ([]string, error) {
-	cmd := exec.Command("git", "branch", "-r", "--format=%(refname:short)")
-	cmd.Dir = workingDir
-
-	output, err := cmd.Output()
+func getAllBranches(exec git.Executor) ([]string, error) {
+	branches, err := exec.RemoteBranches()
 	if err != nil {
 		return nil, err
 	}
-
-	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
-	var branches []string
-
-	for _, line := range lines {
-		branch := strings.TrimSpace(line)
-		if !strings.Contains(branch, "HEAD") && strings.HasPrefix(branch, "origin/") {
-			branches = append(branches, strings.TrimPrefix(branch, "origin/"))
-		}
-	}
-
 	return branches, nil
 }
 

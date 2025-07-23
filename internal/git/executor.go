@@ -18,6 +18,9 @@ type Executor interface {
 	StatusPorcelain() (string, error)
 	LastCommit() (string, error)
 	IsRepository() bool
+	Log(branch, format string) (string, error)
+	LsTree(branch, path string) ([]string, error)
+	RemoteBranches() ([]string, error)
 }
 
 type execExecutor struct {
@@ -114,6 +117,55 @@ func (e *execExecutor) LastCommit() (string, error) {
 		return "", fmt.Errorf("last commit: %w", err)
 	}
 	return strings.TrimSpace(string(out)), nil
+}
+
+func (e *execExecutor) Log(branch, format string) (string, error) {
+	if format == "" {
+		format = "%H|%s|%an|%ct"
+	}
+	out, err := e.gitCmd("log", "-1", "--format="+format, branch).Output()
+	if err != nil {
+		return "", fmt.Errorf("git log: %w", err)
+	}
+	return strings.TrimSpace(string(out)), nil
+}
+
+func (e *execExecutor) LsTree(branch, path string) ([]string, error) {
+	args := []string{"ls-tree", "-r", "--name-only", branch}
+	if path != "" {
+		args = append(args, path)
+	}
+	out, err := e.gitCmd(args...).Output()
+	if err != nil {
+		return nil, fmt.Errorf("git ls-tree: %w", err)
+	}
+	var files []string
+	for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+		line = strings.TrimSpace(line)
+		if line != "" {
+			files = append(files, line)
+		}
+	}
+	return files, nil
+}
+
+func (e *execExecutor) RemoteBranches() ([]string, error) {
+	out, err := e.gitCmd("branch", "-r", "--format=%(refname:short)").Output()
+	if err != nil {
+		return nil, fmt.Errorf("list remote branches: %w", err)
+	}
+	var branches []string
+	for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.Contains(line, "HEAD") {
+			continue
+		}
+		if strings.HasPrefix(line, "origin/") {
+			line = strings.TrimPrefix(line, "origin/")
+		}
+		branches = append(branches, line)
+	}
+	return branches, nil
 }
 
 func (e *execExecutor) IsRepository() bool {
