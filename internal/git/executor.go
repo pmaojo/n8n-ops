@@ -18,6 +18,7 @@ type Executor interface {
 	StatusPorcelain() (string, error)
 	LastCommit() (string, error)
 	IsRepository() bool
+	UserEmail() (string, error)
 }
 
 type execExecutor struct {
@@ -118,4 +119,12 @@ func (e *execExecutor) LastCommit() (string, error) {
 
 func (e *execExecutor) IsRepository() bool {
 	return e.gitCmd("rev-parse", "--git-dir").Run() == nil
+}
+
+func (e *execExecutor) UserEmail() (string, error) {
+	out, err := e.gitCmd("config", "user.email").Output()
+	if err != nil {
+		return "", fmt.Errorf("get git user email: %w", err)
+	}
+	return strings.TrimSpace(string(out)), nil
 }
