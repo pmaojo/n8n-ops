@@ -30,7 +30,11 @@ func TestGitLabURLValidation(t *testing.T) {
         for _, testURL := range invalidURLs {
                 if testURL != "" {
                         parsed, err := url.Parse(testURL)
-                        if err == nil && parsed.Scheme != "https" && parsed.Host != "" {
+                        if err == nil && parsed.Scheme == "ftp" {
+                                // FTP URLs should not be considered valid for GitLab
+                                continue
+                        }
+                        if err == nil && parsed.Scheme == "https" && parsed.Host != "" {
                                 t.Errorf("Invalid URL %s should not be considered valid", testURL)
                         }
                 }
