@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/pmaojo/n8n-ops/internal/client"
 	"github.com/pmaojo/n8n-ops/internal/credentials"
@@ -51,5 +52,6 @@ func runTUI(cmd *cobra.Command, args []string) error {
 	}
 
 	ctx := context.Background()
-	return termui.RunTermuiDashboard(ctx, c)
+	db := termui.NewDashboard(c, 3*time.Second)
+	return db.Run(ctx)
 }
