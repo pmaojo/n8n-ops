@@ -1,0 +1,1041 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>client: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/n8n-workflows/n8n-ops/internal/client/demo_client.go (0.0%)</option>
+				
+				<option value="file1">github.com/n8n-workflows/n8n-ops/internal/client/errors.go (44.4%)</option>
+				
+				<option value="file2">github.com/n8n-workflows/n8n-ops/internal/client/n8n.go (39.5%)</option>
+				
+				<option value="file3">github.com/n8n-workflows/n8n-ops/internal/client/n8n_client.go (0.0%)</option>
+				
+				<option value="file4">github.com/n8n-workflows/n8n-ops/internal/client/transport.go (71.1%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package client
+
+import (
+        "fmt"
+        "time"
+)
+
+type DemoN8nClient struct {
+        workflows map[string]*Workflow
+}
+
+func NewDemoN8nClient() *DemoN8nClient <span class="cov0" title="0">{
+        workflows := map[string]*Workflow{
+                "1001": {
+                        ID:        "1001",
+                        Name:      "Customer Onboarding",
+                        Active:    true,
+                        CreatedAt: time.Now().Add(-72 * time.Hour),
+                        UpdatedAt: time.Now().Add(-30 * time.Minute),
+                        VersionId: 15,
+                        Tags:      []string{"customer", "onboarding"},
+                        Nodes: []WorkflowNode{
+                                {
+                                        ID:         "webhook-1001",
+                                        Name:       "Webhook",
+                                        Type:       "n8n-nodes-base.webhook",
+                                        TypeVersion: 1.0,
+                                        Position:   []int{250, 300},
+                                        Parameters: map[string]interface{}{
+                                                "httpMethod": "POST",
+                                                "path":       "customer-signup",
+                                        },
+                                },
+                                {
+                                        ID:         "email-1001",
+                                        Name:       "Send Welcome Email",
+                                        Type:       "n8n-nodes-base.emailSend",
+                                        TypeVersion: 1.0,
+                                        Position:   []int{450, 300},
+                                        Parameters: map[string]interface{}{
+                                                "subject": "Welcome to our platform!",
+                                                "toEmail": "={{ $json.email }}",
+                                        },
+                                },
+                        },
+                        Connections: map[string]interface{}{
+                                "Webhook": map[string]interface{}{
+                                        "main": [][]map[string]interface{}{
+                                                {
+                                                        {
+                                                                "node": "Send Welcome Email",
+                                                                "type": "main",
+                                                                "index": 0,
+                                                        },
+                                                },
+                                        },
+                                },
+                        },
+                },
+                "1002": {
+                        ID:        "1002",
+                        Name:      "Payment Processing",
+                        Active:    true,
+                        CreatedAt: time.Now().Add(-48 * time.Hour),
+                        UpdatedAt: time.Now().Add(-10 * time.Minute),
+                        VersionId: 23,
+                        Tags:      []string{"payment", "stripe"},
+                        Nodes: []WorkflowNode{
+                                {
+                                        ID:         "webhook-1002",
+                                        Name:       "Payment Webhook",
+                                        Type:       "n8n-nodes-base.webhook",
+                                        TypeVersion: 1.0,
+                                        Position:   []int{250, 200},
+                                        Parameters: map[string]interface{}{
+                                                "httpMethod": "POST",
+                                                "path":       "stripe-webhook",
+                                        },
+                                },
+                                {
+                                        ID:         "stripe-1002",
+                                        Name:       "Process Payment",
+                                        Type:       "n8n-nodes-base.stripe",
+                                        TypeVersion: 1.0,
+                                        Position:   []int{450, 200},
+                                        Parameters: map[string]interface{}{
+                                                "operation": "charge",
+                                        },
+                                },
+                        },
+                        Connections: map[string]interface{}{
+                                "Payment Webhook": map[string]interface{}{
+                                        "main": [][]map[string]interface{}{
+                                                {
+                                                        {
+                                                                "node": "Process Payment",
+                                                                "type": "main",
+                                                                "index": 0,
+                                                        },
+                                                },
+                                        },
+                                },
+                        },
+                },
+                "1003": {
+                        ID:        "1003",
+                        Name:      "Order Fulfillment",
+                        Active:    false,
+                        CreatedAt: time.Now().Add(-24 * time.Hour),
+                        UpdatedAt: time.Now().Add(-5 * time.Minute),
+                        VersionId: 8,
+                        Tags:      []string{"orders", "fulfillment"},
+                        Nodes: []WorkflowNode{
+                                {
+                                        ID:         "trigger-1003",
+                                        Name:       "Order Created",
+                                        Type:       "n8n-nodes-base.httpRequest",
+                                        TypeVersion: 1.0,
+                                        Position:   []int{250, 400},
+                                        Parameters: map[string]interface{}{
+                                                "method": "POST",
+                                        },
+                                },
+                        },
+                        Connections: map[string]interface{}{},
+                },
+        }
+
+        return &amp;DemoN8nClient{workflows: workflows}
+}</span>
+
+func (c *DemoN8nClient) GetMe() (*User, error) <span class="cov0" title="0">{
+        return &amp;User{
+                ID:    "demo-user-123",
+                Email: "demo@n8n-ops.example.com",
+                Settings: map[string]interface{}{
+                        "timezone": "UTC",
+                        "demoMode": true,
+                },
+        }, nil
+}</span>
+
+func (c *DemoN8nClient) GetWorkflows() ([]Workflow, error) <span class="cov0" title="0">{
+        var workflows []Workflow
+        for _, workflow := range c.workflows </span><span class="cov0" title="0">{
+                workflows = append(workflows, *workflow)
+        }</span>
+        <span class="cov0" title="0">return workflows, nil</span>
+}
+
+func (c *DemoN8nClient) GetWorkflow(id string) (*Workflow, error) <span class="cov0" title="0">{
+        workflow, exists := c.workflows[id]
+        if !exists </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("workflow not found: %s", id)
+        }</span>
+        <span class="cov0" title="0">return workflow, nil</span>
+}
+
+func (c *DemoN8nClient) CreateWorkflow(workflow *Workflow) (*Workflow, error) <span class="cov0" title="0">{
+        newID := fmt.Sprintf("demo-%d", len(c.workflows)+1001)
+        workflow.ID = newID
+        workflow.CreatedAt = time.Now()
+        workflow.UpdatedAt = time.Now()
+        workflow.VersionId = 1
+        
+        c.workflows[newID] = workflow
+        return workflow, nil
+}</span>
+
+func (c *DemoN8nClient) UpdateWorkflow(id string, workflow *Workflow) (*Workflow, error) <span class="cov0" title="0">{
+        existing, exists := c.workflows[id]
+        if !exists </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("workflow not found: %s", id)
+        }</span>
+        
+        <span class="cov0" title="0">workflow.ID = id
+        workflow.CreatedAt = existing.CreatedAt
+        workflow.UpdatedAt = time.Now()
+        workflow.VersionId = existing.VersionId + 1
+        
+        c.workflows[id] = workflow
+        return workflow, nil</span>
+}
+
+func (c *DemoN8nClient) ActivateWorkflow(id string) (*Workflow, error) <span class="cov0" title="0">{
+        workflow, exists := c.workflows[id]
+        if !exists </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("workflow not found: %s", id)
+        }</span>
+        
+        <span class="cov0" title="0">workflow.Active = true
+        workflow.UpdatedAt = time.Now()
+        return workflow, nil</span>
+}
+
+func (c *DemoN8nClient) DeactivateWorkflow(id string) (*Workflow, error) <span class="cov0" title="0">{
+        workflow, exists := c.workflows[id]
+        if !exists </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("workflow not found: %s", id)
+        }</span>
+        
+        <span class="cov0" title="0">workflow.Active = false
+        workflow.UpdatedAt = time.Now()
+        return workflow, nil</span>
+}
+
+func (c *DemoN8nClient) DeleteWorkflow(id string) error <span class="cov0" title="0">{
+        if _, exists := c.workflows[id]; !exists </span><span class="cov0" title="0">{
+                return fmt.Errorf("workflow not found: %s", id)
+        }</span>
+        
+        <span class="cov0" title="0">delete(c.workflows, id)
+        return nil</span>
+}
+
+func (c *DemoN8nClient) TestConnection() error <span class="cov0" title="0">{
+        // Demo client always passes connection test
+        return nil
+}</pre>
+		
+		<pre class="file" id="file1" style="display: none">package client
+
+import (
+        "errors"
+        "fmt"
+        "net/http"
+)
+
+// Predefined error types for better error handling
+var (
+        ErrNotFound      = errors.New("resource not found")
+        ErrUnauthorized  = errors.New("unauthorized access")
+        ErrBadRequest    = errors.New("bad request")
+        ErrServerError   = errors.New("internal server error") 
+        ErrTimeout       = errors.New("request timeout")
+        ErrConnection    = errors.New("connection failed")
+        ErrInvalidConfig = errors.New("invalid configuration")
+)
+
+// APIError represents a structured API error
+type APIError struct {
+        Code    int    `json:"code"`
+        Message string `json:"message"`
+        Details string `json:"details,omitempty"`
+}
+
+func (e *APIError) Error() string <span class="cov8" title="1">{
+        if e.Details != "" </span><span class="cov0" title="0">{
+                return fmt.Sprintf("API error %d: %s (%s)", e.Code, e.Message, e.Details)
+        }</span>
+        <span class="cov8" title="1">return fmt.Sprintf("API error %d: %s", e.Code, e.Message)</span>
+}
+
+// NewAPIError creates an APIError from HTTP status code
+func NewAPIError(statusCode int, message string) *APIError <span class="cov8" title="1">{
+        baseError := &amp;APIError{
+                Code:    statusCode,
+                Message: message,
+        }
+        
+        // Map common HTTP status codes to specific errors
+        switch statusCode </span>{
+        case http.StatusNotFound:<span class="cov8" title="1">
+                return &amp;APIError{Code: statusCode, Message: "resource not found"}</span>
+        case http.StatusUnauthorized:<span class="cov0" title="0">
+                return &amp;APIError{Code: statusCode, Message: "unauthorized access"}</span>
+        case http.StatusBadRequest:<span class="cov0" title="0">
+                return &amp;APIError{Code: statusCode, Message: "bad request"}</span>
+        case http.StatusInternalServerError:<span class="cov0" title="0">
+                return &amp;APIError{Code: statusCode, Message: "internal server error"}</span>
+        default:<span class="cov0" title="0">
+                return baseError</span>
+        }
+}
+
+// IsAPIError checks if error is an APIError with specific status code
+func IsAPIError(err error, statusCode int) bool <span class="cov8" title="1">{
+        var apiErr *APIError
+        if errors.As(err, &amp;apiErr) </span><span class="cov8" title="1">{
+                return apiErr.Code == statusCode
+        }</span>
+        <span class="cov0" title="0">return false</span>
+}
+
+// IsNotFound checks if error represents a "not found" condition
+func IsNotFound(err error) bool <span class="cov0" title="0">{
+        return errors.Is(err, ErrNotFound) || IsAPIError(err, http.StatusNotFound)
+}</span>
+
+// IsUnauthorized checks if error represents an "unauthorized" condition  
+func IsUnauthorized(err error) bool <span class="cov0" title="0">{
+        return errors.Is(err, ErrUnauthorized) || IsAPIError(err, http.StatusUnauthorized)
+}</span>
+
+// IsBadRequest checks if error represents a "bad request" condition
+func IsBadRequest(err error) bool <span class="cov0" title="0">{
+        return errors.Is(err, ErrBadRequest) || IsAPIError(err, http.StatusBadRequest)
+}</span>
+
+// IsServerError checks if error represents a server error condition
+func IsServerError(err error) bool <span class="cov0" title="0">{
+        return errors.Is(err, ErrServerError) || IsAPIError(err, http.StatusInternalServerError)
+}</pre>
+		
+		<pre class="file" id="file2" style="display: none">package client
+
+import (
+        "context"
+        "encoding/json"
+        "fmt"
+        "net/http"
+        "strings"
+
+        "github.com/n8n-workflows/n8n-ops/internal/workflow"
+)
+
+// n8nClient is the concrete implementation of N8nClient interface
+type n8nClient struct {
+        transport *ContextualTransport
+}
+
+// New creates a new n8n client following SOLID principles
+// No side effects - connection testing is separate
+func New(baseURL, apiKey string, httpClient *http.Client) (Client, error) <span class="cov8" title="1">{
+        if baseURL == "" </span><span class="cov8" title="1">{
+                return nil, ErrInvalidConfig
+        }</span>
+        <span class="cov8" title="1">if apiKey == "" </span><span class="cov8" title="1">{
+                return nil, ErrInvalidConfig
+        }</span>
+        
+        // Clean base URL
+        <span class="cov8" title="1">baseURL = strings.TrimRight(baseURL, "/")
+        
+        // Create transport with dependency injection
+        transport := NewContextualTransport(baseURL, apiKey, httpClient)
+        
+        return &amp;n8nClient{
+                transport: transport,
+        }, nil</span>
+}
+
+// Ping tests the connection separately from construction
+func (c *n8nClient) Ping(ctx context.Context) error <span class="cov0" title="0">{
+        return c.HealthCheck(ctx)
+}</span>
+
+// Generic request helper following DRY principle
+func doRequest[T any](ctx context.Context, c *n8nClient, method, path string, body interface{}) (T, error) <span class="cov8" title="1">{
+        var zero T
+        
+        // Prepare request body
+        var reqBody []byte
+        if body != nil </span><span class="cov8" title="1">{
+                var err error
+                reqBody, err = json.Marshal(body)
+                if err != nil </span><span class="cov0" title="0">{
+                        return zero, fmt.Errorf("failed to marshal request: %w", err)
+                }</span>
+        }
+        
+        // Create request
+        <span class="cov8" title="1">req := &amp;Request{
+                Method: method,
+                URL:    path,
+                Body:   reqBody,
+                Headers: make(map[string]string),
+        }
+        
+        if body != nil </span><span class="cov8" title="1">{
+                req.Headers["Content-Type"] = "application/json"
+        }</span>
+        
+        // Execute request
+        <span class="cov8" title="1">resp, err := c.transport.DoWithContext(ctx, req)
+        if err != nil </span><span class="cov8" title="1">{
+                return zero, fmt.Errorf("request failed: %w", err)
+        }</span>
+        
+        // Handle HTTP errors
+        <span class="cov0" title="0">if resp.StatusCode &gt;= 400 </span><span class="cov0" title="0">{
+                return zero, NewAPIError(resp.StatusCode, string(resp.Body))
+        }</span>
+        
+        // Deserialize response
+        <span class="cov0" title="0">var result T
+        if len(resp.Body) &gt; 0 </span><span class="cov0" title="0">{
+                if err := json.Unmarshal(resp.Body, &amp;result); err != nil </span><span class="cov0" title="0">{
+                        return zero, fmt.Errorf("failed to unmarshal response: %w", err)
+                }</span>
+        }
+        
+        <span class="cov0" title="0">return result, nil</span>
+}
+
+// HealthCheck implements WorkflowReader interface
+func (c *n8nClient) HealthCheck(ctx context.Context) error <span class="cov8" title="1">{
+        type healthResponse struct {
+                Status string `json:"status"`
+        }
+        
+        health, err := doRequest[healthResponse](ctx, c, http.MethodGet, "/api/v1/workflows", nil)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("health check failed: %w", err)
+        }</span>
+        
+        // Basic health validation
+        <span class="cov0" title="0">if health.Status == "" </span><span class="cov0" title="0">{
+                return nil // No error, just empty response is OK
+        }</span>
+        
+        <span class="cov0" title="0">return nil</span>
+}
+
+// GetWorkflows implements WorkflowReader interface
+func (c *n8nClient) GetWorkflows(ctx context.Context) ([]*workflow.Workflow, error) <span class="cov8" title="1">{
+        type workflowsResponse struct {
+                Data []*workflow.Workflow `json:"data"`
+        }
+        
+        resp, err := doRequest[workflowsResponse](ctx, c, http.MethodGet, "/api/v1/workflows", nil)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("failed to get workflows: %w", err)
+        }</span>
+        
+        <span class="cov0" title="0">return resp.Data, nil</span>
+}
+
+// GetWorkflow implements WorkflowReader interface
+func (c *n8nClient) GetWorkflow(ctx context.Context, id string) (*workflow.Workflow, error) <span class="cov0" title="0">{
+        if id == "" </span><span class="cov0" title="0">{
+                return nil, ErrBadRequest
+        }</span>
+        
+        <span class="cov0" title="0">path := fmt.Sprintf("/api/v1/workflows/%s", id)
+        wf, err := doRequest[*workflow.Workflow](ctx, c, http.MethodGet, path, nil)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to get workflow %s: %w", id, err)
+        }</span>
+        
+        <span class="cov0" title="0">return wf, nil</span>
+}
+
+// CreateWorkflow implements WorkflowWriter interface
+func (c *n8nClient) CreateWorkflow(ctx context.Context, wf *workflow.Workflow) (*workflow.Workflow, error) <span class="cov8" title="1">{
+        if wf == nil </span><span class="cov8" title="1">{
+                return nil, ErrBadRequest
+        }</span>
+        
+        <span class="cov8" title="1">result, err := doRequest[*workflow.Workflow](ctx, c, http.MethodPost, "/api/v1/workflows", wf)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("failed to create workflow: %w", err)
+        }</span>
+        
+        <span class="cov0" title="0">return result, nil</span>
+}
+
+// UpdateWorkflow implements WorkflowWriter interface
+func (c *n8nClient) UpdateWorkflow(ctx context.Context, id string, wf *workflow.Workflow) (*workflow.Workflow, error) <span class="cov0" title="0">{
+        if id == "" || wf == nil </span><span class="cov0" title="0">{
+                return nil, ErrBadRequest
+        }</span>
+        
+        <span class="cov0" title="0">path := fmt.Sprintf("/api/v1/workflows/%s", id)
+        result, err := doRequest[*workflow.Workflow](ctx, c, http.MethodPut, path, wf)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to update workflow %s: %w", id, err)
+        }</span>
+        
+        <span class="cov0" title="0">return result, nil</span>
+}
+
+// DeleteWorkflow implements WorkflowWriter interface
+func (c *n8nClient) DeleteWorkflow(ctx context.Context, id string) error <span class="cov0" title="0">{
+        if id == "" </span><span class="cov0" title="0">{
+                return ErrBadRequest
+        }</span>
+        
+        <span class="cov0" title="0">path := fmt.Sprintf("/api/v1/workflows/%s", id)
+        _, err := doRequest[interface{}](ctx, c, http.MethodDelete, path, nil)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to delete workflow %s: %w", id, err)
+        }</span>
+        
+        <span class="cov0" title="0">return nil</span>
+}
+
+// ExecuteWorkflow implements WorkflowExecutor interface
+func (c *n8nClient) ExecuteWorkflow(ctx context.Context, id string) (*workflow.ExecutionResult, error) <span class="cov0" title="0">{
+        if id == "" </span><span class="cov0" title="0">{
+                return nil, ErrBadRequest
+        }</span>
+        
+        <span class="cov0" title="0">path := fmt.Sprintf("/api/v1/workflows/%s/execute", id)
+        result, err := doRequest[*workflow.ExecutionResult](ctx, c, http.MethodPost, path, nil)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to execute workflow %s: %w", id, err)
+        }</span>
+        
+        <span class="cov0" title="0">return result, nil</span>
+}
+
+// GetExecution implements WorkflowExecutor interface  
+func (c *n8nClient) GetExecution(ctx context.Context, id string) (*workflow.ExecutionResult, error) <span class="cov0" title="0">{
+        if id == "" </span><span class="cov0" title="0">{
+                return nil, ErrBadRequest
+        }</span>
+        
+        <span class="cov0" title="0">path := fmt.Sprintf("/api/v1/executions/%s", id)
+        result, err := doRequest[*workflow.ExecutionResult](ctx, c, http.MethodGet, path, nil)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to get execution %s: %w", id, err)
+        }</span>
+        
+        <span class="cov0" title="0">return result, nil</span>
+}</pre>
+		
+		<pre class="file" id="file3" style="display: none">package client
+
+import (
+        "bytes"
+        "encoding/json"
+        "fmt"
+        "io"
+        "net/http"
+        "time"
+)
+
+type N8nClientInterface interface {
+        GetMe() (*User, error)
+        GetWorkflows() ([]Workflow, error)
+        GetWorkflow(id string) (*Workflow, error)
+        CreateWorkflow(workflow *Workflow) (*Workflow, error)
+        UpdateWorkflow(id string, workflow *Workflow) (*Workflow, error)
+        ActivateWorkflow(id string) (*Workflow, error)
+        DeactivateWorkflow(id string) (*Workflow, error)
+        DeleteWorkflow(id string) error
+        TestConnection() error
+}
+
+type RealN8nClient struct {
+        BaseURL string
+        APIKey  string
+        Client  *http.Client
+}
+
+type Workflow struct {
+        ID          string                 `json:"id"`
+        Name        string                 `json:"name"`
+        Active      bool                   `json:"active"`
+        Nodes       []WorkflowNode         `json:"nodes"`
+        Connections map[string]interface{} `json:"connections"`
+        CreatedAt   time.Time              `json:"createdAt"`
+        UpdatedAt   time.Time              `json:"updatedAt"`
+        VersionId   int                    `json:"versionId"`
+        Tags        []string               `json:"tags"`
+}
+
+type WorkflowNode struct {
+        ID         string                 `json:"id"`
+        Name       string                 `json:"name"`
+        Type       string                 `json:"type"`
+        TypeVersion float64               `json:"typeVersion"`
+        Position   []int                  `json:"position"`
+        Parameters map[string]interface{} `json:"parameters"`
+}
+
+type WorkflowListResponse struct {
+        Data []Workflow `json:"data"`
+}
+
+type User struct {
+        ID       string                 `json:"id"`
+        Email    string                 `json:"email"`
+        Settings map[string]interface{} `json:"settings"`
+}
+
+func NewRealN8nClient(baseURL, apiKey string) *RealN8nClient <span class="cov0" title="0">{
+        return &amp;RealN8nClient{
+                BaseURL: baseURL,
+                APIKey:  apiKey,
+                Client: &amp;http.Client{
+                        Timeout: 30 * time.Second,
+                },
+        }
+}</span>
+
+func (c *RealN8nClient) makeRequest(method, endpoint string, body interface{}) (*http.Response, error) <span class="cov0" title="0">{
+        url := fmt.Sprintf("%s/api/v1%s", c.BaseURL, endpoint)
+        
+        var reqBody io.Reader
+        if body != nil </span><span class="cov0" title="0">{
+                jsonBody, err := json.Marshal(body)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to marshal request body: %w", err)
+                }</span>
+                <span class="cov0" title="0">reqBody = bytes.NewBuffer(jsonBody)</span>
+        }
+        
+        <span class="cov0" title="0">req, err := http.NewRequest(method, url, reqBody)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to create request: %w", err)
+        }</span>
+        
+        <span class="cov0" title="0">req.Header.Set("Content-Type", "application/json")
+        req.Header.Set("X-N8N-API-KEY", c.APIKey)
+        
+        return c.Client.Do(req)</span>
+}
+
+func (c *RealN8nClient) GetMe() (*User, error) <span class="cov0" title="0">{
+        resp, err := c.makeRequest("GET", "/me", nil)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer resp.Body.Close()
+        
+        if resp.StatusCode != http.StatusOK </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("API request failed with status: %d", resp.StatusCode)
+        }</span>
+        
+        <span class="cov0" title="0">var user User
+        if err := json.NewDecoder(resp.Body).Decode(&amp;user); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to decode response: %w", err)
+        }</span>
+        
+        <span class="cov0" title="0">return &amp;user, nil</span>
+}
+
+func (c *RealN8nClient) GetWorkflows() ([]Workflow, error) <span class="cov0" title="0">{
+        resp, err := c.makeRequest("GET", "/workflows", nil)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer resp.Body.Close()
+        
+        if resp.StatusCode != http.StatusOK </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("API request failed with status: %d", resp.StatusCode)
+        }</span>
+        
+        <span class="cov0" title="0">var response WorkflowListResponse
+        if err := json.NewDecoder(resp.Body).Decode(&amp;response); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to decode response: %w", err)
+        }</span>
+        
+        <span class="cov0" title="0">return response.Data, nil</span>
+}
+
+func (c *RealN8nClient) GetWorkflow(id string) (*Workflow, error) <span class="cov0" title="0">{
+        endpoint := fmt.Sprintf("/workflows/%s", id)
+        resp, err := c.makeRequest("GET", endpoint, nil)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer resp.Body.Close()
+        
+        if resp.StatusCode == http.StatusNotFound </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("workflow not found: %s", id)
+        }</span>
+        
+        <span class="cov0" title="0">if resp.StatusCode != http.StatusOK </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("API request failed with status: %d", resp.StatusCode)
+        }</span>
+        
+        <span class="cov0" title="0">var workflow Workflow
+        if err := json.NewDecoder(resp.Body).Decode(&amp;workflow); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to decode response: %w", err)
+        }</span>
+        
+        <span class="cov0" title="0">return &amp;workflow, nil</span>
+}
+
+func (c *RealN8nClient) CreateWorkflow(workflow *Workflow) (*Workflow, error) <span class="cov0" title="0">{
+        resp, err := c.makeRequest("POST", "/workflows", workflow)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer resp.Body.Close()
+        
+        if resp.StatusCode != http.StatusCreated </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("API request failed with status: %d", resp.StatusCode)
+        }</span>
+        
+        <span class="cov0" title="0">var createdWorkflow Workflow
+        if err := json.NewDecoder(resp.Body).Decode(&amp;createdWorkflow); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to decode response: %w", err)
+        }</span>
+        
+        <span class="cov0" title="0">return &amp;createdWorkflow, nil</span>
+}
+
+func (c *RealN8nClient) UpdateWorkflow(id string, workflow *Workflow) (*Workflow, error) <span class="cov0" title="0">{
+        endpoint := fmt.Sprintf("/workflows/%s", id)
+        resp, err := c.makeRequest("PUT", endpoint, workflow)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer resp.Body.Close()
+        
+        if resp.StatusCode != http.StatusOK </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("API request failed with status: %d", resp.StatusCode)
+        }</span>
+        
+        <span class="cov0" title="0">var updatedWorkflow Workflow
+        if err := json.NewDecoder(resp.Body).Decode(&amp;updatedWorkflow); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to decode response: %w", err)
+        }</span>
+        
+        <span class="cov0" title="0">return &amp;updatedWorkflow, nil</span>
+}
+
+func (c *RealN8nClient) ActivateWorkflow(id string) (*Workflow, error) <span class="cov0" title="0">{
+        endpoint := fmt.Sprintf("/workflows/%s/activate", id)
+        resp, err := c.makeRequest("POST", endpoint, nil)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer resp.Body.Close()
+        
+        if resp.StatusCode != http.StatusOK </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("API request failed with status: %d", resp.StatusCode)
+        }</span>
+        
+        <span class="cov0" title="0">var workflow Workflow
+        if err := json.NewDecoder(resp.Body).Decode(&amp;workflow); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to decode response: %w", err)
+        }</span>
+        
+        <span class="cov0" title="0">return &amp;workflow, nil</span>
+}
+
+func (c *RealN8nClient) DeactivateWorkflow(id string) (*Workflow, error) <span class="cov0" title="0">{
+        endpoint := fmt.Sprintf("/workflows/%s/deactivate", id)
+        resp, err := c.makeRequest("POST", endpoint, nil)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer resp.Body.Close()
+        
+        if resp.StatusCode != http.StatusOK </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("API request failed with status: %d", resp.StatusCode)
+        }</span>
+        
+        <span class="cov0" title="0">var workflow Workflow
+        if err := json.NewDecoder(resp.Body).Decode(&amp;workflow); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to decode response: %w", err)
+        }</span>
+        
+        <span class="cov0" title="0">return &amp;workflow, nil</span>
+}
+
+func (c *RealN8nClient) DeleteWorkflow(id string) error <span class="cov0" title="0">{
+        endpoint := fmt.Sprintf("/workflows/%s", id)
+        resp, err := c.makeRequest("DELETE", endpoint, nil)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov0" title="0">defer resp.Body.Close()
+        
+        if resp.StatusCode != http.StatusNoContent </span><span class="cov0" title="0">{
+                return fmt.Errorf("API request failed with status: %d", resp.StatusCode)
+        }</span>
+        
+        <span class="cov0" title="0">return nil</span>
+}
+
+func (c *RealN8nClient) TestConnection() error <span class="cov0" title="0">{
+        _, err := c.GetMe()
+        return err
+}</span>
+
+// Factory function to create the appropriate client  
+func NewN8nClientWithDemo(baseURL, apiKey string, demoMode bool) N8nClientInterface <span class="cov0" title="0">{
+        if demoMode </span><span class="cov0" title="0">{
+                return NewDemoN8nClient()
+        }</span>
+        <span class="cov0" title="0">return NewRealN8nClient(baseURL, apiKey)</span>
+}</pre>
+		
+		<pre class="file" id="file4" style="display: none">package client
+
+import (
+        "bytes"
+        "context"
+        "fmt"
+        "io"
+        "net/http"
+        "time"
+)
+
+const (
+        headerAPIKey     = "X-N8N-API-KEY"
+        headerAccept     = "Accept" 
+        headerContentType = "Content-Type"
+        contentTypeJSON  = "application/json"
+        
+        defaultTimeout = 30 * time.Second
+        handshakeTimeout = 10 * time.Second
+        headerTimeout = 15 * time.Second
+        idleTimeout = 90 * time.Second
+)
+
+// StandardHTTPTransport implements HTTPTransport using standard http.Client
+type StandardHTTPTransport struct {
+        client *http.Client
+        apiKey string
+        baseURL string
+}
+
+// NewStandardHTTPTransport creates a new HTTP transport with optimal configuration
+func NewStandardHTTPTransport(baseURL, apiKey string, client *http.Client) *StandardHTTPTransport <span class="cov8" title="1">{
+        if client == nil </span><span class="cov8" title="1">{
+                client = defaultHTTPClient()
+        }</span>
+        
+        <span class="cov8" title="1">return &amp;StandardHTTPTransport{
+                client:  client,
+                apiKey:  apiKey,
+                baseURL: baseURL,
+        }</span>
+}
+
+// defaultHTTPClient creates an optimally configured HTTP client
+func defaultHTTPClient() *http.Client <span class="cov8" title="1">{
+        return &amp;http.Client{
+                Timeout: defaultTimeout,
+                Transport: &amp;http.Transport{
+                        TLSHandshakeTimeout:   handshakeTimeout,
+                        ResponseHeaderTimeout: headerTimeout, 
+                        IdleConnTimeout:       idleTimeout,
+                        MaxIdleConnsPerHost:   10,
+                        DisableKeepAlives:     false,
+                },
+        }
+}</span>
+
+// Do executes the HTTP request with proper error handling
+func (t *StandardHTTPTransport) Do(req *Request) (*Response, error) <span class="cov8" title="1">{
+        // Create HTTP request
+        var body io.Reader
+        if len(req.Body) &gt; 0 </span><span class="cov8" title="1">{
+                body = bytes.NewReader(req.Body)
+        }</span>
+        
+        <span class="cov8" title="1">httpReq, err := http.NewRequest(req.Method, t.baseURL+req.URL, body)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to create request: %w", err)
+        }</span>
+        
+        // Add default headers
+        <span class="cov8" title="1">t.addDefaultHeaders(httpReq)
+        
+        // Add custom headers
+        for key, value := range req.Headers </span><span class="cov8" title="1">{
+                httpReq.Header.Set(key, value)
+        }</span>
+        
+        // Execute request
+        <span class="cov8" title="1">httpResp, err := t.client.Do(httpReq)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("request failed: %w", err)
+        }</span>
+        <span class="cov0" title="0">defer httpResp.Body.Close()
+        
+        // Read response body
+        respBody, err := io.ReadAll(httpResp.Body)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to read response body: %w", err)
+        }</span>
+        
+        // Convert headers
+        <span class="cov0" title="0">headers := make(map[string]string)
+        for key, values := range httpResp.Header </span><span class="cov0" title="0">{
+                if len(values) &gt; 0 </span><span class="cov0" title="0">{
+                        headers[key] = values[0]
+                }</span>
+        }
+        
+        <span class="cov0" title="0">return &amp;Response{
+                StatusCode: httpResp.StatusCode,
+                Headers:    headers,
+                Body:       respBody,
+        }, nil</span>
+}
+
+// addDefaultHeaders adds standard headers to every request
+func (t *StandardHTTPTransport) addDefaultHeaders(req *http.Request) <span class="cov8" title="1">{
+        req.Header.Set(headerAPIKey, t.apiKey)
+        req.Header.Set(headerAccept, contentTypeJSON)
+        
+        // Set Content-Type for requests with body
+        if req.Body != nil </span><span class="cov8" title="1">{
+                req.Header.Set(headerContentType, contentTypeJSON)
+        }</span>
+}
+
+// ContextualTransport wraps StandardHTTPTransport with context support
+type ContextualTransport struct {
+        transport *StandardHTTPTransport
+}
+
+// NewContextualTransport creates a transport that supports context cancellation
+func NewContextualTransport(baseURL, apiKey string, client *http.Client) *ContextualTransport <span class="cov8" title="1">{
+        return &amp;ContextualTransport{
+                transport: NewStandardHTTPTransport(baseURL, apiKey, client),
+        }
+}</span>
+
+// DoWithContext executes request with context support
+func (t *ContextualTransport) DoWithContext(ctx context.Context, req *Request) (*Response, error) <span class="cov8" title="1">{
+        // Create channel for result
+        type result struct {
+                resp *Response
+                err  error
+        }
+        resultCh := make(chan result, 1)
+        
+        // Execute in goroutine
+        go func() </span><span class="cov8" title="1">{
+                resp, err := t.transport.Do(req)
+                resultCh &lt;- result{resp: resp, err: err}
+        }</span>()
+        
+        // Wait for result or context cancellation
+        <span class="cov8" title="1">select </span>{
+        case res := &lt;-resultCh:<span class="cov8" title="1">
+                return res.resp, res.err</span>
+        case &lt;-ctx.Done():<span class="cov0" title="0">
+                return nil, ctx.Err()</span>
+        }
+}</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
