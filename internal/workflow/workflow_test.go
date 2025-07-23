@@ -2,157 +2,78 @@ package workflow
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
-func TestWorkflowStructure(t *testing.T) {
-	// Test workflow JSON structure
-	workflowJSON := `{
-                "id": "1001",
-                "name": "Test Workflow",
-                "active": true,
-                "nodes": [
-                        {
-                                "id": "node1",
-                                "type": "webhook",
-                                "typeVersion": 1,
-                                "position": [100, 200]
-                        }
-                ],
-                "connections": {},
-                "settings": {
-                        "executionOrder": "v1"
-                }
-        }`
-
-	var workflow map[string]interface{}
-	err := json.Unmarshal([]byte(workflowJSON), &workflow)
-	if err != nil {
-		t.Fatalf("Failed to parse workflow JSON: %v", err)
-	}
-
-	// Validate required fields
-	if workflow["id"] == "" {
-		t.Error("Workflow should have an ID")
-	}
-
-	if workflow["name"] == "" {
-		t.Error("Workflow should have a name")
-	}
-
-	nodes, ok := workflow["nodes"].([]interface{})
-	if !ok || len(nodes) == 0 {
-		t.Error("Workflow should have nodes")
-	}
-}
-
-func TestWorkflowValidation(t *testing.T) {
-	// Test workflow validation rules
-	validWorkflows := []map[string]interface{}{
-		{
-			"id":   "1001",
-			"name": "Valid Workflow",
-			"nodes": []interface{}{
-				map[string]interface{}{"id": "node1", "type": "webhook"},
+func minimalWorkflow() *Workflow {
+	return &Workflow{
+		Name: "Test",
+		Nodes: []Node{
+			{
+				Name:     "Start",
+				Type:     "n8n-nodes-base.manualTrigger",
+				Position: []float64{0, 0},
 			},
 		},
 	}
+}
 
-	invalidWorkflows := []map[string]interface{}{
-		{},                // Empty workflow
-		{"id": ""},        // Missing name
-		{"name": "No ID"}, // Missing ID
-	}
-
-	for _, workflow := range validWorkflows {
-		if workflow["id"] == "" || workflow["name"] == "" {
-			t.Error("Valid workflow failed validation")
-		}
-	}
-
-	for _, workflow := range invalidWorkflows {
-		isValid := true
-		if len(workflow) == 0 {
-			isValid = false
-		}
-		if id, exists := workflow["id"]; !exists || id == "" {
-			isValid = false
-		}
-		if name, exists := workflow["name"]; !exists || name == "" {
-			isValid = false
-		}
-
-		if isValid {
-			t.Error("Invalid workflow passed validation")
-		}
+func TestValidateWorkflowSuccess(t *testing.T) {
+	wf := minimalWorkflow()
+	if err := ValidateWorkflow(wf); err != nil {
+		t.Fatalf("expected no error, got %v", err)
 	}
 }
 
-func TestWorkflowExecution(t *testing.T) {
-	// Test workflow execution data
-	execution := map[string]interface{}{
-		"id":         "exec_001",
-		"workflowId": "1001",
-		"status":     "success",
-		"startTime":  "2025-07-23T01:00:00Z",
-		"endTime":    "2025-07-23T01:00:05Z",
-		"data":       map[string]interface{}{},
-		"error":      nil,
-	}
-
-	// Validate execution structure
-	if execution["id"] == "" {
-		t.Error("Execution should have an ID")
-	}
-
-	if execution["workflowId"] == "" {
-		t.Error("Execution should reference a workflow")
-	}
-
-	status, ok := execution["status"].(string)
-	if !ok {
-		t.Error("Execution status should be a string")
-	}
-
-	validStatuses := []string{"running", "success", "error", "waiting"}
-	isValidStatus := false
-	for _, validStatus := range validStatuses {
-		if status == validStatus {
-			isValidStatus = true
-			break
-		}
-	}
-
-	if !isValidStatus {
-		t.Errorf("Status %s is not valid", status)
+func TestValidateWorkflowFailureMissingName(t *testing.T) {
+	wf := minimalWorkflow()
+	wf.Name = ""
+	if err := ValidateWorkflow(wf); err == nil {
+		t.Fatal("expected validation error for missing workflow name")
 	}
 }
 
-func TestWorkflowMetadata(t *testing.T) {
-	// Test workflow metadata handling
-	metadata := map[string]interface{}{
-		"version":     "1.0.0",
-		"created":     "2025-07-23T01:00:00Z",
-		"modified":    "2025-07-23T01:00:00Z",
-		"environment": "development",
-		"tags":        []string{"payment", "automation"},
+func TestValidateWorkflowStrictConnectivityFailure(t *testing.T) {
+	wf := minimalWorkflow()
+	wf.Nodes = append(wf.Nodes, Node{Name: "Func", Type: "n8n-nodes-base.function", Position: []float64{200, 0}})
+	if err := ValidateWorkflowStrict(wf); err == nil {
+		t.Fatal("expected connectivity error for second node")
+	}
+}
+
+func TestValidateWorkflowFileSuccess(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "wf.json")
+
+	data, err := json.Marshal(minimalWorkflow())
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	if err := os.WriteFile(path, data, 0o644); err != nil {
+		t.Fatalf("write: %v", err)
 	}
 
-	// Validate metadata fields
-	if metadata["version"] == "" {
-		t.Error("Metadata should include version")
+	if err := ValidateWorkflowFile(path); err != nil {
+		t.Fatalf("expected file to validate, got %v", err)
+	}
+}
+
+func TestValidateWorkflowFileInvalidJSON(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "bad.json")
+	if err := os.WriteFile(path, []byte("{"), 0o644); err != nil {
+		t.Fatalf("write: %v", err)
 	}
 
-	if metadata["environment"] == "" {
-		t.Error("Metadata should include environment")
+	if err := ValidateWorkflowFile(path); err == nil {
+		t.Fatal("expected JSON parsing error")
 	}
+}
 
-	tags, ok := metadata["tags"].([]string)
-	if !ok {
-		t.Error("Tags should be a string array")
-	}
-
-	if len(tags) == 0 {
-		t.Error("Workflow should have at least one tag")
+func TestValidateWorkflowFileMissing(t *testing.T) {
+	if err := ValidateWorkflowFile("no_such_file.json"); err == nil {
+		t.Fatal("expected error for missing file")
 	}
 }

@@ -57,39 +57,37 @@ func defaultHTTPClient() *http.Client {
 
 // Do executes the HTTP request with proper error handling
 func (t *StandardHTTPTransport) Do(req *Request) (*Response, error) {
-	// Create HTTP request
+	return t.doRequest(context.Background(), req)
+}
+
+func (t *StandardHTTPTransport) doRequest(ctx context.Context, req *Request) (*Response, error) {
 	var body io.Reader
 	if len(req.Body) > 0 {
 		body = bytes.NewReader(req.Body)
 	}
 
-	httpReq, err := http.NewRequest(req.Method, t.baseURL+req.URL, body)
+	httpReq, err := http.NewRequestWithContext(ctx, req.Method, t.baseURL+req.URL, body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	// Add default headers
 	t.addDefaultHeaders(httpReq)
 
-	// Add custom headers
 	for key, value := range req.Headers {
 		httpReq.Header.Set(key, value)
 	}
 
-	// Execute request
 	httpResp, err := t.client.Do(httpReq)
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
 	defer httpResp.Body.Close()
 
-	// Read response body
 	respBody, err := io.ReadAll(httpResp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	// Convert headers
 	headers := make(map[string]string)
 	for key, values := range httpResp.Header {
 		if len(values) > 0 {
@@ -129,24 +127,5 @@ func NewContextualTransport(baseURL, apiKey string, client *http.Client) *Contex
 
 // DoWithContext executes request with context support
 func (t *ContextualTransport) DoWithContext(ctx context.Context, req *Request) (*Response, error) {
-	// Create channel for result
-	type result struct {
-		resp *Response
-		err  error
-	}
-	resultCh := make(chan result, 1)
-
-	// Execute in goroutine
-	go func() {
-		resp, err := t.transport.Do(req)
-		resultCh <- result{resp: resp, err: err}
-	}()
-
-	// Wait for result or context cancellation
-	select {
-	case res := <-resultCh:
-		return res.resp, res.err
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	}
+	return t.transport.doRequest(ctx, req)
 }
