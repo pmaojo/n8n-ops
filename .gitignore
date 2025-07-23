@@ -37,3 +37,8 @@ bin/
 
 # Node modules (if using npm scripts)
 node_modules/
+
+# Test coverage reports
+coverage.out
+coverage.html
+coverage/
