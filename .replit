@@ -34,7 +34,7 @@ args = "Monitoring Demo"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Deploy Test"
+args = "Deploy Alias Test"
 
 [[workflows.workflow]]
 name = "Go CLI Server"
@@ -78,12 +78,12 @@ task = "shell.exec"
 args = "go run main.go monitor --demo --env development --check-interval 10s --failure-threshold 2"
 
 [[workflows.workflow]]
-name = "Deploy Test"
+name = "Deploy Alias Test"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "./n8n-ops deploy --demo --env development"
+args = "./n8n-ops deploy --demo --force --env development"
 
 [deployment]
 deploymentTarget = "cloudrun"

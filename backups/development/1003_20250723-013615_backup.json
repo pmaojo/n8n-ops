@@ -1,0 +1,33 @@
+{
+  "id": "1003",
+  "name": "Order Fulfillment",
+  "active": false,
+  "nodes": [
+    {
+      "id": "trigger-1003",
+      "name": "Order Created",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        250,
+        400
+      ],
+      "parameters": {
+        "method": "POST"
+      }
+    }
+  ],
+  "versionId": 8,
+  "tags": [
+    {
+      "name": "orders",
+      "createdAt": "0001-01-01T00:00:00Z",
+      "updatedAt": "0001-01-01T00:00:00Z"
+    },
+    {
+      "name": "fulfillment",
+      "createdAt": "0001-01-01T00:00:00Z",
+      "updatedAt": "0001-01-01T00:00:00Z"
+    }
+  ]
+}
