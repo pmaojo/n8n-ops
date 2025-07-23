@@ -6,15 +6,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pmaojo/n8n-ops/internal/bubbleui"
 	"github.com/pmaojo/n8n-ops/internal/client"
 	"github.com/pmaojo/n8n-ops/internal/credentials"
-	"github.com/pmaojo/n8n-ops/internal/termui"
+	"github.com/pmaojo/n8n-ops/internal/ui"
 	"github.com/spf13/cobra"
 )
 
 var tuiCmd = &cobra.Command{
 	Use:   "tui",
-	Short: "Interactive terminal dashboard using termui",
+	Short: "Interactive terminal dashboard",
 	RunE:  runTUI,
 }
 
@@ -52,6 +53,7 @@ func runTUI(cmd *cobra.Command, args []string) error {
 	}
 
 	ctx := context.Background()
-	db := termui.NewDashboard(c, 3*time.Second)
-	return db.Run(ctx)
+	var uiImpl ui.DashboardUI
+	uiImpl = bubbleui.NewDashboard(c, 3*time.Second)
+	return uiImpl.Run(ctx)
 }
