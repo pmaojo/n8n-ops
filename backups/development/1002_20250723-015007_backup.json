@@ -1,0 +1,60 @@
+{
+  "id": "1002",
+  "name": "Payment Processing",
+  "active": true,
+  "nodes": [
+    {
+      "id": "webhook-1002",
+      "name": "Payment Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        200
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "stripe-webhook"
+      }
+    },
+    {
+      "id": "stripe-1002",
+      "name": "Process Payment",
+      "type": "n8n-nodes-base.stripe",
+      "typeVersion": 1,
+      "position": [
+        450,
+        200
+      ],
+      "parameters": {
+        "operation": "charge"
+      }
+    }
+  ],
+  "connections": {
+    "Payment Webhook": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Process Payment",
+            "type": "main"
+          }
+        ]
+      ]
+    }
+  },
+  "versionId": 23,
+  "tags": [
+    {
+      "name": "payment",
+      "createdAt": "0001-01-01T00:00:00Z",
+      "updatedAt": "0001-01-01T00:00:00Z"
+    },
+    {
+      "name": "stripe",
+      "createdAt": "0001-01-01T00:00:00Z",
+      "updatedAt": "0001-01-01T00:00:00Z"
+    }
+  ]
+}

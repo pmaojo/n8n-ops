@@ -1,0 +1,61 @@
+{
+  "id": "1001",
+  "name": "Customer Onboarding",
+  "active": true,
+  "nodes": [
+    {
+      "id": "webhook-1001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "customer-signup"
+      }
+    },
+    {
+      "id": "email-1001",
+      "name": "Send Welcome Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ],
+      "parameters": {
+        "subject": "Welcome to our platform!",
+        "toEmail": "={{ $json.email }}"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Send Welcome Email",
+            "type": "main"
+          }
+        ]
+      ]
+    }
+  },
+  "versionId": 15,
+  "tags": [
+    {
+      "name": "customer",
+      "createdAt": "0001-01-01T00:00:00Z",
+      "updatedAt": "0001-01-01T00:00:00Z"
+    },
+    {
+      "name": "onboarding",
+      "createdAt": "0001-01-01T00:00:00Z",
+      "updatedAt": "0001-01-01T00:00:00Z"
+    }
+  ]
+}
