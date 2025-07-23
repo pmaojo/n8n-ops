@@ -1,68 +1,71 @@
 package config
 
 import (
+	"strings"
 	"testing"
+
+	"github.com/spf13/viper"
 )
 
-func TestConfigDefaults(t *testing.T) {
-	// Test default configuration values
-	defaultEnv := "development"
-	defaultLang := "en"
+// prepareConfig loads the provided YAML into viper and resets global state.
+func prepareConfig(yaml string) {
+	viper.Reset()
+	viper.SetConfigType("yaml")
+	_ = viper.ReadConfig(strings.NewReader(yaml))
+	globalConfig = nil
+}
 
-	if defaultEnv != "development" {
-		t.Error("Default environment should be development")
+func TestInitConfigLoadsConfiguration(t *testing.T) {
+	cfgYAML := `
+    environments:
+      test:
+        url: http://example.com
+        api_key_env: TEST_KEY
+    defaults:
+      environment: test
+      validation:
+        strict: true
+      sync:
+        auto_backup: false
+      deploy:
+        dry_run: true
+        skip_validation: true
+    logging:
+      level: debug
+      format: json
+    `
+	prepareConfig(cfgYAML)
+	t.Setenv("TEST_KEY", "secret")
+
+	InitConfig()
+
+	cfg := GetConfig()
+	if cfg.Defaults.Environment != "test" {
+		t.Fatalf("expected default environment 'test', got '%s'", cfg.Defaults.Environment)
 	}
-
-	if defaultLang != "en" {
-		t.Error("Default language should be en")
+	if !cfg.Defaults.Validation.Strict {
+		t.Error("strict validation should be true")
+	}
+	if cfg.Defaults.Sync.AutoBackup {
+		t.Error("auto backup should be false")
+	}
+	envCfg, err := GetEnvironmentConfig("test")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if envCfg.APIKey != "secret" {
+		t.Errorf("expected API key 'secret', got '%s'", envCfg.APIKey)
+	}
+	logCfg := GetLoggingConfig()
+	if logCfg.Level != "debug" || logCfg.Format != "json" {
+		t.Errorf("unexpected logging config: %+v", logCfg)
 	}
 }
 
-func TestEnvironmentValidation(t *testing.T) {
-	// Test environment validation
-	validEnvs := []string{"development", "staging", "production"}
-	invalidEnv := "invalid"
-
-	validFound := false
-	for _, env := range validEnvs {
-		if env == "development" {
-			validFound = true
-			break
-		}
-	}
-
-	if !validFound {
-		t.Error("Development should be a valid environment")
-	}
-
-	invalidFound := false
-	for _, env := range validEnvs {
-		if env == invalidEnv {
-			invalidFound = true
-			break
-		}
-	}
-
-	if invalidFound {
-		t.Error("Invalid environment should not be in valid list")
-	}
-}
-
-func TestConfigStructure(t *testing.T) {
-	// Test configuration structure expectations
-	configFields := map[string]string{
-		"Environment": "string",
-		"Language":    "string",
-		"Verbose":     "bool",
-		"DryRun":      "bool",
-	}
-
-	for field, fieldType := range configFields {
-		if field == "" {
-			t.Error("Config field name should not be empty")
-		}
-		if fieldType == "" {
-			t.Error("Config field type should not be empty")
-		}
+func TestGetEnvironmentConfigErrors(t *testing.T) {
+	prepareConfig("environments: {}")
+	InitConfig()
+	if _, err := GetEnvironmentConfig("missing"); err == nil {
+		t.Error("expected error for unknown environment")
 	}
 }
