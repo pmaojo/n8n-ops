@@ -1,9 +1,9 @@
 {
   "environment": "development",
   "gitCommit": "",
-  "lastSync": "2025-07-23T11:00:10.072759401Z",
-  "n8nURL": "demo://localhost",
+  "lastSync": "2025-07-23T12:02:10.830172+01:00",
+  "n8nURL": "http://localhost:5678",
   "syncedBy": "pelayo.mao@gmail.com",
-  "syncedWorkflows": 3,
-  "totalWorkflows": 3
+  "syncedWorkflows": 0,
+  "totalWorkflows": 0
 }

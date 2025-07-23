@@ -1,29 +1,29 @@
 package ascii
 
 import (
-        "fmt"
-        "math/rand"
-        "strings"
-        "time"
+	"fmt"
+	"math/rand"
+	"strings"
+	"time"
 )
 
 // Colors for terminal output
 const (
-        Reset     = "\033[0m"
-        Cyan      = "\033[96m"
-        Blue      = "\033[94m"
-        Purple    = "\033[95m"
-        Green     = "\033[92m"
-        Yellow    = "\033[93m"
-        Red       = "\033[91m"
-        Bold      = "\033[1m"
-        Dim       = "\033[2m"
-        Underline = "\033[4m"
+	Reset     = "\033[0m"
+	Cyan      = "\033[96m"
+	Blue      = "\033[94m"
+	Purple    = "\033[95m"
+	Green     = "\033[92m"
+	Yellow    = "\033[93m"
+	Red       = "\033[91m"
+	Bold      = "\033[1m"
+	Dim       = "\033[2m"
+	Underline = "\033[4m"
 )
 
 // N8nLogo returns the main n8n CLI futuristic logo
 func N8nLogo() string {
-        return fmt.Sprintf(`%s%s
+	return fmt.Sprintf(`%s%s
                    ad88888ba                                                        
                   d8"     "8b                                                       
                   88       88                                                       
@@ -31,9 +31,10 @@ func N8nLogo() string {
                    "Y8aaa8P"                                                        
   ,ggg,,ggg,       ,d8"""8b,        ,ggg,,ggg,                                      
  ,8" "8P" "8,     d8"     "8b      ,8" "8P" "8,                                     
- I8   8I   8I     88       88      I8   8I   8I                                     
-,dP   8I   Yb,    Y8a     a8P     ,dP   8I   Yb,                                    
-8P'   8I   Y8     "Y88888P"      8P'   8I   Y8                                     
+      8I   8I     88       88           8I   8I                                     
+      8I   Yb,    Y8a     a8P           8I   Yb,                                    
+      8I   Y8     "Y88888P"             8I   Y8       
+                              
                                                                                     
          8I                                   ,dPYb,                                
          8I                                   IP' Yb                                
@@ -56,7 +57,7 @@ P"Y8888P" Y8    888P"Y888    PI8 YY88888P    8P'"Y88    P"Y8888P"        P""Y88P
 
 // SmallLogo returns a compact version for headers
 func SmallLogo() string {
-        return fmt.Sprintf(`%s%s
+	return fmt.Sprintf(`%s%s
               __                                                
       /  |                / /                            
  ___ (___| ___       ___   (___       ___       ___  ___ 
@@ -68,8 +69,8 @@ func SmallLogo() string {
 
 // Banner creates a futuristic banner with environment info
 func Banner(env string) string {
-        envColor := getEnvironmentColor(env)
-        return fmt.Sprintf(`%s%s
+	envColor := getEnvironmentColor(env)
+	return fmt.Sprintf(`%s%s
 ╔══════════════════════════════════════════════════════════════════════╗
 ║  %s⚡ N8N WORKFLOW OPERATIONS TOOL ⚡%s                                 ║
 ║                                                                      ║
@@ -81,7 +82,7 @@ func Banner(env string) string {
 
 // SuccessMessage creates an animated success display
 func SuccessMessage(action string) string {
-        return fmt.Sprintf(`%s%s
+	return fmt.Sprintf(`%s%s
     ╔═══════════════════════════════════════════════════════════════════╗
     ║  %s✨ SUCCESS! ✨%s                                                  ║
     ║                                                                   ║
@@ -92,7 +93,7 @@ func SuccessMessage(action string) string {
 
 // ErrorMessage creates a futuristic error display
 func ErrorMessage(err string) string {
-        return fmt.Sprintf(`%s%s
+	return fmt.Sprintf(`%s%s
     ╔═══════════════════════════════════════════════════════════════════╗
     ║  %s⚠️  ERROR DETECTED ⚠️%s                                           ║
     ║                                                                   ║
@@ -103,20 +104,20 @@ func ErrorMessage(err string) string {
 
 // LoadingSpinner creates animated loading text
 func LoadingSpinner(message string) string {
-        spinners := []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
-        rand.Seed(time.Now().UnixNano())
-        spinner := spinners[rand.Intn(len(spinners))]
-        
-        return fmt.Sprintf(`%s%s%s %s%s%s`, Cyan, Bold, spinner, message, Dim, Reset)
+	spinners := []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
+	rand.Seed(time.Now().UnixNano())
+	spinner := spinners[rand.Intn(len(spinners))]
+
+	return fmt.Sprintf(`%s%s%s %s%s%s`, Cyan, Bold, spinner, message, Dim, Reset)
 }
 
 // ProgressBar creates a futuristic progress bar
 func ProgressBar(current, total int, message string) string {
-        percentage := float64(current) / float64(total) * 100
-        filled := int(percentage / 5) // 20 characters total
-        bar := strings.Repeat("█", filled) + strings.Repeat("░", 20-filled)
-        
-        return fmt.Sprintf(`%s%s
+	percentage := float64(current) / float64(total) * 100
+	filled := int(percentage / 5) // 20 characters total
+	bar := strings.Repeat("█", filled) + strings.Repeat("░", 20-filled)
+
+	return fmt.Sprintf(`%s%s
     ╔═══════════════════════════════════════════════════════════════════╗
     ║  %s%s%s                                                             ║
     ║                                                                   ║
@@ -128,25 +129,26 @@ func ProgressBar(current, total int, message string) string {
 
 // WorkflowInfo displays workflow information in a futuristic format
 func WorkflowInfo(name, status, env string) string {
-        statusColor := getStatusColor(status)
-        envColor := getEnvironmentColor(env)
-        
-        return fmt.Sprintf(`%s
+	statusColor := getStatusColor(status)
+	envColor := getEnvironmentColor(env)
+
+	return fmt.Sprintf(`%s
     ┌─────────────────────────────────────────────────────────────────┐
     │  %sWorkflow: %s%-20s%s                                         │
     │  %sStatus:   %s%-20s%s                                         │
     │  %sEnv:      %s%-20s%s                                         │
     └─────────────────────────────────────────────────────────────────┘%s
-`, Dim, 
-   Cyan, Bold, name, Dim, 
-   Cyan, statusColor, status, Dim, 
-   Cyan, envColor, env, Dim, 
-   Reset)
+`,
+		Dim,
+		Cyan, Bold, name, Dim,
+		Cyan, statusColor, status, Dim,
+		Cyan, envColor, env, Dim,
+		Reset)
 }
 
 // CommandHelp creates futuristic help display
 func CommandHelp(cmd string) string {
-        return fmt.Sprintf(`%s%s
+	return fmt.Sprintf(`%s%s
 ╔══════════════════════════════════════════════════════════════════════╗
 ║  %s🚀 COMMAND: %s%s%s                                                   ║
 ╚══════════════════════════════════════════════════════════════════════╝%s
@@ -155,53 +157,53 @@ func CommandHelp(cmd string) string {
 
 // Matrix effect for fun
 func MatrixEffect() string {
-        chars := []string{"0", "1", "⚡", "▓", "░", "█", "▒"}
-        var matrix strings.Builder
-        
-        for i := 0; i < 5; i++ {
-                for j := 0; j < 50; j++ {
-                        char := chars[rand.Intn(len(chars))]
-                        matrix.WriteString(fmt.Sprintf("%s%s", Green, char))
-                }
-                matrix.WriteString(fmt.Sprintf("%s\n", Reset))
-        }
-        
-        return matrix.String()
+	chars := []string{"0", "1", "⚡", "▓", "░", "█", "▒"}
+	var matrix strings.Builder
+
+	for i := 0; i < 5; i++ {
+		for j := 0; j < 50; j++ {
+			char := chars[rand.Intn(len(chars))]
+			matrix.WriteString(fmt.Sprintf("%s%s", Green, char))
+		}
+		matrix.WriteString(fmt.Sprintf("%s\n", Reset))
+	}
+
+	return matrix.String()
 }
 
 // Helper functions for colors
 func getEnvironmentColor(env string) string {
-        switch strings.ToLower(env) {
-        case "production":
-                return Red + Bold
-        case "staging":
-                return Yellow + Bold
-        case "development":
-                return Green + Bold
-        default:
-                return Cyan + Bold
-        }
+	switch strings.ToLower(env) {
+	case "production":
+		return Red + Bold
+	case "staging":
+		return Yellow + Bold
+	case "development":
+		return Green + Bold
+	default:
+		return Cyan + Bold
+	}
 }
 
 func getStatusColor(status string) string {
-        switch strings.ToLower(status) {
-        case "success", "completed", "active":
-                return Green + Bold
-        case "error", "failed":
-                return Red + Bold
-        case "warning", "pending":
-                return Yellow + Bold
-        default:
-                return Cyan + Bold
-        }
+	switch strings.ToLower(status) {
+	case "success", "completed", "active":
+		return Green + Bold
+	case "error", "failed":
+		return Red + Bold
+	case "warning", "pending":
+		return Yellow + Bold
+	default:
+		return Cyan + Bold
+	}
 }
 
 // WelcomeScreen creates the main futuristic welcome display
 func WelcomeScreen() string {
-        matrix := MatrixEffect()
-        logo := N8nLogo()
-        
-        return fmt.Sprintf(`%s
+	matrix := MatrixEffect()
+	logo := N8nLogo()
+
+	return fmt.Sprintf(`%s
 %s
 %s%s╔══════════════════════════════════════════════════════════════════════╗
 ║                                                                      ║
@@ -215,12 +217,12 @@ func WelcomeScreen() string {
 ╚══════════════════════════════════════════════════════════════════════╝%s
 
 %sType '%sn8n-ops --help%s' to begin your journey...%s
-`, matrix, logo, Purple, Bold, 
-   Cyan, Purple, 
-   Green, Purple, 
-   Blue, Purple, 
-   Yellow, Purple, 
-   Red, Purple, 
-   Reset, 
-   Dim, Cyan + Bold, Dim, Reset)
+`, matrix, logo, Purple, Bold,
+		Cyan, Purple,
+		Green, Purple,
+		Blue, Purple,
+		Yellow, Purple,
+		Red, Purple,
+		Reset,
+		Dim, Cyan+Bold, Dim, Reset)
 }
