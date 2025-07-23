@@ -82,20 +82,61 @@ func runSync(cmd *cobra.Command, args []string) error {
         }
 
         // Get n8n configuration from environment (or use demo mode)
-        apiURL := os.Getenv("N8N_URL")
-        apiKey := os.Getenv("N8N_API_KEY")
+        var apiURL, apiKey string
         
         if demoMode {
                 fmt.Printf("🎭 Demo mode enabled - using mock n8n data\n")
                 apiURL = "demo://localhost"
                 apiKey = "demo-key"
-        } else if apiURL == "" || apiKey == "" {
-                fmt.Printf("⚠️  N8N_URL or N8N_API_KEY not configured\n")
-                fmt.Printf("💡 Set environment variables or use --demo flag:\n")
-                fmt.Printf("   export N8N_URL=http://localhost:3001\n")
-                fmt.Printf("   export N8N_API_KEY=n8n_api_mock_development\n")
-                fmt.Printf("   OR: ./n8n-ops sync --demo\n")
-                return nil
+        } else {
+                // Try environment-specific variables first
+                envSuffix := strings.ToUpper(environment)
+                apiURL = os.Getenv(fmt.Sprintf("N8N_%s_URL", envSuffix))
+                apiKey = os.Getenv(fmt.Sprintf("N8N_%s_API_KEY", envSuffix))
+                
+                // Fallback to short forms for common environments
+                if apiURL == "" || apiKey == "" {
+                        switch environment {
+                        case "development":
+                                if apiURL == "" {
+                                        apiURL = os.Getenv("N8N_DEV_URL")
+                                }
+                                if apiKey == "" {
+                                        apiKey = os.Getenv("N8N_DEV_API_KEY")
+                                }
+                        case "staging":
+                                if apiURL == "" {
+                                        apiURL = os.Getenv("N8N_STAGING_URL")
+                                }
+                                if apiKey == "" {
+                                        apiKey = os.Getenv("N8N_STAGING_API_KEY")
+                                }
+                        case "production":
+                                if apiURL == "" {
+                                        apiURL = os.Getenv("N8N_PROD_URL")
+                                }
+                                if apiKey == "" {
+                                        apiKey = os.Getenv("N8N_PROD_API_KEY")
+                                }
+                        }
+                }
+                
+                // Final fallback to generic variables
+                if apiURL == "" {
+                        apiURL = os.Getenv("N8N_URL")
+                }
+                if apiKey == "" {
+                        apiKey = os.Getenv("N8N_API_KEY")
+                }
+                
+                if apiURL == "" || apiKey == "" {
+                        fmt.Printf("⚠️  n8n credentials not configured for %s environment\n", environment)
+                        fmt.Printf("💡 Set environment variables or use --demo flag:\n")
+                        fmt.Printf("   export N8N_%s_URL=http://localhost:3001\n", envSuffix)
+                        fmt.Printf("   export N8N_%s_API_KEY=n8n_api_mock_%s\n", envSuffix, environment)
+                        fmt.Printf("   OR: ./n8n-ops sync --demo\n")
+                        return nil
+                }
         }
 
         // Initialize n8n client (with demo mode support)
@@ -207,36 +248,36 @@ func writeWorkflowFile(data interface{}, filepath string) error {
 
 // getSyncUser returns the user information for sync metadata
 func getSyncUser() string {
-	// Try to get user from GitLab CI/CD environment variables
-	if gitlabUser := os.Getenv("GITLAB_USER_EMAIL"); gitlabUser != "" {
-		return gitlabUser
-	}
-	
-	if gitlabUser := os.Getenv("CI_COMMIT_AUTHOR_EMAIL"); gitlabUser != "" {
-		return gitlabUser
-	}
-	
-	// Try to get user from Git configuration
-	if gitUser := getGitUser(); gitUser != "" {
-		return gitUser
-	}
-	
-	// Try to get system user
-	if systemUser := os.Getenv("USER"); systemUser != "" {
-		return systemUser + "@local"
-	}
-	
-	// Fallback
-	return "n8n-ops-user"
+        // Try to get user from GitLab CI/CD environment variables
+        if gitlabUser := os.Getenv("GITLAB_USER_EMAIL"); gitlabUser != "" {
+                return gitlabUser
+        }
+        
+        if gitlabUser := os.Getenv("CI_COMMIT_AUTHOR_EMAIL"); gitlabUser != "" {
+                return gitlabUser
+        }
+        
+        // Try to get user from Git configuration
+        if gitUser := getGitUser(); gitUser != "" {
+                return gitUser
+        }
+        
+        // Try to get system user
+        if systemUser := os.Getenv("USER"); systemUser != "" {
+                return systemUser + "@local"
+        }
+        
+        // Fallback
+        return "n8n-ops-user"
 }
 
 // getGitUser tries to get the Git user email from local Git config
 func getGitUser() string {
-	// Try to get Git user email
-	cmd := exec.Command("git", "config", "user.email")
-	output, err := cmd.Output()
-	if err == nil && len(output) > 0 {
-		return strings.TrimSpace(string(output))
-	}
-	return ""
+        // Try to get Git user email
+        cmd := exec.Command("git", "config", "user.email")
+        output, err := cmd.Output()
+        if err == nil && len(output) > 0 {
+                return strings.TrimSpace(string(output))
+        }
+        return ""
 }
