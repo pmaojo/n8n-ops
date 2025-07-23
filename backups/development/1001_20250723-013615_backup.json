@@ -1,21 +1,7 @@
 {
-  "active": true,
-  "connections": {
-    "Webhook": {
-      "main": [
-        [
-          {
-            "index": 0,
-            "node": "Send Welcome Email",
-            "type": "main"
-          }
-        ]
-      ]
-    }
-  },
-  "createdAt": "2025-07-20T01:36:15.007050485Z",
   "id": "1001",
   "name": "Customer Onboarding",
+  "active": true,
   "nodes": [
     {
       "id": "webhook-1001",
@@ -46,16 +32,30 @@
       }
     }
   ],
-  "syncMetadata": {
-    "environment": "development",
-    "gitCommit": "",
-    "syncDate": "2025-07-23T01:36:15.007080685Z",
-    "syncedBy": "demo@n8n-ops.example.com"
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Send Welcome Email",
+            "type": "main"
+          }
+        ]
+      ]
+    }
   },
+  "versionId": 15,
   "tags": [
-    "customer",
-    "onboarding"
-  ],
-  "updatedAt": "2025-07-23T01:06:15.007050795Z",
-  "versionId": 15
+    {
+      "name": "customer",
+      "createdAt": "0001-01-01T00:00:00Z",
+      "updatedAt": "0001-01-01T00:00:00Z"
+    },
+    {
+      "name": "onboarding",
+      "createdAt": "0001-01-01T00:00:00Z",
+      "updatedAt": "0001-01-01T00:00:00Z"
+    }
+  ]
 }

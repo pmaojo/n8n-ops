@@ -2,6 +2,7 @@ modules = ["go", "golang"]
 
 [nix]
 channel = "stable-24_05"
+packages = ["espeak"]
 
 [workflows]
 runButton = "Project"
@@ -30,6 +31,10 @@ args = "n8n-ops Daemon Test"
 [[workflows.workflow.tasks]]
 task = "workflow.run"
 args = "Monitoring Demo"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Deploy Alias Test"
 
 [[workflows.workflow]]
 name = "Go CLI Server"
@@ -71,6 +76,14 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "go run main.go monitor --demo --env development --check-interval 10s --failure-threshold 2"
+
+[[workflows.workflow]]
+name = "Deploy Alias Test"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "./n8n-ops deploy --demo --force --env development"
 
 [deployment]
 deploymentTarget = "cloudrun"
