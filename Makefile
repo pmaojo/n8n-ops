@@ -105,4 +105,4 @@ ci-test:
 	./n8n-ops validate ./workflows/ --verbose
 	./n8n-ops --help
 	./n8n-ops welcome
-	@echo "CI simulation completed successfully"
+       @echo -e "CI simulation completed successfully\n"
