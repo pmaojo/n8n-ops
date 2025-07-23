@@ -282,7 +282,9 @@ n8n-ops test --workflow Payment_Processing_1002
 n8n-ops deploy --env production --confirm
 
 # Monitoreo
-n8n-ops monitor --daemon --env production
+n8n-ops monitor --env production
+# El comando monitor se ejecuta en modo continuo, por lo que no
+# requiere la bandera `--daemon`.
 
 # Troubleshooting
 n8n-ops status --detailed
