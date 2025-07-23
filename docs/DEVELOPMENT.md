@@ -153,14 +153,29 @@ validate-workflows:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH'
 
-# Test workflow compilation
-test-compilation:
+# Test CLI functions
+test-cli-functions:
   stage: test
   image: golang:${GO_VERSION}
   script:
     - go build -o n8n-ops main.go
     - ./n8n-ops --help
     - ./n8n-ops welcome
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH'
+
+# Run Go unit tests
+unit-tests:
+  stage: test
+  image: golang:${GO_VERSION}
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - ${GOMODCACHE}
+  script:
+    - go vet ./...
+    - go test ./...
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH'
