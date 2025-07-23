@@ -4,7 +4,9 @@ import (
         "encoding/json"
         "fmt"
         "os"
+        "os/exec"
         "path/filepath"
+        "strings"
         "time"
 
         "github.com/spf13/cobra"
@@ -101,11 +103,11 @@ func runSync(cmd *cobra.Command, args []string) error {
         
         // Test connection
         fmt.Printf("🔗 Connecting to n8n API: %s\n", apiURL)
-        user, err := n8nClient.GetMe()
+        err := n8nClient.TestConnection()
         if err != nil {
                 return fmt.Errorf("failed to connect to n8n API: %w", err)
         }
-        fmt.Printf("✅ Connected as: %s\n", user.Email)
+        fmt.Printf("✅ Connected successfully\n")
 
         // Get workflows from n8n
         workflows, err := n8nClient.GetWorkflows()
@@ -136,7 +138,7 @@ func runSync(cmd *cobra.Command, args []string) error {
                         "syncMetadata": map[string]interface{}{
                                 "syncDate":    time.Now(),
                                 "environment": environment,
-                                "syncedBy":    user.Email,
+                                "syncedBy":    getSyncUser(),
                                 "gitCommit":   os.Getenv("CI_COMMIT_SHA"),
                         },
                 }
@@ -161,7 +163,7 @@ func runSync(cmd *cobra.Command, args []string) error {
                 "totalWorkflows":  len(workflows),
                 "syncedWorkflows": syncedCount,
                 "n8nURL":          apiURL,
-                "syncedBy":        user.Email,
+                "syncedBy":        getSyncUser(),
                 "gitCommit":       os.Getenv("CI_COMMIT_SHA"),
         }
 
@@ -201,4 +203,40 @@ func writeWorkflowFile(data interface{}, filepath string) error {
         }
 
         return nil
+}
+
+// getSyncUser returns the user information for sync metadata
+func getSyncUser() string {
+	// Try to get user from GitLab CI/CD environment variables
+	if gitlabUser := os.Getenv("GITLAB_USER_EMAIL"); gitlabUser != "" {
+		return gitlabUser
+	}
+	
+	if gitlabUser := os.Getenv("CI_COMMIT_AUTHOR_EMAIL"); gitlabUser != "" {
+		return gitlabUser
+	}
+	
+	// Try to get user from Git configuration
+	if gitUser := getGitUser(); gitUser != "" {
+		return gitUser
+	}
+	
+	// Try to get system user
+	if systemUser := os.Getenv("USER"); systemUser != "" {
+		return systemUser + "@local"
+	}
+	
+	// Fallback
+	return "n8n-ops-user"
+}
+
+// getGitUser tries to get the Git user email from local Git config
+func getGitUser() string {
+	// Try to get Git user email
+	cmd := exec.Command("git", "config", "user.email")
+	output, err := cmd.Output()
+	if err == nil && len(output) > 0 {
+		return strings.TrimSpace(string(output))
+	}
+	return ""
 }

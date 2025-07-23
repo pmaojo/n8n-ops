@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/n8n-workflows/n8n-ops/internal/ascii"
+	"github.com/n8n-workflows/n8n-ops/internal/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -42,6 +43,9 @@ func init() {
 }
 
 func runOnboard(cmd *cobra.Command, args []string) {
+	// Load .env file if it exists
+	utils.LoadEnvFile()
+	
 	if !onboardSkipIntro {
 		showOnboardingIntro()
 	}
@@ -616,3 +620,4 @@ func promptInput(prompt, defaultValue string) string {
 
 	return input
 }
+

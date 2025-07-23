@@ -5,7 +5,7 @@
 environments:
   development:
     url: http://localhost:5678
-    api_key_env: N8N_DEVELOPMENT_API_KEY
+    api_key_env: N8N_DEV_API_KEY
 
 # Default settings
 defaults:

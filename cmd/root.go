@@ -111,6 +111,9 @@ func initConfig() {
                 viper.SetConfigName(".n8n-ops")
         }
 
+        // Load .env file if it exists
+        utils.LoadEnvFile()
+        
         viper.AutomaticEnv() // read in environment variables that match
 
         // If a config file is found, read it in.
