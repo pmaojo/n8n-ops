@@ -1,6 +1,7 @@
 package issues
 
 import (
+	"strings"
 	"testing"
 	"time"
 )
@@ -125,7 +126,7 @@ func TestBuildIssueDescription(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		if !contains(description, testCase) {
+		if !strings.Contains(description, testCase) {
 			t.Errorf("Description should contain '%s'", testCase)
 		}
 	}
@@ -157,26 +158,8 @@ func TestBuildRecoveryComment(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		if !contains(comment, testCase) {
+		if !strings.Contains(comment, testCase) {
 			t.Errorf("Recovery comment should contain '%s'", testCase)
 		}
 	}
-}
-
-// Helper function to check if a string contains a substring
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
-		(len(s) > len(substr) && containsHelper(s, substr)))
-}
-
-func containsHelper(s, substr string) bool {
-	if len(substr) > len(s) {
-		return false
-	}
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }
