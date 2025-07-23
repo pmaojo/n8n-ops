@@ -1,6 +1,7 @@
 package cmd
 
 import (
+        "context"
         "encoding/json"
         "fmt"
         "io/ioutil"
@@ -65,7 +66,7 @@ func runDaemonMode() {
                 }
         }
         
-        n8nClient, err := client.NewN8nClient(n8nURL, "n8n_api_mock_development")
+        n8nClient, err := client.New(n8nURL, "n8n_api_mock_development", nil)
         if err != nil {
                 logger.WithError(err).Fatal("Failed to create n8n client")
                 return
@@ -135,7 +136,7 @@ func setupDirectoryWatch(watcher *fsnotify.Watcher, watchDir string) error {
         return nil
 }
 
-func handleFileEvent(event fsnotify.Event, n8nClient *client.N8nClient, logger *logrus.Entry) {
+func handleFileEvent(event fsnotify.Event, n8nClient client.Client, logger *logrus.Entry) {
         // Only process JSON files
         if !strings.HasSuffix(event.Name, ".json") {
                 return
@@ -156,7 +157,7 @@ func handleFileEvent(event fsnotify.Event, n8nClient *client.N8nClient, logger *
         }
 }
 
-func processJSONFileChange(filePath string, n8nClient *client.N8nClient, logger *logrus.Entry) error {
+func processJSONFileChange(filePath string, n8nClient client.Client, logger *logrus.Entry) error {
         // Read and parse JSON file
         workflowData, err := readJSONWorkflow(filePath)
         if err != nil {
@@ -198,9 +199,10 @@ func readJSONWorkflow(filePath string) (map[string]interface{}, error) {
         return workflow, nil
 }
 
-func createWorkflowBackup(workflowID string, n8nClient *client.N8nClient) error {
+func createWorkflowBackup(workflowID string, n8nClient client.Client) error {
         // Get current workflow from n8n
-        currentWorkflow, err := n8nClient.GetWorkflow(workflowID)
+        ctx := context.Background()
+        currentWorkflow, err := n8nClient.GetWorkflow(ctx, workflowID)
         if err != nil {
                 // If workflow doesn't exist, no backup needed
                 return nil
@@ -252,7 +254,7 @@ func createWorkflowBackup(workflowID string, n8nClient *client.N8nClient) error 
 
 
 
-func updateWorkflowInN8n(jsonWorkflow map[string]interface{}, n8nClient *client.N8nClient, logger *logrus.Entry) error {
+func updateWorkflowInN8n(jsonWorkflow map[string]interface{}, n8nClient client.Client, logger *logrus.Entry) error {
         workflowID := jsonWorkflow["id"].(string)
 
         // Convert map to workflow struct
@@ -272,28 +274,26 @@ func updateWorkflowInN8n(jsonWorkflow map[string]interface{}, n8nClient *client.
         }
 
         // Check if workflow exists
-        _, err = n8nClient.GetWorkflow(workflowID)
+        ctx := context.Background()
+        _, err = n8nClient.GetWorkflow(ctx, workflowID)
         if err != nil {
                 // Workflow doesn't exist, create new one
                 logger.WithField("workflowId", workflowID).Info("Creating new workflow")
-                _, err = n8nClient.CreateWorkflow(&wf)
+                _, err = n8nClient.CreateWorkflow(ctx, &wf)
                 return err
         }
 
         // Workflow exists, update it
         logger.WithField("workflowId", workflowID).Info("Updating existing workflow")
-        _, err = n8nClient.UpdateWorkflow(workflowID, &wf)
+        _, err = n8nClient.UpdateWorkflow(ctx, workflowID, &wf)
         return err
 }
 
-func testN8nConnectionDaemon(n8nClient *client.N8nClient) error {
-        health, err := n8nClient.HealthCheck()
+func testN8nConnectionDaemon(n8nClient client.Client) error {
+        ctx := context.Background()
+        err := n8nClient.HealthCheck(ctx)
         if err != nil {
                 return fmt.Errorf("health check failed: %w", err)
-        }
-
-        if !health["healthy"].(bool) {
-                return fmt.Errorf("n8n API is not healthy: status code %v", health["status_code"])
         }
 
         fmt.Printf("🔗 Connected to n8n API\n")

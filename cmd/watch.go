@@ -1,15 +1,16 @@
 package cmd
 
 import (
+        "context"
         "fmt"
         "os"
         "os/signal"
         "syscall"
         "time"
 
-        "github.com/spf13/cobra"
         "github.com/n8n-workflows/n8n-ops/internal/client"
         "github.com/sirupsen/logrus"
+        "github.com/spf13/cobra"
 )
 
 var watchCmd = &cobra.Command{
@@ -57,7 +58,7 @@ func runWatch(cmd *cobra.Command, args []string) error {
         }
 
         // Create n8n client
-        n8nClient, err := client.NewN8nClient(environment, "mock-api-key")
+        n8nClient, err := client.New("http://localhost:3001", "n8n_api_mock_development", nil)
         if err != nil {
                 return fmt.Errorf("failed to create n8n client: %w", err)
         }
@@ -101,13 +102,14 @@ func runWatch(cmd *cobra.Command, args []string) error {
         }
 }
 
-func testN8nConnection(client *client.N8nClient) error {
+func testN8nConnection(client client.Client) error {
         // Test API connection (simplified for demo)
         return nil
 }
 
-func performInitialSync(n8nClient *client.N8nClient, lastKnownState map[string]time.Time) error {
-        workflows, err := n8nClient.GetWorkflows()
+func performInitialSync(n8nClient client.Client, lastKnownState map[string]time.Time) error {
+        ctx := context.Background()
+        workflows, err := n8nClient.GetWorkflows(ctx)
         if err != nil {
                 return err
         }
@@ -121,8 +123,9 @@ func performInitialSync(n8nClient *client.N8nClient, lastKnownState map[string]t
         return nil
 }
 
-func checkAndSyncChanges(n8nClient *client.N8nClient, lastKnownState map[string]time.Time) error {
-        workflows, err := n8nClient.GetWorkflows()
+func checkAndSyncChanges(n8nClient client.Client, lastKnownState map[string]time.Time) error {
+        ctx := context.Background()
+        workflows, err := n8nClient.GetWorkflows(ctx)
         if err != nil {
                 return err
         }

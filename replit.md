@@ -131,3 +131,17 @@ workflows/
 - **Notification System**: Integration with Slack/Discord for alerts
 
 The system is designed to be enterprise-ready with comprehensive error handling, logging, and operational tooling for managing n8n workflows at scale.
+
+## Recent Changes (Latest)
+
+### n8n Client Refactor - SOLID Principles Implementation (July 23, 2025)
+- **Completed**: Full refactor of n8n API client following SOLID principles
+- **Interface Segregation**: Split into WorkflowReader, WorkflowWriter, WorkflowExecutor interfaces
+- **Dependency Injection**: HTTP client injected from outside for better testability
+- **Context Support**: All methods now accept context.Context for proper cancellation
+- **Generic Request Handler**: doRequest[T]() function eliminates code duplication
+- **Constructor Fix**: No side effects in constructor, separate Ping() method for connectivity testing
+- **Performance**: Optimized HTTP transport with proper timeouts and connection pooling
+- **Testing**: Comprehensive test suite with 23.6% code coverage, including benchmarks
+- **Error Handling**: Structured error types with helper functions for error checking
+- **Code Quality**: Following Go best practices with proper documentation and type safety
