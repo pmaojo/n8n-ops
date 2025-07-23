@@ -142,52 +142,43 @@ stages:
 variables:
   GO_VERSION: "1.19"
 
-# Validate workflows on all branches
-validate-workflows:
-  stage: validate
+# Reusable deployment template
+.deploy_template:
   image: golang:${GO_VERSION}
+  dependencies:
+    - build-cli
   script:
-    - go build -o n8n-ops main.go
-    - ./n8n-ops validate ./workflows/
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH'
+    - echo "Syncing workflows from $TARGET_ENV..."
+    - ./n8n-ops sync --env $TARGET_ENV --verbose
+    - echo "Validating workflows..."
+    - ./n8n-ops validate ./workflows/$TARGET_ENV/
+    - echo "Running dry-run..."
+    - ./n8n-ops deploy --env $TARGET_ENV --dry-run --verbose
+    - echo "Deploying..."
+    - ./n8n-ops deploy --env $TARGET_ENV --verbose
 
-# Test workflow compilation
-test-compilation:
-  stage: test
-  image: golang:${GO_VERSION}
-  script:
-    - go build -o n8n-ops main.go
-    - ./n8n-ops --help
-    - ./n8n-ops welcome
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH'
-
-# Deploy to development (automatic on develop branch)
+# Deploy to development (automatic)
 deploy-development:
+  extends: .deploy_template
   stage: deploy-dev
-  image: golang:${GO_VERSION}
-  script:
-    - go build -o n8n-ops main.go
-    - ./n8n-ops sync --env development --force
-    - ./n8n-ops deploy --env development --dry-run
-    - ./n8n-ops deploy --env development
+  variables:
+    TARGET_ENV: development
+    N8N_API_KEY: ${N8N_DEV_API_KEY}
+    N8N_URL: ${N8N_DEV_URL}
   environment:
     name: development
     url: $N8N_DEV_URL
   rules:
     - if: '$CI_COMMIT_BRANCH == "develop"'
 
-# Deploy to staging (manual approval)
+# Deploy to staging (manual)
 deploy-staging:
+  extends: .deploy_template
   stage: deploy-staging
-  image: golang:${GO_VERSION}
-  script:
-    - go build -o n8n-ops main.go
-    - ./n8n-ops deploy --env staging --dry-run
-    - ./n8n-ops deploy --env staging
+  variables:
+    TARGET_ENV: staging
+    N8N_API_KEY: ${N8N_STAGING_API_KEY}
+    N8N_URL: ${N8N_STAGING_URL}
   environment:
     name: staging
     url: $N8N_STAGING_URL
@@ -195,16 +186,14 @@ deploy-staging:
   rules:
     - if: '$CI_COMMIT_BRANCH == "staging"'
 
-# Deploy to production (manual approval + protection)
+# Deploy to production (manual + protected)
 deploy-production:
+  extends: .deploy_template
   stage: deploy-production
-  image: golang:${GO_VERSION}
-  script:
-    - go build -o n8n-ops main.go
-    - ./n8n-ops validate ./workflows/production/
-    - ./n8n-ops deploy --env production --dry-run
-    - echo "Deploying to PRODUCTION - Final confirmation required"
-    - ./n8n-ops deploy --env production
+  variables:
+    TARGET_ENV: production
+    N8N_API_KEY: ${N8N_PROD_API_KEY}
+    N8N_URL: ${N8N_PROD_URL}
   environment:
     name: production
     url: $N8N_PROD_URL
