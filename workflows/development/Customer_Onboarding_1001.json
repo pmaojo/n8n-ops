@@ -13,7 +13,7 @@
       ]
     }
   },
-  "createdAt": "2025-07-20T02:24:53.350182449Z",
+  "createdAt": "2025-07-20T07:54:11.535200433Z",
   "id": "1001",
   "name": "Customer Onboarding",
   "nodes": [
@@ -49,13 +49,13 @@
   "syncMetadata": {
     "environment": "development",
     "gitCommit": "",
-    "syncDate": "2025-07-23T02:24:53.350208279Z",
+    "syncDate": "2025-07-23T07:54:11.535227003Z",
     "syncedBy": "demo@n8n-ops.example.com"
   },
   "tags": [
     "customer",
     "onboarding"
   ],
-  "updatedAt": "2025-07-23T01:54:53.350182669Z",
+  "updatedAt": "2025-07-23T07:24:11.535200573Z",
   "versionId": 15
 }

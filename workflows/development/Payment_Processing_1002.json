@@ -13,7 +13,7 @@
       ]
     }
   },
-  "createdAt": "2025-07-21T02:24:53.350189349Z",
+  "createdAt": "2025-07-21T07:54:11.535207633Z",
   "id": "1002",
   "name": "Payment Processing",
   "nodes": [
@@ -48,13 +48,13 @@
   "syncMetadata": {
     "environment": "development",
     "gitCommit": "",
-    "syncDate": "2025-07-23T02:24:53.351387798Z",
+    "syncDate": "2025-07-23T07:54:11.535525533Z",
     "syncedBy": "demo@n8n-ops.example.com"
   },
   "tags": [
     "payment",
     "stripe"
   ],
-  "updatedAt": "2025-07-23T02:14:53.350189409Z",
+  "updatedAt": "2025-07-23T07:44:11.535207693Z",
   "versionId": 23
 }
