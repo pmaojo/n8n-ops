@@ -45,6 +45,16 @@ type LoggingConfig struct {
 	File   string `mapstructure:"file"`
 }
 
+// GetLoggingConfig returns the logging configuration from the Config instance.
+// It does not modify the state of the Config and adheres to the principle of
+// providing read-only access to configuration values.
+func (c *Config) GetLoggingConfig() *LoggingConfig {
+	if c == nil {
+		return &LoggingConfig{}
+	}
+	return &c.Logging
+}
+
 // NewConfig creates and initializes a new Config object
 func NewConfig() (*Config, error) {
 	config := &Config{}
@@ -96,6 +106,18 @@ func GetConfig() *Config {
 	return globalConfig
 }
 
+// InitConfig initializes the global configuration instance using values loaded
+// in Viper. It allows tests and other packages to easily set up configuration
+// without relying on command initialization logic.
+func InitConfig() error {
+	cfg, err := NewConfig()
+	if err != nil {
+		return err
+	}
+	globalConfig = cfg
+	return nil
+}
+
 // GetEnvironmentConfig returns configuration for a specific environment
 func GetEnvironmentConfig(environment string) (*EnvironmentConfig, error) {
 	config := GetConfig()
@@ -140,5 +162,5 @@ func IsAutoBackupEnabled() bool {
 // GetLoggingConfig returns the logging configuration
 func GetLoggingConfig() *LoggingConfig {
 	config := GetConfig()
-	return &config.Logging
+	return config.GetLoggingConfig()
 }
