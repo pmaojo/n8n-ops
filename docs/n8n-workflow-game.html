@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Aventura del Workflow n8n-ops</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow-x: auto;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .game-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .title {
+            text-align: center;
+            font-size: 2.5em;
+            color: white;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 255, 255, 0.3); }
+            to { text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 255, 255, 0.6); }
+        }
+
+        .controls {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            border: none;
+            padding: 15px 30px;
+            margin: 10px;
+            border-radius: 50px;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-board {
+            position: relative;
+            height: 450px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            background: rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .environment {
+            position: absolute;
+            width: 200px;
+            height: 80px;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .development {
+            top: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .staging {
+            top: 180px;
+            left: 280px;
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .production {
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .workflow-character {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff9a9e, #fecfef);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        .path {
+            position: absolute;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 2px;
+            opacity: 0;
+            animation: drawPath 1s ease-in-out forwards;
+        }
+
+        @keyframes drawPath {
+            from { width: 0; opacity: 0; }
+            to { width: 100%; opacity: 1; }
+        }
+
+        .path-dev-staging {
+            top: 220px;
+            left: 150px;
+            width: 180px;
+            transform: rotate(15deg);
+        }
+
+        .path-staging-prod {
+            top: 140px;
+            left: 400px;
+            width: 180px;
+            transform: rotate(-45deg);
+        }
+
+        .status-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            min-width: 300px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .hotfix-alert {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(45deg, #ff416c, #ff4b2b);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            animation: pulse 1s infinite;
+            opacity: 0;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .git-commands {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            opacity: 0;
+            transition: all 0.5s ease;
+            border: 2px solid #00ff00;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .git-commands.party {
+            animation: terminalParty 0.5s ease-in-out;
+            border-color: #ff00ff;
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.5);
+        }
+
+        @keyframes terminalParty {
+            0% { 
+                border-color: #00ff00;
+                box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+            }
+            25% { 
+                border-color: #ff0080;
+                box-shadow: 0 0 30px rgba(255, 0, 128, 0.5);
+                transform: scale(1.02);
+            }
+            50% { 
+                border-color: #0080ff;
+                box-shadow: 0 0 30px rgba(0, 128, 255, 0.5);
+            }
+            75% { 
+                border-color: #ff8000;
+                box-shadow: 0 0 30px rgba(255, 128, 0, 0.5);
+            }
+            100% { 
+                border-color: #00ff00;
+                box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+                transform: scale(1);
+            }
+        }
+
+        .git-commands .prompt {
+            color: #ffff00;
+            font-weight: bold;
+        }
+
+        .git-commands .success {
+            color: #00ff88;
+        }
+
+        .git-commands .info {
+            color: #88ccff;
+        }
+
+        .celebration {
+            position: absolute;
+            font-size: 30px;
+            animation: celebrate 2s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes celebrate {
+            0% { 
+                transform: scale(0) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2) rotate(180deg);
+                opacity: 1;
+            }
+            100% { 
+                transform: scale(0.8) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .version-tag {
+            position: absolute;
+            background: rgba(255, 215, 0, 0.9);
+            color: #333;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .environment:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.3);
+        }
+
+        .rollback-warning {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 0, 0, 0.9);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            opacity: 0;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="title">🎮 Aventura del Workflow n8n-ops</h1>
+        
+        <div class="controls">
+            <button class="btn" onclick="startFeatureFlow()">🚀 Nueva Funcionalidad</button>
+            <button class="btn" onclick="startHotfixFlow()">🔥 Hotfix Urgente</button>
+            <button class="btn" onclick="startRollback()">⏪ Rollback</button>
+            <button class="btn" onclick="resetGame()">🔄 Reset</button>
+        </div>
+
+        <div class="game-board">
+            <!-- Environments -->
+            <div class="environment development" onclick="showEnvironmentInfo('development')">
+                <div>🧪 DEVELOPMENT</div>
+                <div style="font-size: 12px; margin-top: 5px;">feature/push-notifications</div>
+                <div class="version-tag" style="top: -10px; right: -10px;">v1.4.0-dev</div>
+            </div>
+
+            <div class="environment staging" onclick="showEnvironmentInfo('staging')">
+                <div>🎭 STAGING</div>
+                <div style="font-size: 12px; margin-top: 5px;">release candidate</div>
+                <div class="version-tag" style="top: -10px; right: -10px;">v1.3.2-rc1</div>
+            </div>
+
+            <div class="environment production" onclick="showEnvironmentInfo('production')">
+                <div>🏭 PRODUCTION</div>
+                <div style="font-size: 12px; margin-top: 5px;">stable release</div>
+                <div class="version-tag" style="top: -10px; right: -10px;">v1.3.1</div>
+            </div>
+
+            <!-- Workflow Character -->
+            <div class="workflow-character" id="workflow" style="top: 70px; left: 80px;">
+                📦
+            </div>
+
+            <!-- Paths (initially hidden) -->
+            <div class="path path-dev-staging" id="path1" style="display: none;"></div>
+            <div class="path path-staging-prod" id="path2" style="display: none;"></div>
+
+            <!-- Status Panel -->
+            <div class="status-panel" id="status">
+                👋 ¡Hola! Soy un workflow esperando ir a producción. ¡Haz clic en un botón para empezar mi aventura!
+            </div>
+
+            <!-- Hotfix Alert -->
+            <div class="hotfix-alert" id="hotfixAlert">
+                🚨 ¡BUG CRÍTICO DETECTADO!
+            </div>
+
+            <!-- Git Commands Panel -->
+            <div class="git-commands" id="gitCommands">
+                <div>$ git checkout -b feature/push-notifications</div>
+                <div>$ ./n8n-ops sync --env development</div>
+                <div>$ git commit -m "feat: add notifications"</div>
+            </div>
+
+            <!-- Rollback Warning -->
+            <div class="rollback-warning" id="rollbackWarning">
+                ⚠️ ROLLBACK EN PROGRESO ⚠️<br>
+                Volviendo a versión anterior...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentAnimation = null;
+
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        function showGitCommands(commands, celebration = false) {
+            const panel = document.getElementById('gitCommands');
+            
+            // Add party class for microfiesta
+            if (celebration) {
+                panel.classList.add('party');
+                setTimeout(() => panel.classList.remove('party'), 500);
+            }
+            
+            // Format commands with different colors
+            const formattedCommands = commands.map(cmd => {
+                if (cmd.includes('✅') || cmd.includes('SUCCESS')) {
+                    return `<div><span class="prompt">$</span> <span class="success">${cmd}</span></div>`;
+                } else if (cmd.includes('INFO') || cmd.includes('status')) {
+                    return `<div><span class="prompt">$</span> <span class="info">${cmd}</span></div>`;
+                } else {
+                    return `<div><span class="prompt">$</span> ${cmd}</div>`;
+                }
+            });
+            
+            panel.innerHTML = formattedCommands.join('');
+            panel.style.opacity = '1';
+            
+            // Create terminal sparkles for microfiesta
+            if (celebration) {
+                createTerminalSparkles();
+            }
+            
+            setTimeout(() => panel.style.opacity = '0', 4000);
+        }
+
+        function createTerminalSparkles() {
+            const terminal = document.getElementById('gitCommands');
+            const rect = terminal.getBoundingClientRect();
+            const gameBoard = document.querySelector('.game-board');
+            
+            for (let i = 0; i < 8; i++) {
+                setTimeout(() => {
+                    const sparkle = document.createElement('div');
+                    sparkle.textContent = ['✨', '🎊', '⚡', '💫', '🌟'][Math.floor(Math.random() * 5)];
+                    sparkle.style.position = 'absolute';
+                    sparkle.style.left = (Math.random() * 200 + 100) + 'px';
+                    sparkle.style.bottom = (Math.random() * 100 + 150) + 'px';
+                    sparkle.style.fontSize = '20px';
+                    sparkle.style.animation = 'celebrate 1.5s ease-out forwards';
+                    sparkle.style.pointerEvents = 'none';
+                    sparkle.style.zIndex = '200';
+                    gameBoard.appendChild(sparkle);
+                    setTimeout(() => sparkle.remove(), 1500);
+                }, i * 100);
+            }
+        }
+
+        function moveWorkflow(x, y, callback) {
+            const workflow = document.getElementById('workflow');
+            workflow.style.left = x + 'px';
+            workflow.style.top = y + 'px';
+            if (callback) setTimeout(callback, 500);
+        }
+
+        function showPath(pathId) {
+            const path = document.getElementById(pathId);
+            path.style.display = 'block';
+            setTimeout(() => path.style.display = 'none', 2000);
+        }
+
+        function createCelebration(x, y, emoji) {
+            const celebration = document.createElement('div');
+            celebration.className = 'celebration';
+            celebration.textContent = emoji;
+            celebration.style.left = x + 'px';
+            celebration.style.top = y + 'px';
+            document.querySelector('.game-board').appendChild(celebration);
+            setTimeout(() => celebration.remove(), 2000);
+        }
+
+        function startFeatureFlow() {
+            if (currentAnimation) return;
+            currentAnimation = true;
+
+            updateStatus('🔧 Creando feature branch: feature/push-notifications');
+            showGitCommands([
+                'git checkout develop',
+                'git checkout -b feature/push-notifications'
+            ]);
+
+            setTimeout(() => {
+                updateStatus('👨‍💻 Desarrollando en environment local...');
+                document.getElementById('workflow').textContent = '🛠️';
+            }, 1000);
+
+            setTimeout(() => {
+                updateStatus('✅ Desarrollo completo! Sincronizando con development...');
+                showGitCommands([
+                    './n8n-ops sync --env development',
+                    'git commit -m "feat: add push notifications"'
+                ]);
+            }, 2500);
+
+            setTimeout(() => {
+                updateStatus('🚀 Desplegando a staging para testing...');
+                showPath('path1');
+                moveWorkflow(330, 220, () => {
+                    document.getElementById('workflow').textContent = '🧪';
+                    createCelebration(330, 220, '🎉');
+                });
+            }, 4000);
+
+            setTimeout(() => {
+                updateStatus('🎭 Testing exitoso en staging! Preparando para producción...');
+                showGitCommands([
+                    'git checkout staging',
+                    'git merge develop',
+                    '✅ Tests passed successfully!'
+                ], true);
+            }, 5500);
+
+            setTimeout(() => {
+                updateStatus('🏭 Desplegando a producción... ¡Momento de la verdad!');
+                showPath('path2');
+                moveWorkflow(770, 70, () => {
+                    document.getElementById('workflow').textContent = '🏆';
+                    createCelebration(770, 70, '🥳');
+                    createCelebration(790, 90, '🎊');
+                    createCelebration(750, 90, '✨');
+                });
+            }, 7000);
+
+            setTimeout(() => {
+                updateStatus('🎉 ¡ÉXITO! Workflow desplegado en producción. ¡Felicidades!');
+                showGitCommands([
+                    'git tag v1.4.0',
+                    './n8n-ops status --env production',
+                    '✅ SUCCESS: Production deployment complete!',
+                    'INFO: All systems operational 🚀'
+                ], true);
+                currentAnimation = false;
+            }, 8500);
+        }
+
+        function startHotfixFlow() {
+            if (currentAnimation) return;
+            currentAnimation = true;
+
+            document.getElementById('hotfixAlert').style.opacity = '1';
+            updateStatus('🚨 ¡ALERTA! Bug crítico detectado en producción!');
+            document.getElementById('workflow').textContent = '🔥';
+
+            setTimeout(() => {
+                updateStatus('⚡ Creando hotfix branch desde main...');
+                showGitCommands([
+                    'git checkout main',
+                    'git checkout -b hotfix/payment-timeout-fix'
+                ]);
+            }, 1500);
+
+            setTimeout(() => {
+                updateStatus('🛠️ Aplicando fix de emergencia...');
+                document.getElementById('workflow').textContent = '⚙️';
+            }, 3000);
+
+            setTimeout(() => {
+                updateStatus('🚀 Desplegando hotfix directamente a producción!');
+                document.getElementById('workflow').textContent = '🚑';
+                createCelebration(770, 70, '🩹');
+                showGitCommands([
+                    'git merge hotfix/payment-timeout-fix',
+                    'git push origin main',
+                    '✅ Hotfix deployed successfully!'
+                ], true);
+            }, 4500);
+
+            setTimeout(() => {
+                updateStatus('✅ Hotfix aplicado exitosamente! Sistema restaurado.');
+                document.getElementById('workflow').textContent = '💚';
+                document.getElementById('hotfixAlert').style.opacity = '0';
+                showGitCommands([
+                    'git tag v1.3.2',
+                    './n8n-ops status --env production',
+                    '✅ SUCCESS: System fully operational',
+                    'INFO: Hotfix v1.3.2 deployed 🚑'
+                ], true);
+                currentAnimation = false;
+            }, 6000);
+        }
+
+        function startRollback() {
+            if (currentAnimation) return;
+            currentAnimation = true;
+
+            document.getElementById('rollbackWarning').style.opacity = '1';
+            updateStatus('⚠️ Iniciando rollback de emergencia...');
+            document.getElementById('workflow').textContent = '⏪';
+
+            setTimeout(() => {
+                updateStatus('🔄 Revirtiendo a versión anterior estable...');
+                moveWorkflow(330, 220);
+                showGitCommands([
+                    './n8n-ops rollback --env production',
+                    'Reverting to previous stable version...'
+                ]);
+            }, 1500);
+
+            setTimeout(() => {
+                updateStatus('⏳ Aplicando rollback en todos los environments...');
+                document.getElementById('workflow').textContent = '🔄';
+                showGitCommands([
+                    'Rolling back staging environment...',
+                    'Rolling back development environment...',
+                    'INFO: Multi-environment rollback in progress'
+                ]);
+            }, 3000);
+
+            setTimeout(() => {
+                updateStatus('✅ Rollback completado. Sistema estable restaurado.');
+                document.getElementById('workflow').textContent = '🛡️';
+                document.getElementById('rollbackWarning').style.opacity = '0';
+                showGitCommands([
+                    './n8n-ops status --env production',
+                    '✅ SUCCESS: Rollback completed',
+                    'INFO: All systems stable 🛡️',
+                    'System restored to v1.3.1'
+                ], true);
+                currentAnimation = false;
+            }, 4500);
+        }
+
+        function resetGame() {
+            if (currentAnimation) return;
+            
+            moveWorkflow(80, 70);
+            document.getElementById('workflow').textContent = '📦';
+            updateStatus('👋 ¡Hola! Soy un workflow esperando ir a producción. ¡Haz clic en un botón para empezar mi aventura!');
+            document.getElementById('hotfixAlert').style.opacity = '0';
+            document.getElementById('rollbackWarning').style.opacity = '0';
+            document.getElementById('gitCommands').style.opacity = '0';
+            
+            // Remove any celebration elements
+            document.querySelectorAll('.celebration').forEach(el => el.remove());
+        }
+
+        function showEnvironmentInfo(env) {
+            const info = {
+                'development': '🧪 Development: Aquí nacen las ideas. Versión v1.4.0-dev con 3 workflows activos.',
+                'staging': '🎭 Staging: El escenario de pruebas. Versión v1.3.2-rc1 lista para el gran estreno.',
+                'production': '🏭 Production: El mundo real. Versión v1.3.1 sirviendo a usuarios reales 24/7.'
+            };
+            updateStatus(info[env]);
+        }
+
+        // Easter egg: Konami code
+        let konamiCode = [];
+        const konamiSequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'KeyB', 'KeyA'];
+
+        document.addEventListener('keydown', (e) => {
+            konamiCode.push(e.code);
+            if (konamiCode.length > konamiSequence.length) {
+                konamiCode.shift();
+            }
+            if (konamiCode.join(',') === konamiSequence.join(',')) {
+                updateStatus('🎮 ¡CÓDIGO KONAMI ACTIVADO! Modo developer desbloqueado 🚀');
+                document.getElementById('workflow').textContent = '🦄';
+                createCelebration(500, 300, '🌈');
+                createCelebration(520, 280, '⚡');
+                createCelebration(480, 280, '💫');
+            }
+        });
+    </script>
+</body>
+</html>
