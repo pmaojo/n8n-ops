@@ -1,4 +1,4 @@
-package tests
+package testutil
 
 import (
 	"fmt"
@@ -10,8 +10,8 @@ import (
 )
 
 // StartMockServer launches the mock n8n server used in tests and returns a
-// function to stop it. It waits until the server is responsive before
-// returning. The caller should defer the returned stop function.
+// function to stop it. It waits until the server is responsive before returning.
+// The caller should defer the returned stop function.
 func StartMockServer() (func(), error) {
 	cmd := exec.Command("go", "run", "main.go")
 	cmd.Dir = filepath.Join("..", "mock-n8n-server")
