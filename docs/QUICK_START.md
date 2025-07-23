@@ -119,6 +119,10 @@ The included `.gitlab-ci.yml` will automatically:
 - ✅ Deploy to staging on `staging` branch (manual approval)
 - ✅ Deploy to production on `main` branch (manual approval)
 
+Go modules are cached between jobs using the `GOMODCACHE` directory. The cache
+is keyed by the branch name so dependency downloads are reused across pipeline
+runs.
+
 ## Common Commands
 
 ```bash

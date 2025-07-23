@@ -34,6 +34,11 @@ variables:
 build-cli:
   stage: build
   image: golang:${GO_VERSION}
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - ${GOMODCACHE}
+      - go.sum
   script:
     - echo "Building n8n-ops tool..."
     - go mod tidy
@@ -52,6 +57,11 @@ build-cli:
 validate-workflows:
   stage: validate
   image: golang:${GO_VERSION}
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - ${GOMODCACHE}
+      - go.sum
   dependencies:
     - build-cli
   script:
@@ -66,6 +76,11 @@ validate-workflows:
 test-cli-functions:
   stage: test
   image: golang:${GO_VERSION}
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - ${GOMODCACHE}
+      - go.sum
   dependencies:
     - build-cli
   script:
