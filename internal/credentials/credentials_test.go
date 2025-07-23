@@ -73,13 +73,13 @@ func TestEnvironmentIsolation(t *testing.T) {
 	environments := []string{"development", "staging", "production"}
 
 	for _, env := range environments {
-		keyName := "N8N_" + env + "_API_KEY"
+		keyName := "N8N_" + strings.ToUpper(env) + "_API_KEY"
 		if keyName == "" {
 			t.Errorf("Key name for environment %s should not be empty", env)
 		}
 
 		// Verify environment-specific naming
-		if env == "development" && keyName != "N8N_DEV_API_KEY" {
+		if env == "development" && keyName != "N8N_DEVELOPMENT_API_KEY" {
 			t.Error("Development API key name format incorrect")
 		}
 	}
