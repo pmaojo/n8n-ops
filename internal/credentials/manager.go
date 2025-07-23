@@ -12,16 +12,16 @@ import (
 
 // CredentialManager handles environment-specific credentials
 type CredentialManager struct {
-	ConfigPath string
+	ConfigPath  string
 	Environment string
 }
 
 // EnvironmentCredentials holds all credentials for a specific environment
 type EnvironmentCredentials struct {
-	N8nURL       string            `json:"n8n_url" yaml:"n8n_url"`
-	N8nAPIKey    string            `json:"n8n_api_key" yaml:"n8n_api_key"`
-	GitLabToken  string            `json:"gitlab_token" yaml:"gitlab_token"`
-	CustomCreds  map[string]string `json:"custom_credentials" yaml:"custom_credentials"`
+	N8nURL      string            `json:"n8n_url" yaml:"n8n_url"`
+	N8nAPIKey   string            `json:"n8n_api_key" yaml:"n8n_api_key"`
+	GitLabToken string            `json:"gitlab_token" yaml:"gitlab_token"`
+	CustomCreds map[string]string `json:"custom_credentials" yaml:"custom_credentials"`
 }
 
 // WorkflowCredentials represents credentials used within workflows
@@ -63,7 +63,7 @@ func (cm *CredentialManager) GetEnvironmentCredentials() (*EnvironmentCredential
 	}
 
 	envKey := fmt.Sprintf("environments.%s", cm.Environment)
-	
+
 	creds := &EnvironmentCredentials{
 		CustomCreds: make(map[string]string),
 	}
@@ -125,7 +125,7 @@ func (cm *CredentialManager) ValidateCredentials(creds *EnvironmentCredentials) 
 	}
 
 	if len(missing) > 0 {
-		return fmt.Errorf("missing required credentials for %s environment: %s", 
+		return fmt.Errorf("missing required credentials for %s environment: %s",
 			cm.Environment, strings.Join(missing, ", "))
 	}
 
@@ -158,7 +158,7 @@ func (cm *CredentialManager) ListCredentials() (map[string]string, error) {
 	}
 
 	sources := make(map[string]string)
-	
+
 	// Check sources for each credential
 	sources["n8n_url"] = cm.getCredentialSource("n8n_url", creds.N8nURL)
 	sources["n8n_api_key"] = cm.getCredentialSource("n8n_api_key", creds.N8nAPIKey)
@@ -198,9 +198,9 @@ func (cm *CredentialManager) getCredentialSource(key, value string) string {
 func (cm *CredentialManager) GetWorkflowCredentials() ([]WorkflowCredentials, error) {
 	// This would integrate with n8n's credential system
 	// For now, return example structure
-	
+
 	var workflowCreds []WorkflowCredentials
-	
+
 	// Example workflow credentials by environment
 	switch cm.Environment {
 	case "development":
@@ -229,7 +229,7 @@ func (cm *CredentialManager) GetWorkflowCredentials() ([]WorkflowCredentials, er
 				},
 			},
 		}
-		
+
 	case "production":
 		workflowCreds = []WorkflowCredentials{
 			{
@@ -264,13 +264,13 @@ func (cm *CredentialManager) GetWorkflowCredentials() ([]WorkflowCredentials, er
 func (cm *CredentialManager) SyncCredentialsToN8n() error {
 	// This would connect to n8n API and ensure credentials exist
 	// Implementation would depend on n8n's credential management API
-	
+
 	workflowCreds, err := cm.GetWorkflowCredentials()
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("📋 Found %d workflow credentials for %s environment\n", 
+	fmt.Printf("📋 Found %d workflow credentials for %s environment\n",
 		len(workflowCreds), cm.Environment)
 
 	for _, cred := range workflowCreds {

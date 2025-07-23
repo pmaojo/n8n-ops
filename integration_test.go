@@ -62,6 +62,7 @@ func TestVersionCommand(t *testing.T) {
 		t.Skip("Skipping integration test in short mode")
 	}
 
+
 	cmd := exec.Command(binaryPath, "version")
 	output, err := cmd.Output()
 	if err != nil {
@@ -78,6 +79,7 @@ func TestWelcomeCommand(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
 	}
+
 
 	cmd := exec.Command(binaryPath, "welcome")
 	cmd.Env = append(os.Environ(), "DEMO=true")

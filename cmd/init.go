@@ -1,113 +1,113 @@
 package cmd
 
 import (
-        "fmt"
-        "os"
-        "path/filepath"
+	"fmt"
+	"os"
+	"path/filepath"
 
-        "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
 var initCmd = &cobra.Command{
-        Use:   "init [project-name]",
-        Short: "Initialize a new n8n workflow project",
-        Long: `Initialize a new n8n workflow project with the standard directory structure
+	Use:   "init [project-name]",
+	Short: "Initialize a new n8n workflow project",
+	Long: `Initialize a new n8n workflow project with the standard directory structure
 and configuration files for collaborative development.
 
 Examples:
   n8n-ops init my-workflows       # Initialize project in ./my-workflows
   n8n-ops init .                  # Initialize project in current directory`,
-        RunE: runInit,
+	RunE: runInit,
 }
 
 var (
-        initForce bool
+	initForce bool
 )
 
 func init() {
-        rootCmd.AddCommand(initCmd)
-        
-        initCmd.Flags().BoolVarP(&initForce, "force", "f", false, "force initialization, overwriting existing files")
+	rootCmd.AddCommand(initCmd)
+
+	initCmd.Flags().BoolVarP(&initForce, "force", "f", false, "force initialization, overwriting existing files")
 }
 
 func runInit(cmd *cobra.Command, args []string) error {
-        projectDir := "."
-        if len(args) > 0 {
-                projectDir = args[0]
-        }
+	projectDir := "."
+	if len(args) > 0 {
+		projectDir = args[0]
+	}
 
-        logger.Info("Initializing n8n workflow project", "directory", projectDir)
+	logger.Info("Initializing n8n workflow project", "directory", projectDir)
 
-        // Create project directory if it doesn't exist
-        if err := os.MkdirAll(projectDir, 0755); err != nil {
-                return fmt.Errorf("failed to create project directory: %w", err)
-        }
+	// Create project directory if it doesn't exist
+	if err := os.MkdirAll(projectDir, 0755); err != nil {
+		return fmt.Errorf("failed to create project directory: %w", err)
+	}
 
-        // Check if project already exists
-        if !initForce {
-                configPath := filepath.Join(projectDir, ".n8n-ops.yaml")
-                if _, err := os.Stat(configPath); err == nil {
-                        return fmt.Errorf("project already exists in %s (use --force to overwrite)", projectDir)
-                }
-        }
+	// Check if project already exists
+	if !initForce {
+		configPath := filepath.Join(projectDir, ".n8n-ops.yaml")
+		if _, err := os.Stat(configPath); err == nil {
+			return fmt.Errorf("project already exists in %s (use --force to overwrite)", projectDir)
+		}
+	}
 
-        // Create directory structure
-        dirs := []string{
-                "workflows/development",
-                "workflows/staging",
-                "workflows/production",
-                "scripts",
-                "docs",
-                "tests",
-                "config",
-        }
+	// Create directory structure
+	dirs := []string{
+		"workflows/development",
+		"workflows/staging",
+		"workflows/production",
+		"scripts",
+		"docs",
+		"tests",
+		"config",
+	}
 
-        for _, dir := range dirs {
-                dirPath := filepath.Join(projectDir, dir)
-                if err := os.MkdirAll(dirPath, 0755); err != nil {
-                        return fmt.Errorf("failed to create directory %s: %w", dir, err)
-                }
-        }
+	for _, dir := range dirs {
+		dirPath := filepath.Join(projectDir, dir)
+		if err := os.MkdirAll(dirPath, 0755); err != nil {
+			return fmt.Errorf("failed to create directory %s: %w", dir, err)
+		}
+	}
 
-        // Create configuration files
-        if err := createConfigFiles(projectDir); err != nil {
-                return fmt.Errorf("failed to create configuration files: %w", err)
-        }
+	// Create configuration files
+	if err := createConfigFiles(projectDir); err != nil {
+		return fmt.Errorf("failed to create configuration files: %w", err)
+	}
 
-        // Create documentation files
-        if err := createDocumentationFiles(projectDir); err != nil {
-                return fmt.Errorf("failed to create documentation files: %w", err)
-        }
+	// Create documentation files
+	if err := createDocumentationFiles(projectDir); err != nil {
+		return fmt.Errorf("failed to create documentation files: %w", err)
+	}
 
-        // Create git ignore file
-        if err := createGitIgnoreFile(projectDir); err != nil {
-                return fmt.Errorf("failed to create .gitignore: %w", err)
-        }
+	// Create git ignore file
+	if err := createGitIgnoreFile(projectDir); err != nil {
+		return fmt.Errorf("failed to create .gitignore: %w", err)
+	}
 
-        logger.Info("Project initialized successfully", "directory", projectDir)
-        
-        fmt.Printf("✅ n8n workflow project initialized successfully!\n\n")
-        fmt.Printf("Next steps:\n")
-        fmt.Printf("1. Edit .n8n-ops.yaml to configure your n8n environments\n")
-        fmt.Printf("2. Set up environment variables for API keys\n")
-        fmt.Printf("3. Run 'n8n-ops sync --env development' to sync workflows\n")
-        fmt.Printf("4. Start collaborating with your team!\n\n")
-        fmt.Printf("Project structure:\n")
-        fmt.Printf("  workflows/          # Environment-specific workflows\n")
-        fmt.Printf("  ├── development/    # Development environment\n")
-        fmt.Printf("  ├── staging/        # Staging environment\n")
-        fmt.Printf("  └── production/     # Production environment\n")
-        fmt.Printf("  docs/               # Documentation\n")
-        fmt.Printf("  scripts/            # Custom scripts\n")
-        fmt.Printf("  tests/              # Tests\n")
-        fmt.Printf("  config/             # Configuration files\n")
+	logger.Info("Project initialized successfully", "directory", projectDir)
 
-        return nil
+	fmt.Printf("✅ n8n workflow project initialized successfully!\n\n")
+	fmt.Printf("Next steps:\n")
+	fmt.Printf("1. Edit .n8n-ops.yaml to configure your n8n environments\n")
+	fmt.Printf("2. Set up environment variables for API keys\n")
+	fmt.Printf("3. Run 'n8n-ops sync --env development' to sync workflows\n")
+	fmt.Printf("4. Start collaborating with your team!\n\n")
+	fmt.Printf("Project structure:\n")
+	fmt.Printf("  workflows/          # Environment-specific workflows\n")
+	fmt.Printf("  ├── development/    # Development environment\n")
+	fmt.Printf("  ├── staging/        # Staging environment\n")
+	fmt.Printf("  └── production/     # Production environment\n")
+	fmt.Printf("  docs/               # Documentation\n")
+	fmt.Printf("  scripts/            # Custom scripts\n")
+	fmt.Printf("  tests/              # Tests\n")
+	fmt.Printf("  config/             # Configuration files\n")
+
+	return nil
 }
 
 func createConfigFiles(projectDir string) error {
-        // Main configuration file
-        configContent := `# n8n CLI Configuration
+	// Main configuration file
+	configContent := `# n8n CLI Configuration
 # Environment configurations
 environments:
   development:
@@ -138,13 +138,13 @@ logging:
   file: logs/n8n-ops.log
 `
 
-        configPath := filepath.Join(projectDir, ".n8n-ops.yaml")
-        if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
-                return err
-        }
+	configPath := filepath.Join(projectDir, ".n8n-ops.yaml")
+	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+		return err
+	}
 
-        // Environment variables example
-        envContent := `# n8n CLI Environment Variables
+	// Environment variables example
+	envContent := `# n8n CLI Environment Variables
 # Copy this file to .env and fill in your actual values
 
 # Development environment
@@ -166,12 +166,12 @@ N8N_PROD_URL=https://n8n-prod.example.com
 # CI_PIPELINE_URL=https://gitlab.com/project/pipelines/12345
 `
 
-        envPath := filepath.Join(projectDir, ".env.example")
-        return os.WriteFile(envPath, []byte(envContent), 0644)
+	envPath := filepath.Join(projectDir, ".env.example")
+	return os.WriteFile(envPath, []byte(envContent), 0644)
 }
 
 func createDocumentationFiles(projectDir string) error {
-        readmeContent := `# n8n Workflow Project
+	readmeContent := `# n8n Workflow Project
 
 This project contains n8n workflows managed with the n8n-ops tool for collaborative development.
 
@@ -220,12 +220,12 @@ This project includes GitLab CI/CD pipeline configuration for automated:
 - Rollback capabilities
 `
 
-        readmePath := filepath.Join(projectDir, "README.md")
-        return os.WriteFile(readmePath, []byte(readmeContent), 0644)
+	readmePath := filepath.Join(projectDir, "README.md")
+	return os.WriteFile(readmePath, []byte(readmeContent), 0644)
 }
 
 func createGitIgnoreFile(projectDir string) error {
-        gitignoreContent := `# Environment variables
+	gitignoreContent := `# Environment variables
 .env
 .env.local
 
@@ -266,6 +266,6 @@ bin/
 node_modules/
 `
 
-        gitignorePath := filepath.Join(projectDir, ".gitignore")
-        return os.WriteFile(gitignorePath, []byte(gitignoreContent), 0644)
+	gitignorePath := filepath.Join(projectDir, ".gitignore")
+	return os.WriteFile(gitignorePath, []byte(gitignoreContent), 0644)
 }

@@ -16,16 +16,16 @@ type SQLiteDB struct {
 }
 
 type WorkflowRecord struct {
-	ID           string    `db:"id"`
-	Name         string    `db:"name"`
-	Environment  string    `db:"environment"`
-	FilePath     string    `db:"file_path"`
-	Hash         string    `db:"hash"`
-	LastSync     time.Time `db:"last_sync"`
-	LastDeploy   time.Time `db:"last_deploy"`
-	Version      int       `db:"version"`
-	CreatedAt    time.Time `db:"created_at"`
-	UpdatedAt    time.Time `db:"updated_at"`
+	ID          string    `db:"id"`
+	Name        string    `db:"name"`
+	Environment string    `db:"environment"`
+	FilePath    string    `db:"file_path"`
+	Hash        string    `db:"hash"`
+	LastSync    time.Time `db:"last_sync"`
+	LastDeploy  time.Time `db:"last_deploy"`
+	Version     int       `db:"version"`
+	CreatedAt   time.Time `db:"created_at"`
+	UpdatedAt   time.Time `db:"updated_at"`
 }
 
 type DeploymentRecord struct {
@@ -50,7 +50,7 @@ func NewSQLiteDB() (*SQLiteDB, error) {
 	}
 
 	sqliteDB := &SQLiteDB{db: db}
-	
+
 	// Initialize tables
 	if err := sqliteDB.initTables(); err != nil {
 		return nil, fmt.Errorf("failed to initialize tables: %w", err)
@@ -114,7 +114,7 @@ func CreateWorkflowRecord(db *SQLiteDB, record *WorkflowRecord) error {
 		INSERT INTO workflows (id, name, environment, file_path, hash, last_sync, last_deploy, version)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`
-	
+
 	_, err := db.db.Exec(query,
 		record.ID,
 		record.Name,
@@ -125,7 +125,7 @@ func CreateWorkflowRecord(db *SQLiteDB, record *WorkflowRecord) error {
 		record.LastDeploy,
 		record.Version,
 	)
-	
+
 	return err
 }
 
@@ -136,7 +136,7 @@ func UpdateWorkflowRecord(db *SQLiteDB, record *WorkflowRecord) error {
 		SET name = ?, file_path = ?, hash = ?, last_sync = ?, last_deploy = ?, version = ?, updated_at = CURRENT_TIMESTAMP
 		WHERE id = ? AND environment = ?
 	`
-	
+
 	result, err := db.db.Exec(query,
 		record.Name,
 		record.FilePath,
@@ -147,20 +147,20 @@ func UpdateWorkflowRecord(db *SQLiteDB, record *WorkflowRecord) error {
 		record.ID,
 		record.Environment,
 	)
-	
+
 	if err != nil {
 		return err
 	}
-	
+
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		return err
 	}
-	
+
 	if rowsAffected == 0 {
 		return ErrRecordNotFound
 	}
-	
+
 	return nil
 }
 
@@ -171,7 +171,7 @@ func GetWorkflowRecord(db *SQLiteDB, id, environment string) (*WorkflowRecord, e
 		FROM workflows 
 		WHERE id = ? AND environment = ?
 	`
-	
+
 	record := &WorkflowRecord{}
 	err := db.db.QueryRow(query, id, environment).Scan(
 		&record.ID,
@@ -185,14 +185,14 @@ func GetWorkflowRecord(db *SQLiteDB, id, environment string) (*WorkflowRecord, e
 		&record.CreatedAt,
 		&record.UpdatedAt,
 	)
-	
+
 	if err == sql.ErrNoRows {
 		return nil, ErrRecordNotFound
 	}
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return record, nil
 }
 
@@ -204,13 +204,13 @@ func GetWorkflowsByEnvironment(db *SQLiteDB, environment string) ([]*WorkflowRec
 		WHERE environment = ?
 		ORDER BY name
 	`
-	
+
 	rows, err := db.db.Query(query, environment)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var records []*WorkflowRecord
 	for rows.Next() {
 		record := &WorkflowRecord{}
@@ -231,7 +231,7 @@ func GetWorkflowsByEnvironment(db *SQLiteDB, environment string) ([]*WorkflowRec
 		}
 		records = append(records, record)
 	}
-	
+
 	return records, nil
 }
 
@@ -241,7 +241,7 @@ func CreateDeploymentRecord(db *SQLiteDB, record *DeploymentRecord) error {
 		INSERT INTO deployments (id, environment, status, start_time, end_time, workflow_count, git_commit, deployed_by, error_message)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
-	
+
 	_, err := db.db.Exec(query,
 		record.ID,
 		record.Environment,
@@ -253,7 +253,7 @@ func CreateDeploymentRecord(db *SQLiteDB, record *DeploymentRecord) error {
 		record.DeployedBy,
 		record.ErrorMessage,
 	)
-	
+
 	return err
 }
 
@@ -264,7 +264,7 @@ func UpdateDeploymentRecord(db *SQLiteDB, record *DeploymentRecord) error {
 		SET status = ?, end_time = ?, workflow_count = ?, error_message = ?, updated_at = CURRENT_TIMESTAMP
 		WHERE id = ?
 	`
-	
+
 	_, err := db.db.Exec(query,
 		record.Status,
 		record.EndTime,
@@ -272,7 +272,7 @@ func UpdateDeploymentRecord(db *SQLiteDB, record *DeploymentRecord) error {
 		record.ErrorMessage,
 		record.ID,
 	)
-	
+
 	return err
 }
 
@@ -283,7 +283,7 @@ func GetDeploymentRecord(db *SQLiteDB, id string) (*DeploymentRecord, error) {
 		FROM deployments 
 		WHERE id = ?
 	`
-	
+
 	record := &DeploymentRecord{}
 	err := db.db.QueryRow(query, id).Scan(
 		&record.ID,
@@ -298,14 +298,14 @@ func GetDeploymentRecord(db *SQLiteDB, id string) (*DeploymentRecord, error) {
 		&record.CreatedAt,
 		&record.UpdatedAt,
 	)
-	
+
 	if err == sql.ErrNoRows {
 		return nil, ErrRecordNotFound
 	}
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return record, nil
 }
 
@@ -318,13 +318,13 @@ func GetDeploymentHistory(db *SQLiteDB, environment string, limit int) ([]*Deplo
 		ORDER BY start_time DESC
 		LIMIT ?
 	`
-	
+
 	rows, err := db.db.Query(query, environment, limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var records []*DeploymentRecord
 	for rows.Next() {
 		record := &DeploymentRecord{}
@@ -346,7 +346,7 @@ func GetDeploymentHistory(db *SQLiteDB, environment string, limit int) ([]*Deplo
 		}
 		records = append(records, record)
 	}
-	
+
 	return records, nil
 }
 
@@ -358,7 +358,7 @@ func GetWorkflowsByDeployment(db *SQLiteDB, deploymentID string) ([]*WorkflowRec
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Get workflows that were deployed within a time window around the deployment
 	query := `
 		SELECT id, name, environment, file_path, hash, last_sync, last_deploy, version, created_at, updated_at
@@ -367,9 +367,9 @@ func GetWorkflowsByDeployment(db *SQLiteDB, deploymentID string) ([]*WorkflowRec
 		AND last_deploy BETWEEN datetime(?, '-5 minutes') AND datetime(?, '+5 minutes')
 		ORDER BY name
 	`
-	
-	rows, err := db.db.Query(query, 
-		deployment.Environment, 
+
+	rows, err := db.db.Query(query,
+		deployment.Environment,
 		deployment.StartTime.Format("2006-01-02 15:04:05"),
 		deployment.EndTime.Format("2006-01-02 15:04:05"),
 	)
@@ -377,7 +377,7 @@ func GetWorkflowsByDeployment(db *SQLiteDB, deploymentID string) ([]*WorkflowRec
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var records []*WorkflowRecord
 	for rows.Next() {
 		record := &WorkflowRecord{}
@@ -398,7 +398,7 @@ func GetWorkflowsByDeployment(db *SQLiteDB, deploymentID string) ([]*WorkflowRec
 		}
 		records = append(records, record)
 	}
-	
+
 	return records, nil
 }
 

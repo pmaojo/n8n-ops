@@ -11,7 +11,7 @@ var (
 	ErrNotFound      = errors.New("resource not found")
 	ErrUnauthorized  = errors.New("unauthorized access")
 	ErrBadRequest    = errors.New("bad request")
-	ErrServerError   = errors.New("internal server error") 
+	ErrServerError   = errors.New("internal server error")
 	ErrTimeout       = errors.New("request timeout")
 	ErrConnection    = errors.New("connection failed")
 	ErrInvalidConfig = errors.New("invalid configuration")
@@ -37,7 +37,7 @@ func NewAPIError(statusCode int, message string) *APIError {
 		Code:    statusCode,
 		Message: message,
 	}
-	
+
 	// Map common HTTP status codes to specific errors
 	switch statusCode {
 	case http.StatusNotFound:
@@ -67,7 +67,7 @@ func IsNotFound(err error) bool {
 	return errors.Is(err, ErrNotFound) || IsAPIError(err, http.StatusNotFound)
 }
 
-// IsUnauthorized checks if error represents an "unauthorized" condition  
+// IsUnauthorized checks if error represents an "unauthorized" condition
 func IsUnauthorized(err error) bool {
 	return errors.Is(err, ErrUnauthorized) || IsAPIError(err, http.StatusUnauthorized)
 }

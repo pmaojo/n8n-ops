@@ -54,13 +54,13 @@ func OnboardingVisualGuide() string {
 │  %s└───────────┘         └───────────┘         └───────────┘%s         │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘%s
-`, Cyan, Bold, 
-   Yellow, Cyan,
-   Blue, Cyan,
-   Blue, Cyan,
-   Blue, Cyan,
-   Blue, Cyan,
-   Reset)
+`, Cyan, Bold,
+		Yellow, Cyan,
+		Blue, Cyan,
+		Blue, Cyan,
+		Blue, Cyan,
+		Blue, Cyan,
+		Reset)
 }
 
 // OnboardingAPIKeyInstructions returns instructions for getting API keys
@@ -77,13 +77,13 @@ func OnboardingAPIKeyInstructions() string {
 │  %s5. Copy the generated key (starts with "n8n_api_")%s               │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘%s
-`, Yellow, Bold, 
-   Green, Yellow,
-   Cyan, Yellow,
-   Cyan, Yellow,
-   Cyan, Yellow,
-   Cyan, Yellow,
-   Reset)
+`, Yellow, Bold,
+		Green, Yellow,
+		Cyan, Yellow,
+		Cyan, Yellow,
+		Cyan, Yellow,
+		Cyan, Yellow,
+		Reset)
 }
 
 // OnboardingNextSteps returns a guide for next steps after onboarding
@@ -106,14 +106,14 @@ func OnboardingNextSteps() string {
 │     %sgit add workflows/ && git commit -m "update workflows"%s         │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘%s
-`, Green, Bold, 
-   Yellow, Green,
-   Cyan, Green,
-   Cyan, Green,
-   Dim, Green,
-   Cyan, Green,
-   Dim, Green,
-   Cyan, Green,
-   Dim, Green,
-   Reset)
+`, Green, Bold,
+		Yellow, Green,
+		Cyan, Green,
+		Cyan, Green,
+		Dim, Green,
+		Cyan, Green,
+		Dim, Green,
+		Cyan, Green,
+		Dim, Green,
+		Reset)
 }

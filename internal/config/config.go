@@ -14,9 +14,9 @@ type Config struct {
 }
 
 type EnvironmentConfig struct {
-	URL        string `mapstructure:"url"`
-	APIKeyEnv  string `mapstructure:"api_key_env"`
-	APIKey     string // Resolved from environment variable
+	URL       string `mapstructure:"url"`
+	APIKeyEnv string `mapstructure:"api_key_env"`
+	APIKey    string // Resolved from environment variable
 }
 
 type DefaultConfig struct {
@@ -50,7 +50,7 @@ var globalConfig *Config
 // InitConfig initializes the global configuration
 func InitConfig() {
 	globalConfig = &Config{}
-	
+
 	// Set defaults
 	viper.SetDefault("defaults.environment", "development")
 	viper.SetDefault("defaults.validation.strict", false)
@@ -59,7 +59,7 @@ func InitConfig() {
 	viper.SetDefault("defaults.deploy.skip_validation", false)
 	viper.SetDefault("logging.level", "info")
 	viper.SetDefault("logging.format", "text")
-	
+
 	// Unmarshal configuration
 	if err := viper.Unmarshal(globalConfig); err != nil {
 		fmt.Printf("Warning: Failed to parse configuration: %v\n", err)
@@ -90,7 +90,7 @@ func GetConfig() *Config {
 // GetEnvironmentConfig returns configuration for a specific environment
 func GetEnvironmentConfig(environment string) (*EnvironmentConfig, error) {
 	config := GetConfig()
-	
+
 	envConfig, exists := config.Environments[environment]
 	if !exists {
 		return nil, fmt.Errorf("environment '%s' not found in configuration", environment)

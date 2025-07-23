@@ -17,7 +17,7 @@ func TestStatusCommand(t *testing.T) {
 func TestStatusFlags(t *testing.T) {
 	// Test status command flags
 	flags := statusCmd.Flags()
-	
+
 	if !flags.HasFlags() {
 		t.Error("Status command should have flags")
 	}
@@ -26,7 +26,7 @@ func TestStatusFlags(t *testing.T) {
 func TestStatusOutput(t *testing.T) {
 	// Test status output format expectations
 	expectedElements := []string{"Workflows", "Environment", "Status"}
-	
+
 	for _, element := range expectedElements {
 		if element == "" {
 			t.Error("Status element should not be empty")

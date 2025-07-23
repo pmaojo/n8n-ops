@@ -21,20 +21,20 @@ type GrafanaConfig struct {
 
 // GrafanaMetrics represents metrics data structure
 type GrafanaMetrics struct {
-	WorkflowExecutions   int     `json:"workflow_executions"`
-	FailureRate         float64 `json:"failure_rate"`
-	SyncOperations      int     `json:"sync_operations"`
-	ActiveWorkflows     int     `json:"active_workflows"`
-	ResponseTime        float64 `json:"response_time_ms"`
-	Environment         string  `json:"environment"`
-	Timestamp           int64   `json:"timestamp"`
+	WorkflowExecutions int     `json:"workflow_executions"`
+	FailureRate        float64 `json:"failure_rate"`
+	SyncOperations     int     `json:"sync_operations"`
+	ActiveWorkflows    int     `json:"active_workflows"`
+	ResponseTime       float64 `json:"response_time_ms"`
+	Environment        string  `json:"environment"`
+	Timestamp          int64   `json:"timestamp"`
 }
 
 // GrafanaIntegration handles metrics and dashboard integration
 type GrafanaIntegration struct {
-	config     GrafanaConfig
-	client     *http.Client
-	logger     *logrus.Logger
+	config      GrafanaConfig
+	client      *http.Client
+	logger      *logrus.Logger
 	metricsChan chan GrafanaMetrics
 }
 
@@ -92,10 +92,16 @@ func (g *GrafanaIntegration) testConnection() error {
 func (g *GrafanaIntegration) SendWorkflowMetrics(workflowID, environment string, success bool, duration time.Duration) {
 	metrics := GrafanaMetrics{
 		WorkflowExecutions: 1,
-		FailureRate:       func() float64 { if success { return 0.0 } else { return 1.0 } }(),
-		ResponseTime:      float64(duration.Milliseconds()),
-		Environment:       environment,
-		Timestamp:         time.Now().Unix(),
+		FailureRate: func() float64 {
+			if success {
+				return 0.0
+			} else {
+				return 1.0
+			}
+		}(),
+		ResponseTime: float64(duration.Milliseconds()),
+		Environment:  environment,
+		Timestamp:    time.Now().Unix(),
 	}
 
 	select {
@@ -188,22 +194,22 @@ func (g *GrafanaIntegration) CreateDashboard(ctx context.Context) error {
 			"tags":  []string{"n8n", "automation", "workflows"},
 			"panels": []map[string]interface{}{
 				{
-					"title":   "Workflow Executions",
-					"type":    "graph",
+					"title": "Workflow Executions",
+					"type":  "graph",
 					"targets": []map[string]interface{}{
 						{"expr": "rate(workflow_executions_total[5m])"},
 					},
 				},
 				{
-					"title":   "Failure Rate",
-					"type":    "singlestat",
+					"title": "Failure Rate",
+					"type":  "singlestat",
 					"targets": []map[string]interface{}{
 						{"expr": "rate(workflow_failures_total[5m]) / rate(workflow_executions_total[5m])"},
 					},
 				},
 				{
-					"title":   "Sync Operations",
-					"type":    "graph",
+					"title": "Sync Operations",
+					"type":  "graph",
 					"targets": []map[string]interface{}{
 						{"expr": "rate(sync_operations_total[5m])"},
 					},
