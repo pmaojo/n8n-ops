@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>n8n-ops TERMINAL v1.0</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000000;
+            color: #00ff00;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.2;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .terminal {
+            width: 100vw;
+            height: 100vh;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(0deg, #001100 0%, #000000 100%);
+        }
+        
+        .header {
+            border: 1px solid #00ff00;
+            padding: 4px;
+            margin-bottom: 8px;
+            background: #003300;
+        }
+        
+        .title {
+            text-align: center;
+            color: #00ffff;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #ffff00;
+            font-size: 10px;
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto 1fr;
+            gap: 8px;
+            flex: 1;
+        }
+        
+        .panel {
+            border: 1px solid #00ff00;
+            padding: 4px;
+            background: #001100;
+            overflow: hidden;
+        }
+        
+        .panel-title {
+            color: #00ffff;
+            font-weight: bold;
+            border-bottom: 1px solid #004400;
+            padding-bottom: 2px;
+            margin-bottom: 4px;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 4px;
+            font-size: 10px;
+        }
+        
+        .status-item {
+            padding: 2px;
+            border: 1px solid #004400;
+        }
+        
+        .status-ok { color: #00ff00; }
+        .status-warn { color: #ffff00; }
+        .status-error { color: #ff0000; }
+        .status-info { color: #00ffff; }
+        
+        .log-container {
+            grid-column: 1 / -1;
+            height: 100%;
+            overflow-y: auto;
+            font-size: 10px;
+        }
+        
+        .log-line {
+            padding: 1px 2px;
+            border-bottom: 1px solid #002200;
+        }
+        
+        .log-error { background: #330000; color: #ff6666; }
+        .log-warn { background: #332200; color: #ffff66; }
+        .log-info { background: #003300; color: #66ff66; }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            font-size: 10px;
+        }
+        
+        .metric {
+            padding: 2px;
+            border: 1px solid #004400;
+            text-align: center;
+        }
+        
+        .metric-value {
+            color: #00ffff;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .metric-label {
+            color: #888888;
+            font-size: 9px;
+        }
+        
+        .blink {
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+        
+        .cursor::after {
+            content: '█';
+            animation: blink 1s infinite;
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #000000;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #00ff00;
+            border: 1px solid #004400;
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <div class="header">
+            <div class="title">n8n-ops MONITORING TERMINAL v1.0.0</div>
+            <div class="subtitle">REAL-TIME WORKFLOW SURVEILLANCE SYSTEM - CLASSIFIED ACCESS LEVEL ALPHA</div>
+        </div>
+        
+        <div class="main-grid">
+            <!-- System Status Panel -->
+            <div class="panel">
+                <div class="panel-title">██ SYSTEM STATUS</div>
+                <div class="status-grid">
+                    <div class="status-item status-ok">CLI: ONLINE</div>
+                    <div class="status-item status-error">MOCK: OFFLINE</div>
+                    <div class="status-item status-ok">DAEMON: ACTIVE</div>
+                    <div class="status-item status-warn">MONITOR: DETECTING</div>
+                    <div class="status-item status-info">GITLAB: CONNECTED</div>
+                    <div class="status-item status-ok">SENTRY: READY</div>
+                </div>
+            </div>
+            
+            <!-- Environment Status -->
+            <div class="panel">
+                <div class="panel-title">██ ENVIRONMENT STATUS</div>
+                <div class="status-grid">
+                    <div class="status-item status-ok">DEV: localhost:5678</div>
+                    <div class="status-item status-info">STAGING: STANDBY</div>
+                    <div class="status-item status-warn">PROD: MONITORED</div>
+                    <div class="status-item status-error">MOCK: PORT CONFLICT</div>
+                    <div class="status-item status-ok">API: AUTHENTICATED</div>
+                    <div class="status-item status-info">BACKUP: ENABLED</div>
+                </div>
+            </div>
+            
+            <!-- Live Metrics -->
+            <div class="panel">
+                <div class="panel-title">██ LIVE METRICS</div>
+                <div class="metrics-grid">
+                    <div class="metric">
+                        <div class="metric-value" id="failure-count">47</div>
+                        <div class="metric-label">FAILURES</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="issues-created">12</div>
+                        <div class="metric-label">ISSUES</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="uptime">11:20</div>
+                        <div class="metric-label">UPTIME</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="workflows">3</div>
+                        <div class="metric-label">WORKFLOWS</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="threshold">2</div>
+                        <div class="metric-label">THRESHOLD</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="interval">10s</div>
+                        <div class="metric-label">INTERVAL</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Workflow Status -->
+            <div class="panel">
+                <div class="panel-title">██ WORKFLOW STATUS</div>
+                <div id="workflow-status">
+                    <div class="status-item status-ok">1001: Customer_Onboarding [HEALTHY]</div>
+                    <div class="status-item status-error blink">1002: Payment_Processing [CRITICAL - 47 FAILURES]</div>
+                    <div class="status-item status-ok">1003: Order_Fulfillment [HEALTHY]</div>
+                    <div class="log-line log-error">ALERT: Workflow 1002 exceeding failure threshold</div>
+                    <div class="log-line log-info">RECOVERY: Workflow 1001 back online</div>
+                    <div class="log-line log-warn">MONITOR: Stripe API rate limit detected</div>
+                </div>
+            </div>
+            
+            <!-- Live Log Stream -->
+            <div class="panel log-container">
+                <div class="panel-title">██ LIVE EVENT STREAM</div>
+                <div id="log-stream">
+                    <div class="log-line log-error">[02:15:42] FAILURE: Workflow 1002 execution failed - API rate limit exceeded</div>
+                    <div class="log-line log-warn">[02:15:42] COUNTER: Failure count for 1002 = 2</div>
+                    <div class="log-line log-error">[02:15:42] ISSUE: Creating GitLab issue for workflow 1002</div>
+                    <div class="log-line log-info">[02:15:42] GITLAB: Issue #12345 created successfully</div>
+                    <div class="log-line log-error">[02:15:52] FAILURE: Workflow 1002 execution failed - API rate limit exceeded</div>
+                    <div class="log-line log-warn">[02:15:52] COUNTER: Failure count for 1002 = 1 (reset after issue)</div>
+                    <div class="log-line log-error">[02:16:02] FAILURE: Workflow 1002 execution failed - API rate limit exceeded</div>
+                    <div class="log-line log-warn">[02:16:02] COUNTER: Failure count for 1002 = 2</div>
+                    <div class="log-line log-error">[02:16:02] ISSUE: Creating GitLab issue for workflow 1002</div>
+                    <div class="log-line log-info">[02:16:02] GITLAB: Issue #12346 created successfully</div>
+                    <div class="log-line log-error">[02:16:12] FAILURE: Workflow 1002 execution failed - API rate limit exceeded</div>
+                    <div class="log-line log-warn">[02:16:12] COUNTER: Failure count for 1002 = 1 (reset after issue)</div>
+                    <div class="log-line log-info">[02:16:15] DAEMON: File system watcher active</div>
+                    <div class="log-line log-info">[02:16:15] SYNC: 3 workflows synchronized</div>
+                    <div class="log-line log-warn">[02:16:18] SENTRY: Error context captured</div>
+                    <div class="log-line log-info">[02:16:18] GRAFANA: Metrics updated</div>
+                    <div class="log-line log-error">[02:16:22] FAILURE: Workflow 1002 execution failed - API rate limit exceeded</div>
+                    <div class="log-line log-warn">[02:16:22] COUNTER: Failure count for 1002 = 2</div>
+                    <div class="log-line log-error">[02:16:22] ISSUE: Creating GitLab issue for workflow 1002</div>
+                    <div class="log-line log-info">[02:16:22] GITLAB: Issue #12347 created successfully</div>
+                    <div class="log-line log-info">[02:16:25] OBSERVABILITY: All systems operational</div>
+                    <div class="log-line log-warn">[02:16:28] THRESHOLD: Monitoring active - 2 consecutive failures trigger alert</div>
+                    <div class="log-line log-error cursor">[02:16:32] FAILURE: Workflow 1002 execution failed - API rate limit exceeded</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let failureCount = 47;
+        let issueCount = 12;
+        let startTime = Date.now();
+        
+        function updateMetrics() {
+            // Update failure count
+            if (Math.random() > 0.7) {
+                failureCount++;
+                document.getElementById('failure-count').textContent = failureCount;
+            }
+            
+            // Update issues
+            if (Math.random() > 0.9) {
+                issueCount++;
+                document.getElementById('issues-created').textContent = issueCount;
+            }
+            
+            // Update uptime
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('uptime').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        function addLogEntry() {
+            const logTypes = [
+                { class: 'log-error', prefix: 'FAILURE', messages: [
+                    'Workflow 1002 execution failed - API rate limit exceeded',
+                    'Workflow 1002 execution failed - Database connection timeout',
+                    'Workflow 1001 execution failed - Authentication error'
+                ]},
+                { class: 'log-warn', prefix: 'COUNTER', messages: [
+                    'Failure count for 1002 = 2',
+                    'Failure count for 1001 = 1', 
+                    'Threshold reached for workflow 1002'
+                ]},
+                { class: 'log-info', prefix: 'GITLAB', messages: [
+                    'Issue #' + (12348 + Math.floor(Math.random() * 100)) + ' created successfully',
+                    'Issue updated with recovery information',
+                    'Connection to GitLab API stable'
+                ]},
+                { class: 'log-info', prefix: 'DAEMON', messages: [
+                    'File system watcher active',
+                    'Workflow sync completed',
+                    'Backup created successfully'
+                ]}
+            ];
+            
+            const logStream = document.getElementById('log-stream');
+            const currentTime = new Date().toLocaleTimeString('en-US', { hour12: false });
+            const logType = logTypes[Math.floor(Math.random() * logTypes.length)];
+            const message = logType.messages[Math.floor(Math.random() * logType.messages.length)];
+            
+            // Remove cursor from last line
+            const lastLine = logStream.lastElementChild;
+            if (lastLine) {
+                lastLine.classList.remove('cursor');
+            }
+            
+            // Add new log line
+            const newLine = document.createElement('div');
+            newLine.className = `log-line ${logType.class} cursor`;
+            newLine.textContent = `[${currentTime}] ${logType.prefix}: ${message}`;
+            logStream.appendChild(newLine);
+            
+            // Keep only last 20 lines
+            while (logStream.children.length > 22) { // 20 + title + buffer
+                if (logStream.children[1]) { // Skip title
+                    logStream.removeChild(logStream.children[1]);
+                }
+            }
+            
+            // Auto scroll
+            logStream.scrollTop = logStream.scrollHeight;
+        }
+        
+        // Update every 2 seconds
+        setInterval(updateMetrics, 2000);
+        
+        // Add log entry every 3-8 seconds
+        setInterval(addLogEntry, 3000 + Math.random() * 5000);
+        
+        // Initial call
+        updateMetrics();
+        
+        // Simulate real-time data from workflow logs
+        setInterval(() => {
+            if (Math.random() > 0.8) {
+                const workflowStatus = document.getElementById('workflow-status');
+                const critical = workflowStatus.querySelector('.blink');
+                if (critical) {
+                    const currentCount = critical.textContent.match(/(\d+) FAILURES/);
+                    if (currentCount) {
+                        const newCount = parseInt(currentCount[1]) + 1;
+                        critical.textContent = critical.textContent.replace(/\d+ FAILURES/, newCount + ' FAILURES');
+                    }
+                }
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
