@@ -42,7 +42,7 @@ func TestGetUncommittedWorkflowSummary_NoChanges(t *testing.T) {
 	runGit(t, repo, "add", ".")
 	runGit(t, repo, "commit", "-m", "init")
 
-	checker := NewGitStatusChecker(repo)
+	checker := NewGitStatusChecker(repo, NewExecutor(repo))
 	summary, err := checker.GetUncommittedWorkflowSummary()
 	require.NoError(t, err)
 	assert.Equal(t, "All workflows are committed", summary)
@@ -59,7 +59,7 @@ func TestGetStatusDetectsWorkflowChanges(t *testing.T) {
 	writeWorkflow(t, repo, "workflows/development/original.json", `{"name":"changed"}`)
 	writeWorkflow(t, repo, "workflows/development/new.json", `{"name":"new"}`)
 
-	checker := NewGitStatusChecker(repo)
+	checker := NewGitStatusChecker(repo, NewExecutor(repo))
 	status, err := checker.GetStatus()
 	require.NoError(t, err)
 
