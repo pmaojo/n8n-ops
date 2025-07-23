@@ -16,7 +16,12 @@ import (
 var tuiCmd = &cobra.Command{
 	Use:   "tui",
 	Short: "Interactive terminal dashboard",
-	RunE:  runTUI,
+	Long: `Interactive terminal dashboard.
+
+Controls:
+  Up/Down - move selection
+  Q       - quit`,
+	RunE: runTUI,
 }
 
 func init() {
