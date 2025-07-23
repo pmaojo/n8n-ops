@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -108,19 +109,28 @@ func runSync(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Initialize n8n client (with demo mode support)
-	n8nClient := client.NewN8nClientWithDemo(apiURL, apiKey, demoMode)
+	// Initialize n8n client (with optional demo mode)
+	var n8nClient client.Client
+	var err error
+	if demoMode {
+		n8nClient = client.NewDemoN8nClient()
+	} else {
+		n8nClient, err = client.New(apiURL, apiKey, nil)
+		if err != nil {
+			return fmt.Errorf("failed to create n8n client: %w", err)
+		}
+	}
 
 	// Test connection
 	fmt.Printf("🔗 Connecting to n8n API: %s\n", apiURL)
-	err := n8nClient.TestConnection()
-	if err != nil {
+	ctx := context.Background()
+	if err := n8nClient.HealthCheck(ctx); err != nil {
 		return fmt.Errorf("failed to connect to n8n API: %w", err)
 	}
 	fmt.Printf("✅ Connected successfully\n")
 
 	// Get workflows from n8n
-	workflows, err := n8nClient.GetWorkflows()
+	workflows, err := n8nClient.GetWorkflows(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to fetch workflows: %w", err)
 	}
@@ -141,8 +151,6 @@ func runSync(cmd *cobra.Command, args []string) error {
 			"active":      workflow.Active,
 			"nodes":       workflow.Nodes,
 			"connections": workflow.Connections,
-			"createdAt":   workflow.CreatedAt,
-			"updatedAt":   workflow.UpdatedAt,
 			"versionId":   workflow.VersionId,
 			"tags":        workflow.Tags,
 			"syncMetadata": map[string]interface{}{

@@ -11,6 +11,8 @@ type Workflow struct {
 	ID          string                 `json:"id,omitempty"`
 	Name        string                 `json:"name" validate:"required"`
 	Active      bool                   `json:"active"`
+	CreatedAt   time.Time              `json:"createdAt,omitempty"`
+	UpdatedAt   time.Time              `json:"updatedAt,omitempty"`
 	Nodes       []Node                 `json:"nodes" validate:"required,min=1"`
 	Connections map[string]interface{} `json:"connections,omitempty"`
 	Settings    map[string]interface{} `json:"settings,omitempty"`

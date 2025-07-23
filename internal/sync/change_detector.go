@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/pmaojo/n8n-ops/internal/client"
+	"github.com/pmaojo/n8n-ops/internal/workflow"
 )
 
 type ChangeType string
@@ -46,7 +46,7 @@ func NewChangeDetector(workflowsDir, environment string) *ChangeDetector {
 }
 
 // DetectChanges compares local workflows with remote n8n workflows
-func (cd *ChangeDetector) DetectChanges(remoteWorkflows []client.Workflow) ([]Change, error) {
+func (cd *ChangeDetector) DetectChanges(remoteWorkflows []workflow.Workflow) ([]Change, error) {
 	var changes []Change
 
 	// Get local workflows
@@ -57,7 +57,7 @@ func (cd *ChangeDetector) DetectChanges(remoteWorkflows []client.Workflow) ([]Ch
 
 	// Create maps for easier comparison
 	localMap := make(map[string]LocalWorkflow)
-	remoteMap := make(map[string]client.Workflow)
+	remoteMap := make(map[string]workflow.Workflow)
 
 	for _, lw := range localWorkflows {
 		localMap[lw.ID] = lw
@@ -147,7 +147,7 @@ func (cd *ChangeDetector) parseLocalWorkflow(filePath string, info os.FileInfo) 
 		return LocalWorkflow{}, err
 	}
 
-	var workflow client.Workflow
+	var workflow workflow.Workflow
 	if err := json.Unmarshal(content, &workflow); err != nil {
 		return LocalWorkflow{}, err
 	}
@@ -165,7 +165,7 @@ func (cd *ChangeDetector) parseLocalWorkflow(filePath string, info os.FileInfo) 
 	}, nil
 }
 
-func (cd *ChangeDetector) compareWorkflows(local LocalWorkflow, remote client.Workflow) Change {
+func (cd *ChangeDetector) compareWorkflows(local LocalWorkflow, remote workflow.Workflow) Change {
 	// Calculate remote workflow hash
 	remoteContent, err := json.Marshal(remote)
 	if err != nil {

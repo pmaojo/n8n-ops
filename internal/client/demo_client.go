@@ -1,16 +1,19 @@
 package client
 
 import (
+	"context"
 	"fmt"
 	"time"
+
+	"github.com/pmaojo/n8n-ops/internal/workflow"
 )
 
 type DemoN8nClient struct {
-	workflows map[string]*Workflow
+	workflows map[string]*workflow.Workflow
 }
 
 func NewDemoN8nClient() *DemoN8nClient {
-	workflows := map[string]*Workflow{
+	workflows := map[string]*workflow.Workflow{
 		"1001": {
 			ID:        "1001",
 			Name:      "Customer Onboarding",
@@ -18,14 +21,17 @@ func NewDemoN8nClient() *DemoN8nClient {
 			CreatedAt: time.Now().Add(-72 * time.Hour),
 			UpdatedAt: time.Now().Add(-30 * time.Minute),
 			VersionId: 15,
-			Tags:      []string{"customer", "onboarding"},
-			Nodes: []WorkflowNode{
+			Tags: []workflow.Tag{
+				{Name: "customer"},
+				{Name: "onboarding"},
+			},
+			Nodes: []workflow.Node{
 				{
 					ID:          "webhook-1001",
 					Name:        "Webhook",
 					Type:        "n8n-nodes-base.webhook",
 					TypeVersion: 1.0,
-					Position:    []int{250, 300},
+					Position:    []float64{250, 300},
 					Parameters: map[string]interface{}{
 						"httpMethod": "POST",
 						"path":       "customer-signup",
@@ -36,7 +42,7 @@ func NewDemoN8nClient() *DemoN8nClient {
 					Name:        "Send Welcome Email",
 					Type:        "n8n-nodes-base.emailSend",
 					TypeVersion: 1.0,
-					Position:    []int{450, 300},
+					Position:    []float64{450, 300},
 					Parameters: map[string]interface{}{
 						"subject": "Welcome to our platform!",
 						"toEmail": "={{ $json.email }}",
@@ -64,14 +70,17 @@ func NewDemoN8nClient() *DemoN8nClient {
 			CreatedAt: time.Now().Add(-48 * time.Hour),
 			UpdatedAt: time.Now().Add(-10 * time.Minute),
 			VersionId: 23,
-			Tags:      []string{"payment", "stripe"},
-			Nodes: []WorkflowNode{
+			Tags: []workflow.Tag{
+				{Name: "payment"},
+				{Name: "stripe"},
+			},
+			Nodes: []workflow.Node{
 				{
 					ID:          "webhook-1002",
 					Name:        "Payment Webhook",
 					Type:        "n8n-nodes-base.webhook",
 					TypeVersion: 1.0,
-					Position:    []int{250, 200},
+					Position:    []float64{250, 200},
 					Parameters: map[string]interface{}{
 						"httpMethod": "POST",
 						"path":       "stripe-webhook",
@@ -82,7 +91,7 @@ func NewDemoN8nClient() *DemoN8nClient {
 					Name:        "Process Payment",
 					Type:        "n8n-nodes-base.stripe",
 					TypeVersion: 1.0,
-					Position:    []int{450, 200},
+					Position:    []float64{450, 200},
 					Parameters: map[string]interface{}{
 						"operation": "charge",
 					},
@@ -109,14 +118,17 @@ func NewDemoN8nClient() *DemoN8nClient {
 			CreatedAt: time.Now().Add(-24 * time.Hour),
 			UpdatedAt: time.Now().Add(-5 * time.Minute),
 			VersionId: 8,
-			Tags:      []string{"orders", "fulfillment"},
-			Nodes: []WorkflowNode{
+			Tags: []workflow.Tag{
+				{Name: "orders"},
+				{Name: "fulfillment"},
+			},
+			Nodes: []workflow.Node{
 				{
 					ID:          "trigger-1003",
 					Name:        "Order Created",
 					Type:        "n8n-nodes-base.httpRequest",
 					TypeVersion: 1.0,
-					Position:    []int{250, 400},
+					Position:    []float64{250, 400},
 					Parameters: map[string]interface{}{
 						"method": "POST",
 					},
@@ -140,71 +152,81 @@ func (c *DemoN8nClient) GetMe() (*User, error) {
 	}, nil
 }
 
-func (c *DemoN8nClient) GetWorkflows() ([]Workflow, error) {
-	var workflows []Workflow
-	for _, workflow := range c.workflows {
-		workflows = append(workflows, *workflow)
+func (c *DemoN8nClient) HealthCheck(ctx context.Context) error {
+	return nil
+}
+
+func (c *DemoN8nClient) GetWorkflows(ctx context.Context) ([]*workflow.Workflow, error) {
+	var workflows []*workflow.Workflow
+	for _, wf := range c.workflows {
+		copy := *wf
+		workflows = append(workflows, &copy)
 	}
 	return workflows, nil
 }
 
-func (c *DemoN8nClient) GetWorkflow(id string) (*Workflow, error) {
-	workflow, exists := c.workflows[id]
+func (c *DemoN8nClient) GetWorkflow(ctx context.Context, id string) (*workflow.Workflow, error) {
+	wf, exists := c.workflows[id]
 	if !exists {
 		return nil, fmt.Errorf("workflow not found: %s", id)
 	}
-	return workflow, nil
+	copy := *wf
+	return &copy, nil
 }
 
-func (c *DemoN8nClient) CreateWorkflow(workflow *Workflow) (*Workflow, error) {
+func (c *DemoN8nClient) CreateWorkflow(ctx context.Context, wf *workflow.Workflow) (*workflow.Workflow, error) {
 	newID := fmt.Sprintf("demo-%d", len(c.workflows)+1001)
-	workflow.ID = newID
-	workflow.CreatedAt = time.Now()
-	workflow.UpdatedAt = time.Now()
-	workflow.VersionId = 1
+	wf.ID = newID
+	wf.CreatedAt = time.Now()
+	wf.UpdatedAt = time.Now()
+	wf.VersionId = 1
 
-	c.workflows[newID] = workflow
-	return workflow, nil
+	c.workflows[newID] = wf
+	copy := *wf
+	return &copy, nil
 }
 
-func (c *DemoN8nClient) UpdateWorkflow(id string, workflow *Workflow) (*Workflow, error) {
+func (c *DemoN8nClient) UpdateWorkflow(ctx context.Context, id string, wf *workflow.Workflow) (*workflow.Workflow, error) {
 	existing, exists := c.workflows[id]
 	if !exists {
 		return nil, fmt.Errorf("workflow not found: %s", id)
 	}
 
-	workflow.ID = id
-	workflow.CreatedAt = existing.CreatedAt
-	workflow.UpdatedAt = time.Now()
-	workflow.VersionId = existing.VersionId + 1
+	wf.ID = id
+	wf.CreatedAt = existing.CreatedAt
+	wf.UpdatedAt = time.Now()
+	wf.VersionId = existing.VersionId + 1
 
-	c.workflows[id] = workflow
-	return workflow, nil
+	c.workflows[id] = wf
+	copy := *wf
+	return &copy, nil
 }
 
-func (c *DemoN8nClient) ActivateWorkflow(id string) (*Workflow, error) {
-	workflow, exists := c.workflows[id]
+func (c *DemoN8nClient) ActivateWorkflow(ctx context.Context, id string) (*workflow.Workflow, error) {
+	wf, exists := c.workflows[id]
 	if !exists {
 		return nil, fmt.Errorf("workflow not found: %s", id)
 	}
 
-	workflow.Active = true
-	workflow.UpdatedAt = time.Now()
-	return workflow, nil
+	wf.Active = true
+	wf.UpdatedAt = time.Now()
+	copy := *wf
+	return &copy, nil
 }
 
-func (c *DemoN8nClient) DeactivateWorkflow(id string) (*Workflow, error) {
-	workflow, exists := c.workflows[id]
+func (c *DemoN8nClient) DeactivateWorkflow(ctx context.Context, id string) (*workflow.Workflow, error) {
+	wf, exists := c.workflows[id]
 	if !exists {
 		return nil, fmt.Errorf("workflow not found: %s", id)
 	}
 
-	workflow.Active = false
-	workflow.UpdatedAt = time.Now()
-	return workflow, nil
+	wf.Active = false
+	wf.UpdatedAt = time.Now()
+	copy := *wf
+	return &copy, nil
 }
 
-func (c *DemoN8nClient) DeleteWorkflow(id string) error {
+func (c *DemoN8nClient) DeleteWorkflow(ctx context.Context, id string) error {
 	if _, exists := c.workflows[id]; !exists {
 		return fmt.Errorf("workflow not found: %s", id)
 	}
@@ -216,4 +238,16 @@ func (c *DemoN8nClient) DeleteWorkflow(id string) error {
 func (c *DemoN8nClient) TestConnection() error {
 	// Demo client always passes connection test
 	return nil
+}
+
+func (c *DemoN8nClient) ExecuteWorkflow(ctx context.Context, id string) (*workflow.ExecutionResult, error) {
+	return nil, fmt.Errorf("ExecuteWorkflow not implemented in demo client")
+}
+
+func (c *DemoN8nClient) GetExecution(ctx context.Context, id string) (*workflow.ExecutionResult, error) {
+	return nil, fmt.Errorf("GetExecution not implemented in demo client")
+}
+
+func (c *DemoN8nClient) GetExecutions(ctx context.Context, workflowID string, status string, limit int) ([]*workflow.ExecutionResult, error) {
+	return nil, fmt.Errorf("GetExecutions not implemented in demo client")
 }
