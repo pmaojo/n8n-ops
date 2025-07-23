@@ -42,7 +42,7 @@ func OnboardingComplete() string {
 
 // OnboardingVisualGuide returns a visual guide for the n8n-ops workflow
 func OnboardingVisualGuide() string {
-	return fmt.Sprintf(`%s%s
+        return fmt.Sprintf(`%s%s
 ┌─────────────────────────────────────────────────────────────────────┐
 │                                                                     │
 │  %sn8n-ops Workflow:%s                                                │
@@ -54,8 +54,9 @@ func OnboardingVisualGuide() string {
 │  %s└───────────┘         └───────────┘         └───────────┘%s         │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘%s
-`, Cyan, Bold, 
+`, Cyan, Bold,
    Yellow, Cyan,
+   Blue, Cyan,
    Blue, Cyan,
    Blue, Cyan,
    Blue, Cyan,
@@ -65,7 +66,7 @@ func OnboardingVisualGuide() string {
 
 // OnboardingAPIKeyInstructions returns instructions for getting API keys
 func OnboardingAPIKeyInstructions() string {
-	return fmt.Sprintf(`%s%s
+        return fmt.Sprintf(`%s%s
 ┌─────────────────────────────────────────────────────────────────────┐
 │                                                                     │
 │  %sHow to get your n8n API keys:%s                                    │
@@ -77,8 +78,9 @@ func OnboardingAPIKeyInstructions() string {
 │  %s5. Copy the generated key (starts with "n8n_api_")%s               │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘%s
-`, Yellow, Bold, 
+`, Yellow, Bold,
    Green, Yellow,
+   Cyan, Yellow,
    Cyan, Yellow,
    Cyan, Yellow,
    Cyan, Yellow,
@@ -88,7 +90,7 @@ func OnboardingAPIKeyInstructions() string {
 
 // OnboardingNextSteps returns a guide for next steps after onboarding
 func OnboardingNextSteps() string {
-	return fmt.Sprintf(`%s%s
+        return fmt.Sprintf(`%s%s
 ┌─────────────────────────────────────────────────────────────────────┐
 │                                                                     │
 │  %sNext Steps:%s                                                      │
@@ -106,7 +108,7 @@ func OnboardingNextSteps() string {
 │     %sgit add workflows/ && git commit -m "update workflows"%s         │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘%s
-`, Green, Bold, 
+`, Green, Bold,
    Yellow, Green,
    Cyan, Green,
    Cyan, Green,
@@ -115,5 +117,6 @@ func OnboardingNextSteps() string {
    Dim, Green,
    Cyan, Green,
    Dim, Green,
+   Cyan, Green,
    Reset)
 }
