@@ -27,21 +27,23 @@ type BackupInfo struct {
 	WorkflowName string    `json:"workflowName"`
 }
 
-func runDaemonMode() {
+// runDaemonMode starts the file watcher and synchronizes workflow changes with n8n.
+// The environment parameter determines which environment configuration to use.
+func runDaemonMode(env string) {
 	logEntry := logger.WithFields(logrus.Fields{
 		"command": "daemon",
-		"env":     environment,
+		"env":     env,
 	})
 
 	logEntry.Info("Starting n8n-ops daemon mode")
 
 	if language == "es" {
-		fmt.Printf("🤖 Modo daemon iniciado - %s\n", environment)
-		fmt.Printf("👁️ Monitoreando archivos JSON en ./workflows/%s/\n", environment)
+		fmt.Printf("🤖 Modo daemon iniciado - %s\n", env)
+		fmt.Printf("👁️ Monitoreando archivos JSON en ./workflows/%s/\n", env)
 		fmt.Printf("💾 Creando backups automáticos antes de actualizar workflows\n")
 	} else {
-		fmt.Printf("🤖 Daemon mode started - %s environment\n", environment)
-		fmt.Printf("👁️ Watching JSON files in ./workflows/%s/\n", environment)
+		fmt.Printf("🤖 Daemon mode started - %s environment\n", env)
+		fmt.Printf("👁️ Watching JSON files in ./workflows/%s/\n", env)
 		fmt.Printf("💾 Creating automatic backups before updating workflows\n")
 	}
 
@@ -51,7 +53,7 @@ func runDaemonMode() {
 		n8nURL = "http://localhost:3001"
 	} else {
 		// Use environment-specific URL from config
-		switch environment {
+		switch env {
 		case "development":
 			n8nURL = "http://localhost:5678"
 		case "staging":
@@ -84,7 +86,7 @@ func runDaemonMode() {
 	defer watcher.Close()
 
 	// Watch directory
-	watchDir := fmt.Sprintf("./workflows/%s", environment)
+	watchDir := fmt.Sprintf("./workflows/%s", env)
 	if err := setupDirectoryWatch(watcher, watchDir); err != nil {
 		logEntry.WithError(err).Fatal("Failed to setup directory watch")
 		return
@@ -104,7 +106,7 @@ func runDaemonMode() {
 			if !ok {
 				return
 			}
-			handleFileEvent(event, n8nClient, logEntry)
+			handleFileEvent(event, n8nClient, logEntry, env)
 
 		case err, ok := <-watcher.Errors:
 			if !ok {
@@ -133,7 +135,9 @@ func setupDirectoryWatch(watcher *fsnotify.Watcher, watchDir string) error {
 	return nil
 }
 
-func handleFileEvent(event fsnotify.Event, n8nClient client.Client, logEntry *logrus.Entry) {
+// handleFileEvent processes file system events produced by the watcher.
+// The env parameter specifies the target environment for workflow operations.
+func handleFileEvent(event fsnotify.Event, n8nClient client.Client, logEntry *logrus.Entry, env string) {
 	// Only process JSON files
 	if !strings.HasSuffix(event.Name, ".json") {
 		return
@@ -148,13 +152,15 @@ func handleFileEvent(event fsnotify.Event, n8nClient client.Client, logEntry *lo
 	fmt.Printf("📝 File changed: %s\n", filepath.Base(event.Name))
 
 	// Process the file change
-	if err := processJSONFileChange(event.Name, n8nClient, logEntry); err != nil {
+	if err := processJSONFileChange(event.Name, n8nClient, logEntry, env); err != nil {
 		logEntry.WithError(err).Error("Failed to process JSON file change")
 		fmt.Printf("❌ Error processing %s: %v\n", filepath.Base(event.Name), err)
 	}
 }
 
-func processJSONFileChange(filePath string, n8nClient client.Client, logEntry *logrus.Entry) error {
+// processJSONFileChange reads the modified JSON workflow and updates it in n8n.
+// The env parameter is used when creating backups of the current workflow.
+func processJSONFileChange(filePath string, n8nClient client.Client, logEntry *logrus.Entry, env string) error {
 	// Read and parse JSON file
 	workflowData, err := readJSONWorkflow(filePath)
 	if err != nil {
@@ -168,7 +174,7 @@ func processJSONFileChange(filePath string, n8nClient client.Client, logEntry *l
 	}
 
 	// Create backup of existing workflow
-	if err := createWorkflowBackup(workflowID, n8nClient); err != nil {
+	if err := createWorkflowBackup(workflowID, n8nClient, env); err != nil {
 		logEntry.WithError(err).Warn("Failed to create workflow backup")
 	}
 
@@ -196,7 +202,9 @@ func readJSONWorkflow(filePath string) (map[string]interface{}, error) {
 	return workflow, nil
 }
 
-func createWorkflowBackup(workflowID string, n8nClient client.Client) error {
+// createWorkflowBackup saves the current workflow state from n8n to a file.
+// The env parameter determines the backup directory and metadata information.
+func createWorkflowBackup(workflowID string, n8nClient client.Client, env string) error {
 	// Get current workflow from n8n
 	ctx := context.Background()
 	currentWorkflow, err := n8nClient.GetWorkflow(ctx, workflowID)
@@ -206,7 +214,7 @@ func createWorkflowBackup(workflowID string, n8nClient client.Client) error {
 	}
 
 	// Create backups directory
-	backupDir := fmt.Sprintf("./backups/%s", environment)
+	backupDir := fmt.Sprintf("./backups/%s", env)
 	if err := os.MkdirAll(backupDir, 0755); err != nil {
 		return err
 	}
@@ -227,10 +235,10 @@ func createWorkflowBackup(workflowID string, n8nClient client.Client) error {
 
 	// Save backup metadata
 	backupInfo := BackupInfo{
-		OriginalFile: fmt.Sprintf("./workflows/%s/%s.json", environment, workflowID),
+		OriginalFile: fmt.Sprintf("./workflows/%s/%s.json", env, workflowID),
 		BackupFile:   backupFile,
 		Timestamp:    time.Now(),
-		Environment:  environment,
+		Environment:  env,
 		WorkflowID:   workflowID,
 		WorkflowName: currentWorkflow.Name,
 	}
