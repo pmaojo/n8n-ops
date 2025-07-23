@@ -8,6 +8,7 @@ import (
 	"github.com/pmaojo/n8n-ops/internal/config"
 	"github.com/pmaojo/n8n-ops/internal/i18n"
 	"github.com/pmaojo/n8n-ops/internal/utils"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -20,7 +21,8 @@ var (
 	showVersion bool
 	demoMode    bool
 	daemonMode  bool
-	logger      = utils.NewLogger()
+	cfg         *config.Config
+	logger      *logrus.Logger
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -124,14 +126,15 @@ func initConfig() {
 	}
 
 	// Initialize configuration
-	cfg, err := config.NewConfig()
+	var err error
+	cfg, err = config.NewConfig()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error initializing config: %v\n", err)
 		os.Exit(1)
 	}
 
 	// Setup logger
-	logger := utils.NewLogger()
+	logger = utils.NewLogger()
 	loggingConfig := cfg.GetLoggingConfig()
 	utils.SetLogLevel(logger, loggingConfig.Level)
 	utils.SetLogFormat(logger, loggingConfig.Format)

@@ -87,42 +87,13 @@ func NewConfig() (*Config, error) {
 	return config, nil
 }
 
-// GetConfig is a placeholder and should be removed or refactored
-// to not depend on a global instance.
-var globalConfig *Config
-
-func GetConfig() *Config {
-	if globalConfig == nil {
-		// This is not ideal, but serves as a temporary bridge
-		// during refactoring.
-		cfg, err := NewConfig()
-		if err != nil {
-			fmt.Printf("Error initializing config: %v", err)
-			// Return an empty config to avoid nil pointer panics
-			return &Config{}
-		}
-		globalConfig = cfg
-	}
-	return globalConfig
-}
-
-// InitConfig initializes the global configuration instance using values loaded
-// in Viper. It allows tests and other packages to easily set up configuration
-// without relying on command initialization logic.
-func InitConfig() error {
-	cfg, err := NewConfig()
-	if err != nil {
-		return err
-	}
-	globalConfig = cfg
-	return nil
-}
-
 // GetEnvironmentConfig returns configuration for a specific environment
-func GetEnvironmentConfig(environment string) (*EnvironmentConfig, error) {
-	config := GetConfig()
+func (c *Config) GetEnvironmentConfig(environment string) (*EnvironmentConfig, error) {
+	if c == nil {
+		return nil, fmt.Errorf("nil config provided")
+	}
 
-	envConfig, exists := config.Environments[environment]
+	envConfig, exists := c.Environments[environment]
 	if !exists {
 		return nil, fmt.Errorf("environment '%s' not found in configuration", environment)
 	}
@@ -139,28 +110,28 @@ func GetEnvironmentConfig(environment string) (*EnvironmentConfig, error) {
 }
 
 // GetDefaultEnvironment returns the default environment name
-func GetDefaultEnvironment() string {
-	config := GetConfig()
-	if config.Defaults.Environment != "" {
-		return config.Defaults.Environment
+func (c *Config) GetDefaultEnvironment() string {
+	if c == nil {
+		return "development"
+	}
+	if c.Defaults.Environment != "" {
+		return c.Defaults.Environment
 	}
 	return "development"
 }
 
 // IsStrictValidation returns whether strict validation is enabled
-func IsStrictValidation() bool {
-	config := GetConfig()
-	return config.Defaults.Validation.Strict
+func (c *Config) IsStrictValidation() bool {
+	if c == nil {
+		return false
+	}
+	return c.Defaults.Validation.Strict
 }
 
 // IsAutoBackupEnabled returns whether auto backup is enabled for sync
-func IsAutoBackupEnabled() bool {
-	config := GetConfig()
-	return config.Defaults.Sync.AutoBackup
-}
-
-// GetLoggingConfig returns the logging configuration
-func GetLoggingConfig() *LoggingConfig {
-	config := GetConfig()
-	return config.GetLoggingConfig()
+func (c *Config) IsAutoBackupEnabled() bool {
+	if c == nil {
+		return false
+	}
+	return c.Defaults.Sync.AutoBackup
 }
