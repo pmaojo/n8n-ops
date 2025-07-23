@@ -1,4 +1,4 @@
-package termui
+package bubbleui
 
 // WorkflowStatus describes minimal workflow data for display.
 type WorkflowStatus struct {
