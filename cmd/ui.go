@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"time"
 
+	"github.com/pmaojo/n8n-ops/internal/dashboard"
 	"github.com/spf13/cobra"
 )
 
@@ -50,70 +50,15 @@ func runUI(cmd *cobra.Command, args []string) error {
 		fmt.Printf("🌐 Opening browser...\n")
 	}
 
-	// Create a simple UI server
-	return startUIServer(environment, uiPort)
+	// Create a simple UI server using the demo dashboard service
+	svc := dashboard.NewDemoService()
+	return startUIServer(environment, uiPort, svc)
 }
 
-func startUIServer(env string, port int) error {
-	// Check for real uncommitted workflow changes (remove demo simulation)
-	hasRealUncommittedChanges := false
-	realUncommittedWorkflows := []struct {
-		WorkflowName string
-		Status       string
-		Environment  string
-		FilePath     string
-	}{}
-
-	// For now, show clean state until real Git integration is implemented
-	// In production, this would check actual Git status
-
-	// Simple dashboard data
-	dashboardData := struct {
-		Environment string
-		Status      string
-		Workflows   []struct {
-			Name   string
-			Status string
-			Branch string
-		}
-		Credentials []struct {
-			Name   string
-			Status string
-		}
-		LastSync              time.Time
-		HasUncommittedChanges bool
-		UncommittedWorkflows  []struct {
-			WorkflowName string
-			Status       string
-			Environment  string
-			FilePath     string
-		}
-		GitBranch string
-	}{
-		Environment:           env,
-		Status:                "connected",
-		LastSync:              time.Now(),
-		HasUncommittedChanges: hasRealUncommittedChanges,
-		UncommittedWorkflows:  realUncommittedWorkflows,
-		GitBranch:             "main", // Default branch
-		Workflows: []struct {
-			Name   string
-			Status string
-			Branch string
-		}{
-			{"Customer Onboarding Process", "active", "main"},
-			{"Email Notification System", "active", "main"},
-			{"Payment Processing", "active", "main"},
-		},
-		Credentials: []struct {
-			Name   string
-			Status string
-		}{
-			{"N8N API", "missing"},
-			{"SMTP", "missing"},
-			{"PostgreSQL", "missing"},
-			{"Stripe", "missing"},
-		},
+func startUIServer(env string, port int, svc dashboard.Service) error {
+	dashboardData, err := svc.GetDashboardData(env)
+	if err != nil {
+		return err
 	}
 
 	// Simple HTML template
