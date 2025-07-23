@@ -2,13 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
-	"runtime"
 	"time"
 
 	"github.com/pmaojo/n8n-ops/internal/ascii"
 	"github.com/pmaojo/n8n-ops/internal/tutorial"
+	"github.com/pmaojo/n8n-ops/internal/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -63,7 +61,7 @@ func runQuickstart(cmd *cobra.Command, args []string) {
 }
 
 func showQuickstartIntro() {
-	clearTerminal()
+	utils.ClearTerminalScreen()
 	fmt.Print(ascii.MatrixEffect())
 	time.Sleep(500 * time.Millisecond)
 
@@ -115,7 +113,7 @@ func showQuickstartGuide() {
 	}
 
 	for i, step := range steps {
-		clearTerminal()
+		utils.ClearTerminalScreen()
 		fmt.Println(ascii.Banner("quickstart"))
 		fmt.Printf("\n%s%s%sSTEP %d/%d: %s%s\n\n", ascii.Bold, ascii.Yellow, ascii.Underline, i+1, len(steps), step.title, ascii.Reset)
 
@@ -131,7 +129,7 @@ func showQuickstartGuide() {
 	}
 
 	// Show completion message
-	clearTerminal()
+	utils.ClearTerminalScreen()
 	fmt.Println(ascii.Banner("quickstart"))
 	fmt.Printf("\n%s%s✨ QUICKSTART COMPLETE! ✨%s\n\n", ascii.Bold, ascii.Yellow, ascii.Reset)
 	fmt.Printf("%sYou now know the basics of using n8n-ops!%s\n\n", ascii.Cyan, ascii.Reset)
@@ -285,15 +283,4 @@ func showGitStep() {
 	fmt.Printf("%s%sBranch Commands:%s\n\n", ascii.Bold, ascii.Cyan, ascii.Reset)
 	fmt.Printf("- %sn8n-ops branch current%s: Show current branch and mapped environment\n", ascii.Yellow, ascii.Reset)
 	fmt.Printf("- %sn8n-ops branch list%s: List all branch-to-environment mappings\n", ascii.Yellow, ascii.Reset)
-}
-
-func clearTerminal() {
-	var cmd *exec.Cmd
-	if runtime.GOOS == "windows" {
-		cmd = exec.Command("cmd", "/c", "cls")
-	} else {
-		cmd = exec.Command("clear")
-	}
-	cmd.Stdout = os.Stdout
-	cmd.Run()
 }
