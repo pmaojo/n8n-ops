@@ -1,10 +1,10 @@
-modules = ["go"]
+modules = ["go", "golang"]
 
 [nix]
 channel = "stable-24_05"
 
 [workflows]
-runButton = "Go CLI Server"
+runButton = "Project"
 
 [[workflows.workflow]]
 name = "Project"
@@ -17,7 +17,19 @@ args = "Go CLI Server"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "CLI Test"
+args = "n8n-ops Version"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Mock n8n Server"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "n8n-ops Daemon Test"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Monitoring Demo"
 
 [[workflows.workflow]]
 name = "Go CLI Server"
@@ -28,12 +40,49 @@ task = "shell.exec"
 args = "go run main.go --help"
 
 [[workflows.workflow]]
-name = "CLI Test"
+name = "n8n-ops Version"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "./n8n-cli --help"
+args = "./n8n-ops version"
+
+[[workflows.workflow]]
+name = "Mock n8n Server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd mock-n8n-server && go run main.go"
+waitForPort = 3001
+
+[[workflows.workflow]]
+name = "n8n-ops Daemon Test"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "go run main.go --daemon --demo --env development"
+
+[[workflows.workflow]]
+name = "Monitoring Demo"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "go run main.go monitor --demo --env development --check-interval 10s --failure-threshold 2"
 
 [deployment]
 deploymentTarget = "cloudrun"
+
+[[ports]]
+localPort = 3001
+externalPort = 80
+
+[[ports]]
+localPort = 5000
+externalPort = 5000
+
+[[ports]]
+localPort = 5001
+externalPort = 3000

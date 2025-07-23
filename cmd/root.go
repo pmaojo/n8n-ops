@@ -6,10 +6,10 @@ import (
 
         "github.com/spf13/cobra"
         "github.com/spf13/viper"
-        "github.com/n8n-workflows/cli/internal/ascii"
-        "github.com/n8n-workflows/cli/internal/config"
-        "github.com/n8n-workflows/cli/internal/i18n"
-        "github.com/n8n-workflows/cli/internal/utils"
+        "github.com/n8n-workflows/n8n-ops/internal/ascii"
+        "github.com/n8n-workflows/n8n-ops/internal/config"
+        "github.com/n8n-workflows/n8n-ops/internal/i18n"
+        "github.com/n8n-workflows/n8n-ops/internal/utils"
 )
 
 var (
@@ -17,24 +17,40 @@ var (
         environment string
         verbose     bool
         language    string
+        showVersion bool
+        demoMode    bool
+        daemonMode  bool
         logger      = utils.NewLogger()
 )
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-        Use:   "n8n-cli",
-        Short: "A collaborative n8n workflow management CLI tool",
+        Use:   "n8n-ops",
+        Short: "A collaborative n8n workflow operations tool",
         Long: ascii.N8nLogo() + `
 
-n8n-cli is a command-line tool for managing n8n workflows across multiple environments.
+n8n-ops is a command-line tool for managing n8n workflows across multiple environments.
 It supports syncing workflows from n8n instances, deploying local changes, validating workflow files,
 and integrating with GitLab CI/CD pipelines for collaborative development.
 
 Examples:
-  n8n-cli sync --env development    # Sync workflows from development environment
-  n8n-cli deploy --env staging      # Deploy workflows to staging environment  
-  n8n-cli validate ./workflows/     # Validate workflow files
-  n8n-cli rollback --env production # Rollback to previous deployment`,
+  n8n-ops sync --env development    # Sync workflows from development environment
+  n8n-ops deploy --env staging      # Deploy workflows to staging environment  
+  n8n-ops validate ./workflows/     # Validate workflow files
+  n8n-ops rollback --env production # Rollback to previous deployment`,
+        Run: func(cmd *cobra.Command, args []string) {
+                if showVersion {
+                        fmt.Printf("n8n-ops version %s\n", Version)
+                        fmt.Printf("Git commit: %s\n", GitCommit)
+                        fmt.Printf("Build date: %s\n", BuildDate)
+                        return
+                }
+                if daemonMode {
+                        runDaemonMode()
+                        return
+                }
+                cmd.Help()
+        },
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -42,19 +58,30 @@ func Execute() error {
         return rootCmd.Execute()
 }
 
+// Version information - will be set at build time
+var (
+        Version   = "1.0.0"
+        GitCommit = "unknown"
+        BuildDate = "unknown"
+)
+
 func init() {
         cobra.OnInitialize(initConfig)
 
         // Global flags
-        rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.n8n-cli.yaml)")
+        rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.n8n-ops.yaml)")
         rootCmd.PersistentFlags().StringVarP(&environment, "env", "e", "development", "target environment (development, staging, production)")
         rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
         rootCmd.PersistentFlags().StringVarP(&language, "lang", "l", "en", "language (en, es)")
+        rootCmd.PersistentFlags().BoolVar(&demoMode, "demo", false, "use demo mode with mock n8n server")
+        rootCmd.PersistentFlags().BoolVarP(&daemonMode, "daemon", "d", false, "run in daemon mode - watch for YAML changes and auto-sync to n8n")
+        rootCmd.Flags().BoolVar(&showVersion, "version", false, "show version information")
 
         // Bind flags to viper
         viper.BindPFlag("environment", rootCmd.PersistentFlags().Lookup("env"))
         viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
         viper.BindPFlag("language", rootCmd.PersistentFlags().Lookup("lang"))
+        viper.BindPFlag("daemon", rootCmd.PersistentFlags().Lookup("daemon"))
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -73,11 +100,11 @@ func initConfig() {
                 home, err := os.UserHomeDir()
                 cobra.CheckErr(err)
 
-                // Search config in home directory with name ".n8n-cli" (without extension).
+                // Search config in home directory with name ".n8n-ops" (without extension).
                 viper.AddConfigPath(home)
                 viper.AddConfigPath(".")
                 viper.SetConfigType("yaml")
-                viper.SetConfigName(".n8n-cli")
+                viper.SetConfigName(".n8n-ops")
         }
 
         viper.AutomaticEnv() // read in environment variables that match

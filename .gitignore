@@ -1,0 +1,63 @@
+# n8n CLI Binary
+n8n-ops
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Environment files - NEVER commit API keys!
+.env
+.env.local
+.env.*.local
+
+# CLI local data
+.n8n-ops/
+!.n8n-ops/.gitkeep
+
+# Go build artifacts
+*.test
+*.out
+vendor/
+dist/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+debug.log
+
+# Temporary files
+tmp/
+temp/
+
+# GitLab CI artifacts
+.gitlab-ci-local/
+
+# Configuration backups
+*.yaml.bak
+*.yml.bak
+
+# Release artifacts
+release-notes.md
+dist/
+
+# Test coverage
+coverage.out
+coverage.html
+
+# OS-specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

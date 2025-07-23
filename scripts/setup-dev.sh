@@ -29,28 +29,28 @@ echo -e "${BLUE}📁 Creating project directories...${NC}"
 mkdir -p workflows/{development,staging,production}
 mkdir -p scripts
 mkdir -p config/templates
-mkdir -p .n8n-cli/logs
+mkdir -p .n8n-ops/logs
 mkdir -p tests
 
 # Build the CLI
 echo -e "${BLUE}🔨 Building n8n CLI...${NC}"
 go mod tidy
-go build -o n8n-cli main.go
-chmod +x n8n-cli
+go build -o n8n-ops main.go
+chmod +x n8n-ops
 
 # Test the build
 echo -e "${BLUE}🧪 Testing CLI build...${NC}"
-./n8n-cli --help > /dev/null
+./n8n-ops --help > /dev/null
 echo -e "${GREEN}✅ CLI built successfully${NC}"
 
 # Copy example configuration
-if [ ! -f ~/.n8n-cli.yaml ]; then
+if [ ! -f ~/.n8n-ops.yaml ]; then
     echo -e "${BLUE}⚙️ Creating example configuration...${NC}"
-    cp config.example.yaml ~/.n8n-cli.yaml
-    echo -e "${YELLOW}📝 Configuration created at ~/.n8n-cli.yaml${NC}"
+    cp config.example.yaml ~/.n8n-ops.yaml
+    echo -e "${YELLOW}📝 Configuration created at ~/.n8n-ops.yaml${NC}"
     echo -e "${YELLOW}   Please edit this file with your n8n instance URLs and API keys${NC}"
 else
-    echo -e "${YELLOW}📝 Configuration already exists at ~/.n8n-cli.yaml${NC}"
+    echo -e "${YELLOW}📝 Configuration already exists at ~/.n8n-ops.yaml${NC}"
 fi
 
 # Create environment file template
@@ -83,7 +83,7 @@ if [ ! -f .gitignore ]; then
     echo -e "${BLUE}📝 Creating .gitignore...${NC}"
     cat > .gitignore << 'EOF'
 # Binaries
-n8n-cli
+n8n-ops
 *.exe
 *.dll
 *.so
@@ -94,8 +94,8 @@ n8n-cli
 .env.local
 
 # CLI data
-.n8n-cli/
-!.n8n-cli/.gitkeep
+.n8n-ops/
+!.n8n-ops/.gitkeep
 
 # Go
 *.test
@@ -177,17 +177,17 @@ echo ""
 echo -e "${GREEN}✅ Development environment setup complete!${NC}"
 echo ""
 echo -e "${BLUE}Next steps:${NC}"
-echo -e "1. ${YELLOW}Edit ~/.n8n-cli.yaml with your n8n instance details${NC}"
+echo -e "1. ${YELLOW}Edit ~/.n8n-ops.yaml with your n8n instance details${NC}"
 echo -e "2. ${YELLOW}Fill in .env file with your API keys${NC}"
 echo -e "3. ${YELLOW}Source your environment: source .env${NC}"
-echo -e "4. ${YELLOW}Test the CLI: ./n8n-cli welcome${NC}"
-echo -e "5. ${YELLOW}Validate example workflow: ./n8n-cli validate workflows/development/${NC}"
+echo -e "4. ${YELLOW}Test the CLI: ./n8n-ops welcome${NC}"
+echo -e "5. ${YELLOW}Validate example workflow: ./n8n-ops validate workflows/development/${NC}"
 echo ""
 echo -e "${BLUE}Useful commands:${NC}"
-echo -e "• ${GREEN}./n8n-cli --help${NC} - Show all available commands"
-echo -e "• ${GREEN}./n8n-cli welcome${NC} - Display welcome screen"
-echo -e "• ${GREEN}./n8n-cli --lang es welcome${NC} - Spanish welcome screen"
-echo -e "• ${GREEN}./n8n-cli validate ./workflows/${NC} - Validate all workflows"
-echo -e "• ${GREEN}./n8n-cli sync --env development${NC} - Sync from n8n instance"
+echo -e "• ${GREEN}./n8n-ops --help${NC} - Show all available commands"
+echo -e "• ${GREEN}./n8n-ops welcome${NC} - Display welcome screen"
+echo -e "• ${GREEN}./n8n-ops --lang es welcome${NC} - Spanish welcome screen"
+echo -e "• ${GREEN}./n8n-ops validate ./workflows/${NC} - Validate all workflows"
+echo -e "• ${GREEN}./n8n-ops sync --env development${NC} - Sync from n8n instance"
 echo ""
 echo -e "${GREEN}🎉 Happy workflow automation!${NC}"

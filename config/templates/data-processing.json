@@ -1,0 +1,161 @@
+{
+  "name": "Data Processing Template",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "{{WEBHOOK_PATH}}",
+        "responseMode": "onReceived"
+      },
+      "id": "webhook-input",
+      "name": "Data Input",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process incoming data\nconst data = $input.item.json;\n\n// Add processing timestamp\ndata.processed_at = new Date().toISOString();\n\n// Transform data as needed\ndata.processed_data = {\n  original: data,\n  environment: '{{ENVIRONMENT}}',\n  version: '1.0.0'\n};\n\nreturn { json: data };"
+      },
+      "id": "code-processor",
+      "name": "Process Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "processed"
+            },
+            {
+              "name": "workflow_id",
+              "value": "{{WORKFLOW_ID}}"
+            }
+          ],
+          "number": [
+            {
+              "name": "processing_time_ms",
+              "value": "={{ Date.now() - new Date($node['Data Input'].json.timestamp).getTime() }}"
+            }
+          ]
+        }
+      },
+      "id": "set-metadata",
+      "name": "Add Metadata",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "operation": "equal",
+              "value2": "processed"
+            }
+          ]
+        }
+      },
+      "id": "condition-check",
+      "name": "Validation Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [800, 300]
+    },
+    {
+      "parameters": {
+        "message": "Data processing completed successfully"
+      },
+      "id": "success-output",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1000, 200]
+    },
+    {
+      "parameters": {
+        "message": "Data processing failed validation"
+      },
+      "id": "error-output",
+      "name": "Error Response",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1000, 400]
+    }
+  ],
+  "connections": {
+    "Data Input": {
+      "main": [
+        [
+          {
+            "node": "Process Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Data": {
+      "main": [
+        [
+          {
+            "node": "Add Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Metadata": {
+      "main": [
+        [
+          {
+            "node": "Validation Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validation Check": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "saveExecutionProgress": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "tags": ["template", "data-processing", "webhook"],
+  "meta": {
+    "templateVersion": "1.0.0",
+    "description": "Template for processing incoming data via webhook",
+    "variables": {
+      "WEBHOOK_PATH": "data-processor",
+      "ENVIRONMENT": "development", 
+      "WORKFLOW_ID": "data-processing-001"
+    }
+  }
+}

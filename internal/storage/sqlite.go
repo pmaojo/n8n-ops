@@ -44,7 +44,7 @@ type DeploymentRecord struct {
 
 // NewSQLiteDB creates a new SQLite database connection
 func NewSQLiteDB() (*SQLiteDB, error) {
-	db, err := sql.Open("sqlite3", ".n8n-cli.db")
+	db, err := sql.Open("sqlite3", ".n8n-ops.db")
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}

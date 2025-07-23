@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  n8n-ops:
+    build: 
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: n8n-ops
+    environment:
+      # n8n API Keys - set these in your environment or .env file
+      - N8N_DEV_API_KEY=${N8N_DEV_API_KEY}
+      - N8N_STAGING_API_KEY=${N8N_STAGING_API_KEY}
+      - N8N_PROD_API_KEY=${N8N_PROD_API_KEY}
+      
+      # n8n Instance URLs
+      - N8N_DEV_URL=${N8N_DEV_URL}
+      - N8N_STAGING_URL=${N8N_STAGING_URL}
+      - N8N_PROD_URL=${N8N_PROD_URL}
+      
+      # CLI Configuration
+      - N8N_CLI_LANG=${N8N_CLI_LANG:-en}
+    volumes:
+      # Mount local workflows directory
+      - ../workflows:/home/n8ncli/workflows
+      
+      # Mount local CLI data directory
+      - ../.n8n-ops:/home/n8ncli/.n8n-ops
+      
+      # Mount configuration file
+      - ~/.n8n-ops.yaml:/home/n8ncli/.n8n-ops.yaml:ro
+    working_dir: /home/n8ncli
+    command: welcome
+    
+  # Development service - interactive shell
+  n8n-ops-dev:
+    build: 
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: n8n-ops-dev
+    environment:
+      - N8N_DEV_API_KEY=${N8N_DEV_API_KEY}
+      - N8N_STAGING_API_KEY=${N8N_STAGING_API_KEY}
+      - N8N_PROD_API_KEY=${N8N_PROD_API_KEY}
+      - N8N_DEV_URL=${N8N_DEV_URL}
+      - N8N_STAGING_URL=${N8N_STAGING_URL}
+      - N8N_PROD_URL=${N8N_PROD_URL}
+      - N8N_CLI_LANG=${N8N_CLI_LANG:-en}
+    volumes:
+      - ../workflows:/home/n8ncli/workflows
+      - ../.n8n-ops:/home/n8ncli/.n8n-ops
+      - ~/.n8n-ops.yaml:/home/n8ncli/.n8n-ops.yaml:ro
+    working_dir: /home/n8ncli
+    stdin_open: true
+    tty: true
+    entrypoint: /bin/sh

@@ -1,0 +1,180 @@
+# GitLab CI/CD Configuration for n8n-ops Workflow Management
+# This pipeline compiles the CLI tool and manages workflow deployments across environments
+
+stages:
+  - build
+  - validate
+  - test
+  - deploy-dev
+  - deploy-staging
+  - deploy-production
+
+variables:
+  GO_VERSION: "1.19"
+  CLI_BINARY: "n8n-ops"
+
+# Build the CLI tool
+build-cli:
+  stage: build
+  image: golang:${GO_VERSION}
+  script:
+    - echo "Building n8n-ops tool..."
+    - go mod tidy
+    - go build -o ${CLI_BINARY} main.go
+    - chmod +x ${CLI_BINARY}
+    - ./${CLI_BINARY} --help
+  artifacts:
+    paths:
+      - ${CLI_BINARY}
+    expire_in: 1 hour
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH'
+
+# Validate all workflow files
+validate-workflows:
+  stage: validate
+  image: golang:${GO_VERSION}
+  dependencies:
+    - build-cli
+  script:
+    - echo "Validating workflow JSON files..."
+    - ./${CLI_BINARY} validate ./workflows/ --verbose
+    - echo "Validation completed successfully"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH'
+
+# Test CLI functionality
+test-cli-functions:
+  stage: test
+  image: golang:${GO_VERSION}
+  dependencies:
+    - build-cli
+  script:
+    - echo "Testing CLI basic functions..."
+    - ./${CLI_BINARY} welcome
+    - ./${CLI_BINARY} --lang es welcome
+    - ./${CLI_BINARY} version
+    - echo "CLI tests completed"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH'
+
+# Deploy to Development Environment
+deploy-development:
+  stage: deploy-dev
+  image: golang:${GO_VERSION}
+  dependencies:
+    - build-cli
+  before_script:
+    - echo "Configuring development environment..."
+    - export N8N_API_KEY="${N8N_DEV_API_KEY}"
+    - export N8N_URL="${N8N_DEV_URL}"
+  script:
+    - echo "Syncing workflows from development n8n instance..."
+    - ./${CLI_BINARY} sync --env development --verbose
+    - echo "Validating workflows before deployment..."
+    - ./${CLI_BINARY} validate ./workflows/development/
+    - echo "Running dry-run deployment..."
+    - ./${CLI_BINARY} deploy --env development --dry-run --verbose
+    - echo "Deploying workflows to development..."
+    - ./${CLI_BINARY} deploy --env development --verbose
+    - echo "Development deployment completed"
+  environment:
+    name: development
+    url: $N8N_DEV_URL
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+
+# Deploy to Staging Environment (Manual)
+deploy-staging:
+  stage: deploy-staging
+  image: golang:${GO_VERSION}
+  dependencies:
+    - build-cli
+  before_script:
+    - echo "Configuring staging environment..."
+    - export N8N_API_KEY="${N8N_STAGING_API_KEY}"
+    - export N8N_URL="${N8N_STAGING_URL}"
+  script:
+    - echo "Validating workflows for staging deployment..."
+    - ./${CLI_BINARY} validate ./workflows/staging/
+    - echo "Running staging dry-run..."
+    - ./${CLI_BINARY} deploy --env staging --dry-run --verbose
+    - echo "Deploying workflows to staging..."
+    - ./${CLI_BINARY} deploy --env staging --verbose
+    - echo "Staging deployment completed"
+  environment:
+    name: staging
+    url: $N8N_STAGING_URL
+  when: manual
+  allow_failure: false
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "staging"'
+
+# Deploy to Production Environment (Manual + Protected)
+deploy-production:
+  stage: deploy-production
+  image: golang:${GO_VERSION}
+  dependencies:
+    - build-cli
+  before_script:
+    - echo "Configuring production environment..."
+    - export N8N_API_KEY="${N8N_PROD_API_KEY}"
+    - export N8N_URL="${N8N_PROD_URL}"
+  script:
+    - echo "PRODUCTION DEPLOYMENT - Performing strict validation..."
+    - ./${CLI_BINARY} validate ./workflows/production/ --verbose
+    - echo "Running production dry-run with detailed output..."
+    - ./${CLI_BINARY} deploy --env production --dry-run --verbose
+    - echo "⚠️  DEPLOYING TO PRODUCTION ⚠️"
+    - echo "This will update live workflows. Ensure you have tested in staging."
+    - sleep 5
+    - ./${CLI_BINARY} deploy --env production --verbose
+    - echo "✅ Production deployment completed successfully"
+  environment:
+    name: production
+    url: $N8N_PROD_URL
+  when: manual
+  allow_failure: false
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# Rollback Production (Emergency use only)
+rollback-production:
+  stage: deploy-production
+  image: golang:${GO_VERSION}
+  dependencies:
+    - build-cli
+  before_script:
+    - export N8N_API_KEY="${N8N_PROD_API_KEY}"
+    - export N8N_URL="${N8N_PROD_URL}"
+  script:
+    - echo "⚠️  ROLLING BACK PRODUCTION ⚠️"
+    - ./${CLI_BINARY} rollback --env production --verbose
+    - echo "Rollback completed"
+  environment:
+    name: production
+    url: $N8N_PROD_URL
+  when: manual
+  allow_failure: false
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# Notification job (runs after deployments)
+notify-deployment:
+  stage: deploy-production
+  image: alpine:latest
+  dependencies:
+    - build-cli
+  script:
+    - echo "Sending deployment notification..."
+    - echo "Deployment completed for environment: $CI_ENVIRONMENT_NAME"
+    - echo "Branch: $CI_COMMIT_BRANCH"
+    - echo "Commit: $CI_COMMIT_SHA"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+    - if: '$CI_COMMIT_BRANCH == "staging"'  
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  when: on_success

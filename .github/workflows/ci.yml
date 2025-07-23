@@ -1,0 +1,108 @@
+# GitHub Actions CI/CD Pipeline for n8n CLI
+# This is a backup/alternative to GitLab CI/CD
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, staging, develop ]
+  pull_request:
+    branches: [ main, staging ]
+  release:
+    types: [ published ]
+
+env:
+  GO_VERSION: '1.19'
+
+jobs:
+  # Build and test the CLI
+  test:
+    name: Test and Validate
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+    
+    - name: Cache Go modules
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    
+    - name: Download dependencies
+      run: go mod download
+    
+    - name: Build CLI
+      run: go build -o n8n-ops main.go
+    
+    - name: Run tests
+      run: |
+        go test ./...
+        go vet ./...
+        
+    - name: Test CLI functionality
+      run: |
+        chmod +x n8n-ops
+        ./n8n-ops --help
+        ./n8n-ops welcome
+        ./n8n-ops --lang es welcome
+    
+    - name: Validate workflows
+      run: ./n8n-ops validate ./workflows/ || true
+
+  # Cross-platform builds
+  build:
+    name: Cross-platform Build
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+    
+    - name: Build cross-platform binaries
+      run: |
+        ./scripts/build.sh all
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: n8n-ops-binaries
+        path: dist/
+        retention-days: 30
+
+  # Create GitHub release
+  release:
+    name: Create Release
+    needs: [test, build]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: n8n-ops-binaries
+        path: dist/
+    
+    - name: Upload release assets
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          dist/n8n-ops-*
+          dist/checksums.txt
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

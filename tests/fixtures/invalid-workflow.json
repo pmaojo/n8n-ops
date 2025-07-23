@@ -1,0 +1,21 @@
+{
+  "name": "Test Invalid Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "test-webhook"
+        // Missing responseMode - this makes it invalid
+      },
+      "id": "test-webhook-1",
+      "name": "Test Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    }
+  ],
+  // Missing required connections field
+  "active": false,
+  "settings": {}
+  // Missing required tags field
+}

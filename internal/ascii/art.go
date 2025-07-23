@@ -5,7 +5,6 @@ import (
         "math/rand"
         "strings"
         "time"
-        "github.com/n8n-workflows/cli/internal/i18n"
 )
 
 // Colors for terminal output
@@ -51,8 +50,7 @@ P"Y8888P" Y8    888P"Y888    PI8 YY88888P    8P'"Y88    P"Y8888P"        P""Y88P
                               I8                                            8, ,8I  
                               I8                                             Y8P"   
 %s
-%s             %s⚡ %s ⚡%s
-%s`, Cyan, Bold, Reset, Yellow, i18n.T("workflow_automation"), Reset)
+             %s⚡ n8n Operations Tool ⚡%s`, Cyan, Bold, Reset, Yellow, Reset)
 }
 
 // SmallLogo returns a compact version for headers
@@ -75,7 +73,7 @@ func Banner(env string) string {
         envColor := getEnvironmentColor(env)
         return fmt.Sprintf(`%s%s
 ╔══════════════════════════════════════════════════════════════════════╗
-║  %s⚡ N8N WORKFLOW AUTOMATION CLI ⚡%s                                  ║
+║  %s⚡ N8N WORKFLOW OPERATIONS TOOL ⚡%s                                 ║
 ║                                                                      ║
 ║  %sEnvironment: %s%s%-12s%s                                            ║
 ║  %sMode: %sFuturistic Workflow Management%s                           ║
@@ -102,7 +100,7 @@ func ErrorMessage(err string) string {
     ║                                                                   ║
     ║  %s%s%s                                                             ║
     ╚═══════════════════════════════════════════════════════════════════╝%s
-`, Red, Bold, Yellow, Red, Dim, err, Reset)
+`, Red, Bold, Yellow, Red, Dim, err, Red, Reset)
 }
 
 // LoadingSpinner creates animated loading text
@@ -137,11 +135,15 @@ func WorkflowInfo(name, status, env string) string {
         
         return fmt.Sprintf(`%s
     ┌─────────────────────────────────────────────────────────────────┐
-    │  %sWorkflow: %s%s%-20s%s                                       │
-    │  %sStatus:   %s%s%-20s%s                                       │
-    │  %sEnv:      %s%s%-20s%s                                       │
+    │  %sWorkflow: %s%-20s%s                                         │
+    │  %sStatus:   %s%-20s%s                                         │
+    │  %sEnv:      %s%-20s%s                                         │
     └─────────────────────────────────────────────────────────────────┘%s
-`, Dim, Cyan, Bold, name, Dim, Cyan, statusColor, status, Dim, Cyan, envColor, env, Dim, Reset)
+`, Dim, 
+   Cyan, Bold, name, Dim, 
+   Cyan, statusColor, status, Dim, 
+   Cyan, envColor, env, Dim, 
+   Reset)
 }
 
 // CommandHelp creates futuristic help display
@@ -196,8 +198,11 @@ func getStatusColor(status string) string {
         }
 }
 
-// WelcomeScreen creates the main welcome display
+// WelcomeScreen creates the main futuristic welcome display
 func WelcomeScreen() string {
+        matrix := MatrixEffect()
+        logo := N8nLogo()
+        
         return fmt.Sprintf(`%s
 %s
 %s%s╔══════════════════════════════════════════════════════════════════════╗
@@ -211,6 +216,13 @@ func WelcomeScreen() string {
 ║                                                                      ║
 ╚══════════════════════════════════════════════════════════════════════╝%s
 
-%sType '%sn8n-cli --help%s' to begin your journey...%s
-`, MatrixEffect(), N8nLogo(), Purple, Bold, Cyan, Purple, Green, Purple, Blue, Purple, Yellow, Purple, Red, Purple, Reset, Dim, Cyan, Bold, Dim, Reset)
+%sType '%sn8n-ops --help%s' to begin your journey...%s
+`, matrix, logo, Purple, Bold, 
+   Cyan, Purple, 
+   Green, Purple, 
+   Blue, Purple, 
+   Yellow, Purple, 
+   Red, Purple, 
+   Reset, 
+   Dim, Cyan + Bold, Dim, Reset)
 }

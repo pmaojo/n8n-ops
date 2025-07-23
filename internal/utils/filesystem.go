@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/n8n-workflows/cli/internal/workflow"
+	"github.com/n8n-workflows/n8n-ops/internal/workflow"
 )
 
 // SanitizeFilename sanitizes a string to be safe for use as a filename
