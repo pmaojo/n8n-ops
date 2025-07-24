@@ -18,6 +18,7 @@ type Dashboard struct {
 	client  client.WorkflowReader
 	refresh time.Duration
 	logger  logrus.FieldLogger
+	theme   Theme
 	model   *model
 }
 
@@ -25,13 +26,13 @@ type Dashboard struct {
 var _ interface{ Run(context.Context) error } = (*Dashboard)(nil)
 
 // NewDashboard initializes a Bubble Tea dashboard.
-func NewDashboard(c client.WorkflowReader, refresh time.Duration, logger logrus.FieldLogger) *Dashboard {
-	return &Dashboard{client: c, refresh: refresh, logger: logger}
+func NewDashboard(c client.WorkflowReader, refresh time.Duration, logger logrus.FieldLogger, theme Theme) *Dashboard {
+	return &Dashboard{client: c, refresh: refresh, logger: logger, theme: theme}
 }
 
 // Run starts the Bubble Tea program.
 func (d *Dashboard) Run(ctx context.Context) error {
-	m := newModel(ctx, d.client, d.refresh, d.logger)
+	m := newModel(ctx, d.client, d.refresh, d.logger, d.theme)
 	d.model = &m
 	p := tea.NewProgram(d.model, tea.WithContext(ctx))
 	_, err := p.Run()
@@ -49,6 +50,7 @@ type model struct {
 	client  client.WorkflowReader
 	refresh time.Duration
 	logger  logrus.FieldLogger
+	theme   Theme
 	start   time.Time
 
 	width  int
@@ -65,12 +67,13 @@ type model struct {
 	workflowDetail *wf.Workflow
 }
 
-func newModel(ctx context.Context, c client.WorkflowReader, refresh time.Duration, logger logrus.FieldLogger) model {
+func newModel(ctx context.Context, c client.WorkflowReader, refresh time.Duration, logger logrus.FieldLogger, theme Theme) model {
 	return model{
 		ctx:           ctx,
 		client:        c,
 		refresh:       refresh,
 		logger:        logger,
+		theme:         theme,
 		start:         time.Now(),
 		selectedIndex: 0,
 		filterText:    "",
@@ -213,14 +216,14 @@ func (m model) View() string {
 		barWidth = 0
 	}
 	filled := int(float64(barWidth) * float64(percent) / 100)
-	gauge := lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
-	bar := lipgloss.NewStyle().Foreground(lipgloss.Color("10")).Render(strings.Repeat("█", filled)) + strings.Repeat(" ", barWidth-filled)
+	gauge := m.theme.GaugeStyle
+	bar := m.theme.GaugeBarStyle.Render(strings.Repeat("█", filled)) + strings.Repeat(" ", barWidth-filled)
 	gaugeStr := gauge.Render("[" + bar + "] " + label)
 
 	var b strings.Builder
-	highlight := lipgloss.NewStyle().Foreground(lipgloss.Color("0")).Background(lipgloss.Color("2"))
+	highlight := m.theme.HighlightStyle
 	for i, r := range rows {
-		status := statusStyle(r[2]).Render(r[2])
+		status := statusStyle(m.theme, r[2]).Render(r[2])
 		row := fmt.Sprintf("%-8s %-30s %-10s", r[0], r[1], status)
 		if i == m.selectedIndex+1 { // +1 because rows include header
 			row = highlight.Render(row)

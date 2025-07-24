@@ -28,19 +28,19 @@ func summaryGauge(active, total int) (percent int, label string) {
 	return
 }
 
-func statusColor(status string) lipgloss.Color {
+func statusColor(t Theme, status string) lipgloss.Color {
 	switch utils.StatusColor(status) {
 	case "green":
-		return lipgloss.Color("2")
+		return t.SuccessColor
 	case "red":
-		return lipgloss.Color("1")
+		return t.ErrorColor
 	case "yellow":
-		return lipgloss.Color("3")
+		return t.WarningColor
 	default:
-		return lipgloss.Color("7")
+		return t.NeutralColor
 	}
 }
 
-func statusStyle(status string) lipgloss.Style {
-	return lipgloss.NewStyle().Foreground(statusColor(status))
+func statusStyle(t Theme, status string) lipgloss.Style {
+	return lipgloss.NewStyle().Foreground(statusColor(t, status))
 }

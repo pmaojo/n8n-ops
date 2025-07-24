@@ -22,8 +22,8 @@ var dashboardFS embed.FS
 
 var dashboardCmd = &cobra.Command{
 	Use:   "dashboard",
-	Short: "Launch retro-futuristic monitoring dashboard",
-	Long: `Launch a retro-futuristic MS-DOS style dashboard that displays real-time
+	Short: "Launch monitoring dashboard",
+	Long: `Launch a web-based dashboard that displays real-time
 monitoring data from the n8n-ops system. Shows workflow failures, GitLab issues,
 system metrics, and live event streams in a terminal-style interface.
 
@@ -81,7 +81,7 @@ func runDashboard(cmd *cobra.Command, args []string) error {
 		"port":    dashboardPort,
 	})
 
-	logEntry.Info("Starting retro-futuristic dashboard")
+	logEntry.Info("Starting monitoring dashboard")
 
 	// ASCII Art Header
 	fmt.Print(`
