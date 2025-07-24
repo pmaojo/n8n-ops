@@ -11,6 +11,9 @@ import (
 	"github.com/pmaojo/n8n-ops/internal/workflow"
 )
 
+// ChangeType represents the classification of a detected change.
+// Values include "new", "modified", "deleted", "conflict" and "none".
+// It is exported to allow other packages to reason about change results.
 type ChangeType string
 
 const (
@@ -21,6 +24,9 @@ const (
 	ChangeTypeNone     ChangeType = "none"
 )
 
+// Change describes the difference between a local workflow file and the
+// corresponding workflow retrieved from n8n. The Direction field indicates
+// where the most recent change occurred.
 type Change struct {
 	Type       ChangeType `json:"type"`
 	WorkflowID string     `json:"workflowId"`
@@ -33,11 +39,17 @@ type Change struct {
 	Direction  string     `json:"direction"` // "to_n8n", "from_n8n", "bidirectional"
 }
 
+// ChangeDetector inspects workflow files and their remote counterparts in n8n
+// to determine if any differences exist. It contains the local workflows
+// directory and the target environment name used for reporting.
 type ChangeDetector struct {
 	WorkflowsDir string
 	Environment  string
 }
 
+// NewChangeDetector returns a ChangeDetector configured with the given
+// workflows directory and environment name. It performs no IO, allowing the
+// caller to manage dependencies explicitly.
 func NewChangeDetector(workflowsDir, environment string) *ChangeDetector {
 	return &ChangeDetector{
 		WorkflowsDir: workflowsDir,
@@ -106,6 +118,8 @@ func (cd *ChangeDetector) DetectChanges(remoteWorkflows []workflow.Workflow) ([]
 	return changes, nil
 }
 
+// LocalWorkflow represents a workflow loaded from the filesystem. The Content
+// field holds the raw JSON payload used to compute a deterministic hash.
 type LocalWorkflow struct {
 	ID         string    `json:"id"`
 	Name       string    `json:"name"`

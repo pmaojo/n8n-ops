@@ -10,12 +10,14 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/pmaojo/n8n-ops/internal/client"
 	wf "github.com/pmaojo/n8n-ops/internal/workflow"
+	"github.com/sirupsen/logrus"
 )
 
 // Dashboard implements a Bubble Tea terminal dashboard.
 type Dashboard struct {
 	client  client.WorkflowReader
 	refresh time.Duration
+	logger  logrus.FieldLogger
 	model   *model
 }
 
@@ -23,13 +25,13 @@ type Dashboard struct {
 var _ interface{ Run(context.Context) error } = (*Dashboard)(nil)
 
 // NewDashboard initializes a Bubble Tea dashboard.
-func NewDashboard(c client.WorkflowReader, refresh time.Duration) *Dashboard {
-	return &Dashboard{client: c, refresh: refresh}
+func NewDashboard(c client.WorkflowReader, refresh time.Duration, logger logrus.FieldLogger) *Dashboard {
+	return &Dashboard{client: c, refresh: refresh, logger: logger}
 }
 
 // Run starts the Bubble Tea program.
 func (d *Dashboard) Run(ctx context.Context) error {
-	m := newModel(ctx, d.client, d.refresh)
+	m := newModel(ctx, d.client, d.refresh, d.logger)
 	d.model = &m
 	p := tea.NewProgram(d.model, tea.WithContext(ctx))
 	_, err := p.Run()
@@ -46,6 +48,7 @@ type model struct {
 	ctx     context.Context
 	client  client.WorkflowReader
 	refresh time.Duration
+	logger  logrus.FieldLogger
 	start   time.Time
 
 	width  int
@@ -58,13 +61,16 @@ type model struct {
 	selectedIndex int
 	filterText    string
 	inputMode     bool
+	viewingDetails bool
+	workflowDetail *wf.Workflow
 }
 
-func newModel(ctx context.Context, c client.WorkflowReader, refresh time.Duration) model {
+func newModel(ctx context.Context, c client.WorkflowReader, refresh time.Duration, logger logrus.FieldLogger) model {
 	return model{
 		ctx:           ctx,
 		client:        c,
 		refresh:       refresh,
+		logger:        logger,
 		start:         time.Now(),
 		selectedIndex: 0,
 		filterText:    "",
@@ -116,6 +122,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.selectedIndex < len(filterWorkflows(m.workflows, m.filterText))-1 {
 				m.selectedIndex++
 			}
+		case "enter":
+			if m.viewingDetails {
+				m.viewingDetails = false
+				m.workflowDetail = nil
+			} else {
+				m.loadWorkflowDetail()
+			}
 		}
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -128,7 +141,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *model) refreshData() {
-	workflows := m.fetchWorkflows()
+	workflows, err := m.fetchWorkflows()
+	if err != nil {
+		if m.logger != nil {
+			m.logger.WithError(err).Error("failed to fetch workflows")
+		}
+		m.workflows = nil
+		m.metrics = Metrics{Uptime: time.Since(m.start).Truncate(time.Second).String()}
+		m.summary = Summary{}
+		m.events = []string{time.Now().Format("15:04:05") + " failed to fetch workflows"}
+		return
+	}
 	statuses := make([]WorkflowStatus, 0, len(workflows))
 	active := 0
 	for _, wf := range workflows {
@@ -148,23 +171,43 @@ func (m *model) refreshData() {
 	m.events = []string{time.Now().Format("15:04:05") + " dashboard refreshed"}
 }
 
-func (m *model) fetchWorkflows() []*wf.Workflow {
+func (m *model) fetchWorkflows() ([]*wf.Workflow, error) {
 	if m.client == nil {
-		return nil
+		return nil, nil
 	}
 	if m.ctx == nil {
 		m.ctx = context.Background()
 	}
 	workflows, err := m.client.GetWorkflows(m.ctx)
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return workflows
+	return workflows, nil
+}
+
+func (m *model) loadWorkflowDetail() {
+	if m.client == nil || m.selectedIndex >= len(m.workflows) {
+		return
+	}
+	if m.ctx == nil {
+		m.ctx = context.Background()
+	}
+	wfID := m.workflows[m.selectedIndex].ID
+	wf, err := m.client.GetWorkflow(m.ctx, wfID)
+	if err != nil {
+		return
+	}
+	m.workflowDetail = wf
+	m.viewingDetails = true
 }
 
 func (m model) View() string {
 	filtered := filterWorkflows(m.workflows, m.filterText)
 	rows := workflowTableRows(filtered)
+	if m.viewingDetails && m.workflowDetail != nil {
+		return renderDetailView(m.workflowDetail)
+	}
+	rows := workflowTableRows(m.workflows)
 	percent, label := summaryGauge(m.summary.Active, m.summary.Active+m.summary.Inactive)
 	barWidth := m.width - len(label) - 5
 	if barWidth < 0 {
@@ -178,7 +221,8 @@ func (m model) View() string {
 	var b strings.Builder
 	highlight := lipgloss.NewStyle().Foreground(lipgloss.Color("0")).Background(lipgloss.Color("2"))
 	for i, r := range rows {
-		row := fmt.Sprintf("%-8s %-30s %-10s", r[0], r[1], r[2])
+		status := statusStyle(r[2]).Render(r[2])
+		row := fmt.Sprintf("%-8s %-30s %-10s", r[0], r[1], status)
 		if i == m.selectedIndex+1 { // +1 because rows include header
 			row = highlight.Render(row)
 		}
@@ -214,5 +258,35 @@ func (m model) View() string {
 		strings.Join(m.events, "\n"),
 	)
 
+	return lipgloss.JoinVertical(lipgloss.Left, sections...)
+}
+
+func renderDetailView(wf *wf.Workflow) string {
+	highlight := lipgloss.NewStyle().Bold(true)
+	var sections []string
+	sections = append(sections, highlight.Render("Workflow Details"))
+	sections = append(sections,
+		fmt.Sprintf("ID: %s", wf.ID),
+		fmt.Sprintf("Name: %s", wf.Name),
+		fmt.Sprintf("Active: %t", wf.Active),
+		fmt.Sprintf("Last Updated: %s", wf.UpdatedAt.Format(time.RFC3339)),
+	)
+
+	if len(wf.Nodes) > 0 {
+		sections = append(sections, highlight.Render("Nodes"))
+		for _, n := range wf.Nodes {
+			sections = append(sections, fmt.Sprintf("- %s (%s)", n.Name, n.Type))
+		}
+	}
+
+	if len(wf.Tags) > 0 {
+		var tags []string
+		for _, t := range wf.Tags {
+			tags = append(tags, t.Name)
+		}
+		sections = append(sections, highlight.Render("Tags"), strings.Join(tags, ", "))
+	}
+
+	sections = append(sections, "", "Press Enter to return")
 	return lipgloss.JoinVertical(lipgloss.Left, sections...)
 }

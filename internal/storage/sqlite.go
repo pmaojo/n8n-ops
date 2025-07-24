@@ -11,10 +11,13 @@ import (
 
 var ErrRecordNotFound = errors.New("record not found")
 
+// SQLiteDB wraps a sql.DB connection used for persisting workflow and
+// deployment metadata. It exposes helper functions for CRUD operations.
 type SQLiteDB struct {
 	db *sql.DB
 }
 
+// WorkflowRecord stores metadata about a workflow on disk or in n8n.
 type WorkflowRecord struct {
 	ID          string    `db:"id"`
 	Name        string    `db:"name"`
@@ -28,6 +31,7 @@ type WorkflowRecord struct {
 	UpdatedAt   time.Time `db:"updated_at"`
 }
 
+// DeploymentRecord tracks the state of a deployment process.
 type DeploymentRecord struct {
 	ID            string    `db:"id"`
 	Environment   string    `db:"environment"`
