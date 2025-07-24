@@ -165,7 +165,7 @@ func (fd *FailureDetector) createFailureIssue(ctx context.Context, workflowID st
 		"issueURL":   issue.WebURL,
 	}).Info("Created failure issue for workflow")
 
-	fmt.Printf("🚨 Issue created for workflow failure: %s\n", issue.WebURL)
+	fd.logger.Infof("🚨 Issue created for workflow failure: %s", issue.WebURL)
 
 	return nil
 }
@@ -201,7 +201,7 @@ func (fd *FailureDetector) handleWorkflowRecovery(ctx context.Context, workflowI
 	}
 
 	if len(openIssues) > 0 {
-		fmt.Printf("✅ Workflow %s recovered - updated %d issues\n", workflowID, len(openIssues))
+		fd.logger.Infof("✅ Workflow %s recovered - updated %d issues", workflowID, len(openIssues))
 	}
 
 	return nil
