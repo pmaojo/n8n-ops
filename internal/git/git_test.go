@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGitRepository(t *testing.T) {
@@ -111,5 +113,32 @@ func TestFileTracking(t *testing.T) {
 		if file == ".env" || file == "node_modules/" {
 			// These should not be tracked
 		}
+	}
+}
+
+func TestGetEnvironmentFromBranch(t *testing.T) {
+	cases := map[string]string{
+		"develop":   "development",
+		"feature/x": "development",
+		"staging":   "staging",
+		"stage":     "staging",
+		"main":      "production",
+		"master":    "production",
+		"prod":      "production",
+	}
+	for branch, expect := range cases {
+		assert.Equal(t, expect, GetEnvironmentFromBranch(branch))
+	}
+}
+
+func TestGetBranchFromEnvironment(t *testing.T) {
+	cases := map[string]string{
+		"development": "develop",
+		"staging":     "staging",
+		"production":  "main",
+		"other":       "develop",
+	}
+	for env, expect := range cases {
+		assert.Equal(t, expect, GetBranchFromEnvironment(env))
 	}
 }
