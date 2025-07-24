@@ -2,16 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/pmaojo/n8n-ops/internal/observability"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
-
-// getEnvVar helper function
-func getEnvVar(key string) string {
-	return os.Getenv(key)
-}
 
 var (
 	sentryDSN     string
@@ -51,14 +46,16 @@ var setupObservabilityCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("🔧 Setting up observability integrations...")
 
+		cfg := loadObservabilityConfig(viper.GetViper())
+
 		// Setup Sentry
 		if enableSentry {
-			if sentryDSN == "" {
+			if cfg.SentryDSN == "" {
 				return fmt.Errorf("sentry DSN is required")
 			}
 
 			sentryConfig := observability.SentryConfig{
-				DSN:         sentryDSN,
+				DSN:         cfg.SentryDSN,
 				Environment: environment,
 				Release:     "1.0.0",
 				SampleRate:  1.0,
@@ -74,14 +71,14 @@ var setupObservabilityCmd = &cobra.Command{
 
 		// Setup Grafana
 		if enableGrafana {
-			if grafanaURL == "" || grafanaAPIKey == "" {
+			if cfg.GrafanaURL == "" || cfg.GrafanaAPIKey == "" {
 				return fmt.Errorf("grafana URL and API key are required")
 			}
 
 			grafanaConfig := observability.GrafanaConfig{
-				URL:       grafanaURL,
-				APIKey:    grafanaAPIKey,
-				OrgID:     grafanaOrgID,
+				URL:       cfg.GrafanaURL,
+				APIKey:    cfg.GrafanaAPIKey,
+				OrgID:     cfg.GrafanaOrgID,
 				Dashboard: "n8n-ops-monitoring",
 			}
 
@@ -108,10 +105,12 @@ var testConnectionCmd = &cobra.Command{
 
 		success := true
 
+		cfg := loadObservabilityConfig(viper.GetViper())
+
 		// Test Sentry
-		if enableSentry && sentryDSN != "" {
+		if enableSentry && cfg.SentryDSN != "" {
 			sentryConfig := observability.SentryConfig{
-				DSN:         sentryDSN,
+				DSN:         cfg.SentryDSN,
 				Environment: "test",
 				Release:     "test",
 				SampleRate:  0.1,
@@ -128,11 +127,11 @@ var testConnectionCmd = &cobra.Command{
 		}
 
 		// Test Grafana
-		if enableGrafana && grafanaURL != "" && grafanaAPIKey != "" {
+		if enableGrafana && cfg.GrafanaURL != "" && cfg.GrafanaAPIKey != "" {
 			grafanaConfig := observability.GrafanaConfig{
-				URL:    grafanaURL,
-				APIKey: grafanaAPIKey,
-				OrgID:  grafanaOrgID,
+				URL:    cfg.GrafanaURL,
+				APIKey: cfg.GrafanaAPIKey,
+				OrgID:  cfg.GrafanaOrgID,
 			}
 
 			grafana := observability.NewGrafanaIntegration(grafanaConfig, logger)
@@ -161,16 +160,17 @@ var createDashboardCmd = &cobra.Command{
 	Short: "Create default Grafana dashboard",
 	Long:  `Create a pre-configured Grafana dashboard for n8n-ops monitoring.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if grafanaURL == "" || grafanaAPIKey == "" {
+		cfg := loadObservabilityConfig(viper.GetViper())
+		if cfg.GrafanaURL == "" || cfg.GrafanaAPIKey == "" {
 			return fmt.Errorf("grafana URL and API key are required")
 		}
 
 		fmt.Println("📊 Creating Grafana dashboard...")
 
 		grafanaConfig := observability.GrafanaConfig{
-			URL:       grafanaURL,
-			APIKey:    grafanaAPIKey,
-			OrgID:     grafanaOrgID,
+			URL:       cfg.GrafanaURL,
+			APIKey:    cfg.GrafanaAPIKey,
+			OrgID:     cfg.GrafanaOrgID,
 			Dashboard: "n8n-ops-monitoring",
 		}
 
@@ -184,7 +184,7 @@ var createDashboardCmd = &cobra.Command{
 		}
 
 		fmt.Println("✅ Grafana dashboard created successfully!")
-		fmt.Printf("📈 Access at: %s/d/n8n-ops-monitoring\n", grafanaURL)
+		fmt.Printf("📈 Access at: %s/d/n8n-ops-monitoring\n", cfg.GrafanaURL)
 
 		return nil
 	},
@@ -208,14 +208,14 @@ func init() {
 	observabilityCmd.PersistentFlags().StringVar(&grafanaAPIKey, "grafana-api-key", "", "Grafana API key")
 	observabilityCmd.PersistentFlags().IntVar(&grafanaOrgID, "grafana-org-id", 1, "Grafana organization ID")
 
-	// Environment variable support (manual lookup)
-	if sentryDSN == "" {
-		sentryDSN = getEnvVar("SENTRY_DSN")
-	}
-	if grafanaURL == "" {
-		grafanaURL = getEnvVar("GRAFANA_URL")
-	}
-	if grafanaAPIKey == "" {
-		grafanaAPIKey = getEnvVar("GRAFANA_API_KEY")
-	}
+	// Bind flags and environment variables
+	viper.BindPFlag("sentry_dsn", observabilityCmd.PersistentFlags().Lookup("sentry-dsn"))
+	viper.BindPFlag("grafana_url", observabilityCmd.PersistentFlags().Lookup("grafana-url"))
+	viper.BindPFlag("grafana_api_key", observabilityCmd.PersistentFlags().Lookup("grafana-api-key"))
+	viper.BindPFlag("grafana_org_id", observabilityCmd.PersistentFlags().Lookup("grafana-org-id"))
+
+	viper.BindEnv("sentry_dsn", "SENTRY_DSN")
+	viper.BindEnv("grafana_url", "GRAFANA_URL")
+	viper.BindEnv("grafana_api_key", "GRAFANA_API_KEY")
+	viper.BindEnv("grafana_org_id", "GRAFANA_ORG_ID")
 }
