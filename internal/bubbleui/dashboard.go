@@ -56,6 +56,9 @@ type model struct {
 	events        []string
 	summary       Summary
 	selectedIndex int
+
+	viewingDetails bool
+	workflowDetail *wf.Workflow
 }
 
 func newModel(ctx context.Context, c client.WorkflowReader, refresh time.Duration) model {
@@ -85,6 +88,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "down":
 			if m.selectedIndex < len(m.workflows)-1 {
 				m.selectedIndex++
+			}
+		case "enter":
+			if m.viewingDetails {
+				m.viewingDetails = false
+				m.workflowDetail = nil
+			} else {
+				m.loadWorkflowDetail()
 			}
 		}
 	case tea.WindowSizeMsg:
@@ -132,7 +142,26 @@ func (m *model) fetchWorkflows() []*wf.Workflow {
 	return workflows
 }
 
+func (m *model) loadWorkflowDetail() {
+	if m.client == nil || m.selectedIndex >= len(m.workflows) {
+		return
+	}
+	if m.ctx == nil {
+		m.ctx = context.Background()
+	}
+	wfID := m.workflows[m.selectedIndex].ID
+	wf, err := m.client.GetWorkflow(m.ctx, wfID)
+	if err != nil {
+		return
+	}
+	m.workflowDetail = wf
+	m.viewingDetails = true
+}
+
 func (m model) View() string {
+	if m.viewingDetails && m.workflowDetail != nil {
+		return renderDetailView(m.workflowDetail)
+	}
 	rows := workflowTableRows(m.workflows)
 	percent, label := summaryGauge(m.summary.Active, m.summary.Active+m.summary.Inactive)
 	barWidth := m.width - len(label) - 5
@@ -176,5 +205,35 @@ func (m model) View() string {
 		strings.Join(m.events, "\n"),
 	)
 
+	return lipgloss.JoinVertical(lipgloss.Left, sections...)
+}
+
+func renderDetailView(wf *wf.Workflow) string {
+	highlight := lipgloss.NewStyle().Bold(true)
+	var sections []string
+	sections = append(sections, highlight.Render("Workflow Details"))
+	sections = append(sections,
+		fmt.Sprintf("ID: %s", wf.ID),
+		fmt.Sprintf("Name: %s", wf.Name),
+		fmt.Sprintf("Active: %t", wf.Active),
+		fmt.Sprintf("Last Updated: %s", wf.UpdatedAt.Format(time.RFC3339)),
+	)
+
+	if len(wf.Nodes) > 0 {
+		sections = append(sections, highlight.Render("Nodes"))
+		for _, n := range wf.Nodes {
+			sections = append(sections, fmt.Sprintf("- %s (%s)", n.Name, n.Type))
+		}
+	}
+
+	if len(wf.Tags) > 0 {
+		var tags []string
+		for _, t := range wf.Tags {
+			tags = append(tags, t.Name)
+		}
+		sections = append(sections, highlight.Render("Tags"), strings.Join(tags, ", "))
+	}
+
+	sections = append(sections, "", "Press Enter to return")
 	return lipgloss.JoinVertical(lipgloss.Left, sections...)
 }
