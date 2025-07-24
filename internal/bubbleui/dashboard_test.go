@@ -66,7 +66,8 @@ func TestViewHighlightsSelectedRow(t *testing.T) {
 
 	view := m.View()
 	highlight := lipgloss.NewStyle().Foreground(lipgloss.Color("0")).Background(lipgloss.Color("2"))
-	row := fmt.Sprintf("%-8s %-30s %-10s", "2", "B", "inactive")
+	status := statusStyle("inactive").Render("inactive")
+	row := fmt.Sprintf("%-8s %-30s %-10s", "2", "B", status)
 	expected := highlight.Render(row)
 
 	if !strings.Contains(view, expected) {
@@ -74,6 +75,23 @@ func TestViewHighlightsSelectedRow(t *testing.T) {
 	}
 }
 
+func TestViewColorsStatus(t *testing.T) {
+	m := newModel(context.Background(), nil, time.Second)
+	m.workflows = []WorkflowStatus{
+		{ID: "1", Name: "A", Status: "active"},
+		{ID: "2", Name: "B", Status: "inactive"},
+	}
+
+	view := m.View()
+
+	activeColored := statusStyle("active").Render("active")
+	if !strings.Contains(view, activeColored) {
+		t.Errorf("expected active status color not found")
+	}
+	inactiveColored := statusStyle("inactive").Render("inactive")
+	if !strings.Contains(view, inactiveColored) {
+		t.Errorf("expected inactive status color not found")
+    
 func TestEnterToggleDetailView(t *testing.T) {
 	m := newModel(context.Background(), stubClient{}, time.Second)
 	m.refreshData()
@@ -87,6 +105,6 @@ func TestEnterToggleDetailView(t *testing.T) {
 	mdl, _ = m2.Update(tea.KeyMsg{Type: tea.KeyEnter})
 	m3 := mdl.(model)
 	if m3.viewingDetails || m3.workflowDetail != nil {
-		t.Fatal("expected to return to list view on enter")
+		t.Fatal("expected to return to list view on enter") 
 	}
 }
