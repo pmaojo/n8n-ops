@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/pmaojo/n8n-ops/internal/app"
 	"github.com/pmaojo/n8n-ops/internal/ascii"
 	"github.com/pmaojo/n8n-ops/internal/config"
 	"github.com/pmaojo/n8n-ops/internal/i18n"
@@ -23,6 +24,7 @@ var (
 	daemonMode  bool
 	cfg         *config.Config
 	logger      *logrus.Logger
+	appCfg      *app.Config
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -147,5 +149,10 @@ func initConfig() {
 
 	if viper.GetBool("verbose") {
 		utils.SetLogLevel(logger, "debug")
+	}
+
+	appCfg = app.New(logger, cfg, environment, demoMode, verbose || viper.GetBool("verbose"))
+	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		cmd.SetContext(app.WithContext(cmd.Context(), appCfg))
 	}
 }

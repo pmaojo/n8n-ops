@@ -9,10 +9,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/pmaojo/n8n-ops/internal/app"
 	"github.com/pmaojo/n8n-ops/internal/client"
 	"github.com/pmaojo/n8n-ops/internal/credentials"
 	"github.com/pmaojo/n8n-ops/internal/i18n"
-	"github.com/pmaojo/n8n-ops/internal/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -69,15 +69,14 @@ type Metrics struct {
 }
 
 func runDashboard(cmd *cobra.Command, args []string) error {
-	logger := utils.NewLogger()
-	utils.SetLogLevel(logger, "info")
-	if verbose {
-		utils.SetLogLevel(logger, "debug")
+	cfg := app.FromContext(cmd.Context())
+	if cfg == nil {
+		return fmt.Errorf("configuration not found in context")
 	}
 
-	logEntry := logger.WithFields(logrus.Fields{
+	logEntry := cfg.Logger.WithFields(logrus.Fields{
 		"command": "dashboard",
-		"env":     environment,
+		"env":     cfg.Environment,
 		"port":    dashboardPort,
 	})
 
@@ -97,12 +96,18 @@ func runDashboard(cmd *cobra.Command, args []string) error {
 `)
 
 	i18n.PrintfKey("dashboard_starting", dashboardPort)
-	i18n.PrintfKey("dashboard_environment", environment)
+	i18n.PrintfKey("dashboard_environment", cfg.Environment)
 	i18n.PrintfKey("dashboard_url", dashboardPort)
 
-	// Setup HTTP handlers
-	http.HandleFunc("/", serveDashboard)
-	http.HandleFunc("/api/data", serveAPIData)
+	// Setup HTTP handlers with injected context
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		r = r.WithContext(app.WithContext(r.Context(), cfg))
+		serveDashboard(w, r)
+	})
+	http.HandleFunc("/api/data", func(w http.ResponseWriter, r *http.Request) {
+		r = r.WithContext(app.WithContext(r.Context(), cfg))
+		serveAPIData(w, r)
+	})
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
@@ -116,6 +121,11 @@ func runDashboard(cmd *cobra.Command, args []string) error {
 }
 
 func serveDashboard(w http.ResponseWriter, r *http.Request) {
+	cfg := app.FromContext(r.Context())
+	if cfg == nil {
+		http.Error(w, "config missing", http.StatusInternalServerError)
+		return
+	}
 	// Read embedded template
 	templateContent, err := dashboardFS.ReadFile("templates/dashboard.html")
 	if err != nil {
@@ -131,9 +141,9 @@ func serveDashboard(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := DashboardData{
-		Environment: environment,
+		Environment: cfg.Environment,
 		N8nURL: func() string {
-			cm := credentials.NewCredentialManager(environment)
+			cm := credentials.NewCredentialManager(cfg.Environment)
 			url, _, _ := cm.GetN8nCredentials()
 			if url == "" {
 				return "http://localhost:5678"
@@ -168,17 +178,22 @@ func serveDashboard(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveAPIData(w http.ResponseWriter, r *http.Request) {
+	cfg := app.FromContext(r.Context())
+	if cfg == nil {
+		http.Error(w, "config missing", http.StatusInternalServerError)
+		return
+	}
 	// Connect to n8n to get real data
 	var n8nURL, apiKey string
-	if demoMode {
+	if cfg.DemoMode {
 		n8nURL = "http://localhost:3001"
 		apiKey = "n8n_api_mock_development"
 	} else {
-		cm := credentials.NewCredentialManager(environment)
+		cm := credentials.NewCredentialManager(cfg.Environment)
 		var err error
 		n8nURL, apiKey, err = cm.GetN8nCredentials()
 		if err != nil {
-			logger.Warn("failed to load credentials, using demo data")
+			cfg.Logger.Warn("failed to load credentials, using demo data")
 		}
 		if n8nURL == "" {
 			n8nURL = "http://localhost:5678"
@@ -198,7 +213,7 @@ func serveAPIData(w http.ResponseWriter, r *http.Request) {
                                 "status": "connected",
                                 "timestamp": "%s",
                                 "environment": "%s"
-                        }`, len(workflows), time.Now().Format("15:04:05"), environment)
+                        }`, len(workflows), time.Now().Format("15:04:05"), cfg.Environment)
 			return
 		}
 	}
@@ -210,5 +225,5 @@ func serveAPIData(w http.ResponseWriter, r *http.Request) {
                 "status": "demo_mode",
                 "timestamp": "%s",
                 "environment": "%s"
-        }`, time.Now().Format("15:04:05"), environment)
+        }`, time.Now().Format("15:04:05"), cfg.Environment)
 }

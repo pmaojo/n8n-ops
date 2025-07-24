@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pmaojo/n8n-ops/internal/app"
 	"github.com/pmaojo/n8n-ops/internal/client"
 	"github.com/pmaojo/n8n-ops/internal/credentials"
 	"github.com/pmaojo/n8n-ops/internal/git"
@@ -44,12 +45,17 @@ func init() {
 }
 
 func runWatch(cmd *cobra.Command, args []string) error {
-	logEntry := logger.WithFields(logrus.Fields{
+	cfg := app.FromContext(cmd.Context())
+	if cfg == nil {
+		return fmt.Errorf("configuration not found in context")
+	}
+
+	logEntry := cfg.Logger.WithFields(logrus.Fields{
 		"command": "watch",
-		"env":     environment,
+		"env":     cfg.Environment,
 	})
 
-	cm := credentials.NewCredentialManager(environment)
+	cm := credentials.NewCredentialManager(cfg.Environment)
 	n8nURL, apiKey, err := cm.GetN8nCredentials()
 	if err != nil {
 		return fmt.Errorf("failed to load credentials: %w", err)
@@ -58,7 +64,7 @@ func runWatch(cmd *cobra.Command, args []string) error {
 		n8nURL = "http://localhost:5678"
 	}
 	if apiKey == "" {
-		return fmt.Errorf("N8N_%s_API_KEY environment variable not set", strings.ToUpper(environment))
+		return fmt.Errorf("N8N_%s_API_KEY environment variable not set", strings.ToUpper(cfg.Environment))
 	}
 
 	n8nClient, err := client.New(n8nURL, apiKey, nil)
@@ -67,8 +73,8 @@ func runWatch(cmd *cobra.Command, args []string) error {
 	}
 
 	gitChecker := git.NewGitStatusChecker(".", nil)
-	syncSvc := isync.NewService(n8nClient, cm, gitChecker, logEntry, environment)
-	svc := iwatch.NewService(n8nClient, cm, gitChecker, syncSvc, logEntry, environment)
+	syncSvc := isync.NewService(n8nClient, cm, gitChecker, logEntry, cfg.Environment)
+	svc := iwatch.NewService(n8nClient, cm, gitChecker, syncSvc, logEntry, cfg.Environment)
 
 	return svc.Watch(context.Background(), iwatch.Options{
 		Interval:   watchInterval,

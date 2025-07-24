@@ -11,11 +11,11 @@ import (
 
 	"github.com/pmaojo/n8n-ops/internal/credentials"
 
+	"github.com/pmaojo/n8n-ops/internal/app"
 	"github.com/pmaojo/n8n-ops/internal/client"
 	"github.com/pmaojo/n8n-ops/internal/i18n"
 	"github.com/pmaojo/n8n-ops/internal/issues"
 	"github.com/pmaojo/n8n-ops/internal/monitoring"
-	"github.com/pmaojo/n8n-ops/internal/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -54,30 +54,29 @@ func init() {
 }
 
 func runMonitor(cmd *cobra.Command, args []string) error {
-	logger := utils.NewLogger()
-	utils.SetLogLevel(logger, "info")
-	if verbose {
-		utils.SetLogLevel(logger, "debug")
+	cfg := app.FromContext(cmd.Context())
+	if cfg == nil {
+		return fmt.Errorf("configuration not found in context")
 	}
 
-	logEntry := logger.WithFields(logrus.Fields{
+	logEntry := cfg.Logger.WithFields(logrus.Fields{
 		"command": "monitor",
-		"env":     environment,
+		"env":     cfg.Environment,
 	})
 
 	logEntry.Info("Starting workflow monitoring")
 
-	i18n.PrintfKey("monitor_starting", environment)
+	i18n.PrintfKey("monitor_starting", cfg.Environment)
 	i18n.PrintfKey("monitor_check_interval", checkInterval)
 	i18n.PrintfKey("monitor_failure_threshold", failureThreshold)
 
 	// Create n8n client using unified credential system
 	var n8nURL, apiKey string
-	if demoMode {
+	if cfg.DemoMode {
 		n8nURL = "http://localhost:3001"
 		apiKey = "n8n_api_mock_development"
 	} else {
-		cm := credentials.NewCredentialManager(environment)
+		cm := credentials.NewCredentialManager(cfg.Environment)
 		var err error
 		n8nURL, apiKey, err = cm.GetN8nCredentials()
 		if err != nil {
@@ -85,7 +84,7 @@ func runMonitor(cmd *cobra.Command, args []string) error {
 		}
 		if n8nURL == "" || apiKey == "" {
 			return fmt.Errorf("n8n credentials not configured for %s environment. Set N8N_%s_URL and N8N_%s_API_KEY or use --demo",
-				environment, strings.ToUpper(environment), strings.ToUpper(environment))
+				cfg.Environment, strings.ToUpper(cfg.Environment), strings.ToUpper(cfg.Environment))
 		}
 	}
 
@@ -106,18 +105,18 @@ func runMonitor(cmd *cobra.Command, args []string) error {
 		if gitlabProjectID == "" {
 			gitlabProjectID = os.Getenv("GITLAB_PROJECT")
 		}
-		if gitlabProjectID == "" && !demoMode {
+		if gitlabProjectID == "" && !cfg.DemoMode {
 			return fmt.Errorf("gitlab-project or GITLAB_PROJECT_ID is required")
 		}
 	}
 
 	gitlabToken := os.Getenv("GITLAB_TOKEN")
-	if gitlabToken == "" && !demoMode {
+	if gitlabToken == "" && !cfg.DemoMode {
 		return fmt.Errorf("GITLAB_TOKEN environment variable is required")
 	}
 
 	var issueManager issues.IssueManager
-	if demoMode {
+	if cfg.DemoMode {
 		issueManager = NewMockIssueManager()
 		fmt.Println("📋 Using mock issue manager (demo mode)")
 	} else {
@@ -126,7 +125,7 @@ func runMonitor(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create failure detector
-	detector := monitoring.NewFailureDetector(n8nClient, issueManager, logger)
+	detector := monitoring.NewFailureDetector(n8nClient, issueManager, cfg.Logger)
 	detector.SetCheckInterval(checkInterval)
 	detector.SetRetryThreshold(failureThreshold)
 
