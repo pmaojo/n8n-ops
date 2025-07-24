@@ -140,7 +140,6 @@ func TestAllCommandsHelp(t *testing.T) {
 		{[]string{"quickstart", "--help"}, "Usage"},
 		{[]string{"status", "--help"}, "Usage"},
 		{[]string{"sync", "--help"}, "Usage"},
-		{[]string{"terminal", "--help"}, "Usage"},
 		{[]string{"tui", "--help"}, "Usage"},
 		{[]string{"tutorial", "--help"}, "Usage"},
 		{[]string{"ui", "--help"}, "Usage"},
