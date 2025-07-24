@@ -33,3 +33,20 @@ Run `n8n-ops --help` for command information or check the documentation.
 ## CI/CD
 
 Automated builds and tests run on both GitLab CI/CD and GitHub Actions. The GitLab pipeline remains in `.gitlab-ci.yml` while GitHub uses `.github/workflows/ci.yml` for pull request checks.
+
+## Testing
+
+Run unit tests with:
+
+```bash
+go test -short ./...
+```
+
+Run integration tests with:
+
+```bash
+go test ./integration    # optional: -tags=integration
+```
+
+The first run downloads dependencies and may take longer to complete.
+
