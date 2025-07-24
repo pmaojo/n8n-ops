@@ -16,7 +16,7 @@ import (
 
 // gitAutoCommitter defines the subset of git.GitStatusChecker used by the watch service.
 type gitAutoCommitter interface {
-	AutoCommitWorkflows(message string) (string, error)
+	AutoCommitWorkflows(ctx context.Context, message string) (string, error)
 }
 
 // workflowSyncer abstracts the sync.Service dependency.
@@ -90,6 +90,11 @@ func (s *Service) initialSync(ctx context.Context, state map[string]time.Time) e
 		return err
 	}
 	for _, wf := range wfs {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
 		state[wf.ID] = wf.UpdatedAt
 	}
 	return nil
@@ -103,6 +108,11 @@ func (s *Service) checkChanges(ctx context.Context, state map[string]time.Time, 
 
 	changed := false
 	for _, wf := range wfs {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
 		last, ok := state[wf.ID]
 		if !ok {
 			s.Logger.Infof("new workflow detected: %s", wf.Name)
@@ -128,7 +138,7 @@ func (s *Service) checkChanges(ctx context.Context, state map[string]time.Time, 
 	}
 
 	if opts.AutoCommit && s.Git != nil {
-		if msg, err := s.Git.AutoCommitWorkflows(""); err != nil {
+		if msg, err := s.Git.AutoCommitWorkflows(ctx, ""); err != nil {
 			s.Logger.WithError(err).Warn("auto-commit failed")
 		} else if msg != "" {
 			s.Logger.Info(msg)

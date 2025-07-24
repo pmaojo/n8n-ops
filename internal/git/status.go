@@ -2,6 +2,7 @@ package git
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -303,7 +304,7 @@ func (gsc *GitStatusChecker) CheckBeforeSync() (string, error) {
 }
 
 // AutoCommitWorkflows automatically commits workflow changes if enabled
-func (gsc *GitStatusChecker) AutoCommitWorkflows(message string) (string, error) {
+func (gsc *GitStatusChecker) AutoCommitWorkflows(ctx context.Context, message string) (string, error) {
 	status, err := gsc.GetStatus()
 	if err != nil {
 		return "", err
@@ -315,6 +316,11 @@ func (gsc *GitStatusChecker) AutoCommitWorkflows(message string) (string, error)
 
 	// Add workflow files
 	for _, workflow := range status.UncommittedWorkflows {
+		select {
+		case <-ctx.Done():
+			return "", ctx.Err()
+		default:
+		}
 		if err := gsc.executor.Add(workflow.FilePath); err != nil {
 			return "", fmt.Errorf("failed to add %s: %w", workflow.FilePath, err)
 		}
@@ -323,6 +329,12 @@ func (gsc *GitStatusChecker) AutoCommitWorkflows(message string) (string, error)
 	// Commit changes
 	if message == "" {
 		message = fmt.Sprintf("Auto-commit %d workflow changes", len(status.UncommittedWorkflows))
+	}
+
+	select {
+	case <-ctx.Done():
+		return "", ctx.Err()
+	default:
 	}
 
 	if err := gsc.executor.Commit(message); err != nil {

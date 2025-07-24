@@ -38,7 +38,7 @@ func (m *mockClient) GetExecutions(ctx context.Context, workflowID, status strin
 
 type fakeGitChecker struct{ calls int }
 
-func (f *fakeGitChecker) AutoCommitWorkflows(message string) (string, error) {
+func (f *fakeGitChecker) AutoCommitWorkflows(ctx context.Context, message string) (string, error) {
 	f.calls++
 	return "", nil
 }
