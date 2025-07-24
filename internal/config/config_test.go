@@ -73,3 +73,72 @@ func TestGetEnvironmentConfigErrors(t *testing.T) {
 		t.Error("expected error for unknown environment")
 	}
 }
+
+func TestGetEnvironmentConfigMissingValues(t *testing.T) {
+	t.Run("missing url", func(t *testing.T) {
+		cfgYAML := `
+    environments:
+      test:
+        api_key_env: TEST_KEY
+    `
+		prepareConfig(cfgYAML)
+		t.Setenv("TEST_KEY", "secret")
+
+		cfg, err := NewConfig()
+		if err != nil {
+			t.Fatalf("init config: %v", err)
+		}
+		if _, err := cfg.GetEnvironmentConfig("test"); err == nil {
+			t.Error("expected error for missing url")
+		}
+	})
+
+	t.Run("missing api key", func(t *testing.T) {
+		cfgYAML := `
+    environments:
+      test:
+        url: http://example.com
+        api_key_env: TEST_KEY
+    `
+		prepareConfig(cfgYAML)
+		t.Setenv("TEST_KEY", "")
+
+		cfg, err := NewConfig()
+		if err != nil {
+			t.Fatalf("init config: %v", err)
+		}
+		if _, err := cfg.GetEnvironmentConfig("test"); err == nil {
+			t.Error("expected error for missing api key")
+		}
+	})
+}
+
+func TestDefaultValuesAndLogging(t *testing.T) {
+	prepareConfig("")
+
+	cfg, err := NewConfig()
+	if err != nil {
+		t.Fatalf("init config: %v", err)
+	}
+
+	if env := cfg.GetDefaultEnvironment(); env != "development" {
+		t.Errorf("unexpected default environment: %s", env)
+	}
+	if cfg.IsStrictValidation() {
+		t.Error("strict validation should default to false")
+	}
+	if !cfg.IsAutoBackupEnabled() {
+		t.Error("auto backup should default to true")
+	}
+
+	logCfg := cfg.GetLoggingConfig()
+	if logCfg.Level != "info" || logCfg.Format != "text" || logCfg.File != "" {
+		t.Errorf("unexpected logging defaults: %+v", logCfg)
+	}
+
+	var nilCfg *Config
+	nilLogCfg := nilCfg.GetLoggingConfig()
+	if nilLogCfg.Level != "" || nilLogCfg.Format != "" || nilLogCfg.File != "" {
+		t.Errorf("expected zero valued log config for nil, got: %+v", nilLogCfg)
+	}
+}
