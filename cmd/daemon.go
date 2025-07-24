@@ -27,9 +27,39 @@ type BackupInfo struct {
 	WorkflowName string    `json:"workflowName"`
 }
 
+// fileWatcher abstracts fsnotify.Watcher for easier testing.
+type fileWatcher interface {
+	Add(name string) error
+	Close() error
+	Events() <-chan fsnotify.Event
+	Errors() <-chan error
+}
+
+type fsnotifyWatcher struct{ *fsnotify.Watcher }
+
+func (w *fsnotifyWatcher) Events() <-chan fsnotify.Event { return w.Watcher.Events }
+func (w *fsnotifyWatcher) Errors() <-chan error          { return w.Watcher.Errors }
+
+var daemonWatcherFactory = func() (fileWatcher, error) {
+	w, err := fsnotify.NewWatcher()
+	if err != nil {
+		return nil, err
+	}
+	return &fsnotifyWatcher{w}, nil
+}
+
+var daemonClientFactory = func(url string) (client.Client, error) {
+	return client.New(url, "n8n_api_mock_development", nil)
+}
+
 // runDaemonMode starts the file watcher and synchronizes workflow changes with n8n.
 // The environment parameter determines which environment configuration to use.
 func runDaemonMode(env string) {
+	runDaemonModeCtx(context.Background(), env)
+}
+
+// runDaemonModeCtx allows injecting a context for testing.
+func runDaemonModeCtx(ctx context.Context, env string) {
 	logEntry := logger.WithFields(logrus.Fields{
 		"command": "daemon",
 		"env":     env,
@@ -65,7 +95,7 @@ func runDaemonMode(env string) {
 		}
 	}
 
-	n8nClient, err := client.New(n8nURL, "n8n_api_mock_development", nil)
+	n8nClient, err := daemonClientFactory(n8nURL)
 	if err != nil {
 		logEntry.WithError(err).Fatal("Failed to create n8n client")
 		return
@@ -78,7 +108,7 @@ func runDaemonMode(env string) {
 	}
 
 	// Setup file watcher
-	watcher, err := fsnotify.NewWatcher()
+	watcher, err := daemonWatcherFactory()
 	if err != nil {
 		logEntry.WithError(err).Fatal("Failed to create file watcher")
 		return
@@ -102,13 +132,15 @@ func runDaemonMode(env string) {
 	// Main daemon loop
 	for {
 		select {
-		case event, ok := <-watcher.Events:
+		case <-ctx.Done():
+			return
+		case event, ok := <-watcher.Events():
 			if !ok {
 				return
 			}
 			handleFileEvent(event, n8nClient, logEntry, env)
 
-		case err, ok := <-watcher.Errors:
+		case err, ok := <-watcher.Errors():
 			if !ok {
 				return
 			}
@@ -121,7 +153,7 @@ func runDaemonMode(env string) {
 	}
 }
 
-func setupDirectoryWatch(watcher *fsnotify.Watcher, watchDir string) error {
+func setupDirectoryWatch(watcher fileWatcher, watchDir string) error {
 	// Create directory if it doesn't exist
 	if err := os.MkdirAll(watchDir, 0755); err != nil {
 		return fmt.Errorf("failed to create watch directory: %w", err)
