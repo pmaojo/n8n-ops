@@ -33,6 +33,9 @@ type WorkflowCredentials struct {
 	Data        map[string]string `json:"data"`
 }
 
+// NewCredentialManager initializes a CredentialManager for the given
+// environment. The configuration file path is resolved from the environment and
+// no filesystem operations are performed during construction.
 func NewCredentialManager(environment string) *CredentialManager {
 	configPath := os.Getenv("N8N_OPS_CONFIG")
 	if configPath == "" {

@@ -36,6 +36,9 @@ type GitStatusChecker struct {
 	executor   Executor
 }
 
+// NewGitStatusChecker creates a GitStatusChecker using the provided working
+// directory and executor. A default executor is used when nil is passed. The
+// function does not access the filesystem, enabling easier testing.
 func NewGitStatusChecker(workingDir string, exec Executor) *GitStatusChecker {
 	if workingDir == "" {
 		workingDir = "."
