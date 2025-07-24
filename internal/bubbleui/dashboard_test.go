@@ -60,3 +60,46 @@ func TestViewHighlightsSelectedRow(t *testing.T) {
 		t.Errorf("highlighted row not found in view")
 	}
 }
+
+func TestFilterInputMode(t *testing.T) {
+	m := newModel(context.Background(), nil, time.Second)
+	m.workflows = []WorkflowStatus{
+		{ID: "1", Name: "Alpha", Status: "active"},
+		{ID: "2", Name: "Beta", Status: "inactive"},
+	}
+
+	mdl, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'/'}})
+	m = mdl.(model)
+	if !m.inputMode {
+		t.Fatal("input mode should be active after '/' press")
+	}
+
+	mdl, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'a'}})
+	m = mdl.(model)
+	if m.filterText != "a" {
+		t.Fatalf("expected filter text 'a', got %s", m.filterText)
+	}
+
+	mdl, _ = m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m = mdl.(model)
+	if m.inputMode {
+		t.Fatal("input mode should exit on enter")
+	}
+}
+
+func TestViewFiltersWorkflows(t *testing.T) {
+	m := newModel(context.Background(), nil, time.Second)
+	m.workflows = []WorkflowStatus{
+		{ID: "1", Name: "Alpha", Status: "active"},
+		{ID: "2", Name: "Beta", Status: "inactive"},
+	}
+	m.filterText = "be"
+
+	view := m.View()
+	if strings.Contains(view, "Alpha") {
+		t.Fatal("filtered view should not contain Alpha")
+	}
+	if !strings.Contains(view, "Beta") {
+		t.Fatal("filtered view should contain Beta")
+	}
+}
