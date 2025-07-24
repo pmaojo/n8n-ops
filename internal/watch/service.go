@@ -66,7 +66,7 @@ func (s *Service) Watch(ctx context.Context, opts Options) error {
 	defer ticker.Stop()
 
 	state := make(map[string]time.Time)
-	if err := s.initialSync(state); err != nil {
+	if err := s.initialSync(ctx, state); err != nil {
 		s.Logger.WithError(err).Warn("initial sync failed")
 	}
 
@@ -77,26 +77,26 @@ func (s *Service) Watch(ctx context.Context, opts Options) error {
 		case <-sigChan:
 			return nil
 		case <-ticker.C:
-			if err := s.checkChanges(state, opts); err != nil {
+			if err := s.checkChanges(ctx, state, opts); err != nil {
 				s.Logger.WithError(err).Error("failed to check changes")
 			}
 		}
 	}
 }
 
-func (s *Service) initialSync(state map[string]time.Time) error {
-	wfs, err := s.Client.GetWorkflows(context.Background())
+func (s *Service) initialSync(ctx context.Context, state map[string]time.Time) error {
+	wfs, err := s.Client.GetWorkflows(ctx)
 	if err != nil {
 		return err
 	}
 	for _, wf := range wfs {
-		state[wf.ID] = time.Now()
+		state[wf.ID] = wf.UpdatedAt
 	}
 	return nil
 }
 
-func (s *Service) checkChanges(state map[string]time.Time, opts Options) error {
-	wfs, err := s.Client.GetWorkflows(context.Background())
+func (s *Service) checkChanges(ctx context.Context, state map[string]time.Time, opts Options) error {
+	wfs, err := s.Client.GetWorkflows(ctx)
 	if err != nil {
 		return err
 	}
@@ -106,13 +106,13 @@ func (s *Service) checkChanges(state map[string]time.Time, opts Options) error {
 		last, ok := state[wf.ID]
 		if !ok {
 			s.Logger.Infof("new workflow detected: %s", wf.Name)
-			state[wf.ID] = time.Now()
+			state[wf.ID] = wf.UpdatedAt
 			changed = true
 			continue
 		}
-		if time.Since(last) > time.Minute {
+		if wf.UpdatedAt.After(last) {
 			s.Logger.Infof("workflow updated: %s", wf.Name)
-			state[wf.ID] = time.Now()
+			state[wf.ID] = wf.UpdatedAt
 			changed = true
 		}
 	}
@@ -122,7 +122,7 @@ func (s *Service) checkChanges(state map[string]time.Time, opts Options) error {
 	}
 
 	if opts.AutoSync && s.Syncer != nil {
-		if err := s.Syncer.Sync(context.Background(), isync.Options{}); err != nil {
+		if err := s.Syncer.Sync(ctx, isync.Options{}); err != nil {
 			s.Logger.WithError(err).Warn("auto-sync failed")
 		}
 	}

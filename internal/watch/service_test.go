@@ -51,14 +51,14 @@ func (f *fakeSyncer) Sync(ctx context.Context, opts isync.Options) error {
 }
 
 func TestCheckChanges_AutoSync(t *testing.T) {
-	wf := &workflow.Workflow{ID: "1", Name: "Test"}
+	wf := &workflow.Workflow{ID: "1", Name: "Test", UpdatedAt: time.Now()}
 	client := &mockClient{workflows: []*workflow.Workflow{wf}}
 	gitChecker := &fakeGitChecker{}
 	syncer := &fakeSyncer{}
 	svc := NewService(client, nil, gitChecker, syncer, logrus.New(), "dev")
 
 	state := map[string]time.Time{"1": time.Now().Add(-2 * time.Minute)}
-	err := svc.checkChanges(state, Options{AutoSync: true})
+	err := svc.checkChanges(context.Background(), state, Options{AutoSync: true})
 	if err != nil {
 		t.Fatalf("checkChanges returned error: %v", err)
 	}
@@ -71,13 +71,13 @@ func TestCheckChanges_AutoSync(t *testing.T) {
 }
 
 func TestCheckChanges_AutoCommit(t *testing.T) {
-	wf := &workflow.Workflow{ID: "1", Name: "Test"}
+	wf := &workflow.Workflow{ID: "1", Name: "Test", UpdatedAt: time.Now()}
 	client := &mockClient{workflows: []*workflow.Workflow{wf}}
 	gitChecker := &fakeGitChecker{}
 	svc := NewService(client, nil, gitChecker, nil, logrus.New(), "dev")
 
 	state := map[string]time.Time{"1": time.Now().Add(-2 * time.Minute)}
-	err := svc.checkChanges(state, Options{AutoCommit: true})
+	err := svc.checkChanges(context.Background(), state, Options{AutoCommit: true})
 	if err != nil {
 		t.Fatalf("checkChanges returned error: %v", err)
 	}
