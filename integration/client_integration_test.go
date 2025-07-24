@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/pmaojo/n8n-ops/internal/client"
-	"github.com/pmaojo/n8n-ops/internal/testutil"
 	"github.com/pmaojo/n8n-ops/internal/workflow"
 )
 
