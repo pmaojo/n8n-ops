@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -38,22 +39,34 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+// runCommand executes the CLI with the provided arguments and
+// verifies that it exits successfully and prints the expected text.
+// Additional environment variables can be supplied via the env slice.
+func runCommand(t *testing.T, args []string, expect string, env []string) {
+	t.Helper()
+
+	cmd := exec.Command(binaryPath, args...)
+	if len(env) > 0 {
+		cmd.Env = append(os.Environ(), env...)
+	} else {
+		cmd.Env = os.Environ()
+	}
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("%v failed: %v\n%s", strings.Join(args, " "), err, string(output))
+	}
+	if !strings.Contains(string(output), expect) {
+		t.Errorf("output for %v did not contain %q\n%s", args, expect, string(output))
+	}
+}
+
 func TestCLIIntegration(t *testing.T) {
 	// Test CLI binary exists and runs
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
 	}
 
-	// Test help command
-	cmd := exec.Command(binaryPath, "--help")
-	output, err := cmd.Output()
-	if err != nil {
-		t.Fatalf("Failed to run CLI help: %v", err)
-	}
-
-	if len(output) == 0 {
-		t.Error("CLI help should produce output")
-	}
+	runCommand(t, []string{"--help"}, "n8n-ops", nil)
 }
 
 func TestVersionCommand(t *testing.T) {
@@ -61,16 +74,7 @@ func TestVersionCommand(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
 	}
-
-	cmd := exec.Command(binaryPath, "version")
-	output, err := cmd.Output()
-	if err != nil {
-		t.Fatalf("Failed to run CLI version: %v", err)
-	}
-
-	if len(output) == 0 {
-		t.Error("Version command should produce output")
-	}
+	runCommand(t, []string{"version"}, "n8n-ops version", nil)
 }
 
 func TestWelcomeCommand(t *testing.T) {
@@ -81,16 +85,10 @@ func TestWelcomeCommand(t *testing.T) {
 
 	cmd := exec.Command(binaryPath, "welcome")
 	cmd.Env = append(os.Environ(), "DEMO=true")
-
-	err := cmd.Start()
-	if err != nil {
+	if err := cmd.Start(); err != nil {
 		t.Fatalf("Failed to start welcome command: %v", err)
 	}
-
-	// Give it a moment to start
 	time.Sleep(100 * time.Millisecond)
-
-	// Kill the process
 	if cmd.Process != nil {
 		cmd.Process.Kill()
 	}
@@ -102,15 +100,7 @@ func TestDemoMode(t *testing.T) {
 		t.Skip("Skipping integration test in short mode")
 	}
 
-	cmd := exec.Command(binaryPath, "sync", "--demo", "--env", "development")
-	output, err := cmd.Output()
-	if err != nil {
-		t.Fatalf("Failed to run sync in demo mode: %v", err)
-	}
-
-	if len(output) == 0 {
-		t.Error("Demo sync should produce output")
-	}
+	runCommand(t, []string{"sync", "--demo", "--env", "development", "--force"}, "Sync", nil)
 }
 
 func TestEnvironmentHandling(t *testing.T) {
@@ -118,10 +108,50 @@ func TestEnvironmentHandling(t *testing.T) {
 	environments := []string{"development", "staging", "production"}
 
 	for _, env := range environments {
-		cmd := exec.Command(binaryPath, "status", "--env", env, "--demo")
-		_, err := cmd.Output()
-		if err != nil {
-			t.Errorf("Failed to run status for environment %s: %v", env, err)
-		}
+		runCommand(t, []string{"status", "--env", env, "--demo"}, "Status Dashboard", nil)
+	}
+}
+
+func TestAllCommandsHelp(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
+	tests := []struct {
+		args   []string
+		expect string
+	}{
+		{[]string{"branch", "--help"}, "Usage"},
+		{[]string{"check", "--help"}, "Usage"},
+		{[]string{"credentials", "--help"}, "Usage"},
+		{[]string{"credentials", "list", "--help"}, "Usage"},
+		{[]string{"credentials", "validate", "--help"}, "Usage"},
+		{[]string{"credentials", "map", "--help"}, "Usage"},
+		{[]string{"credentials", "template", "--help"}, "Usage"},
+		{[]string{"dashboard", "--help"}, "Usage"},
+		{[]string{"deploy", "--help"}, "Usage"},
+		{[]string{"init", "--help"}, "Usage"},
+		{[]string{"monitor", "--help"}, "Usage"},
+		{[]string{"observability", "--help"}, "Usage"},
+		{[]string{"observability", "setup", "--help"}, "Usage"},
+		{[]string{"observability", "test-connection", "--help"}, "Usage"},
+		{[]string{"observability", "create-dashboard", "--help"}, "Usage"},
+		{[]string{"onboard", "--help"}, "Usage"},
+		{[]string{"quickstart", "--help"}, "Usage"},
+		{[]string{"status", "--help"}, "Usage"},
+		{[]string{"sync", "--help"}, "Usage"},
+		{[]string{"terminal", "--help"}, "Usage"},
+		{[]string{"tui", "--help"}, "Usage"},
+		{[]string{"tutorial", "--help"}, "Usage"},
+		{[]string{"ui", "--help"}, "Usage"},
+		{[]string{"validate", "--help"}, "Usage"},
+		{[]string{"watch", "--help"}, "Usage"},
+		{[]string{"welcome", "--help"}, "Usage"},
+	}
+
+	for _, tc := range tests {
+		t.Run(strings.Join(tc.args, "-"), func(t *testing.T) {
+			runCommand(t, tc.args, tc.expect, []string{"DEMO=true"})
+		})
 	}
 }
