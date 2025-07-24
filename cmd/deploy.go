@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
@@ -20,7 +22,13 @@ Examples:
   n8n-ops deploy --env staging        # Deploy to staging (with Git checks)
   n8n-ops deploy --force              # Deploy ignoring Git status
   n8n-ops deploy --dry-run            # Show what would be deployed`,
-	RunE: runDeploy,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cli := cliFrom(cmd)
+		if cli == nil {
+			return fmt.Errorf("CLI not initialized")
+		}
+		return runDeploy(cmd, args, cli)
+	},
 }
 
 func init() {
@@ -33,10 +41,10 @@ func init() {
 	deployCmd.Flags().BoolVar(&syncDryRun, "dry-run", false, "show what would be synced without making changes")
 }
 
-func runDeploy(cmd *cobra.Command, args []string) error {
+func runDeploy(cmd *cobra.Command, args []string, cli *CLI) error {
 	// Set the --to-n8n flag for sync command
 	toN8n = true
 
 	// Call the existing sync function with --to-n8n enabled
-	return runSync(cmd, args)
+	return runSync(cmd, args, cli)
 }

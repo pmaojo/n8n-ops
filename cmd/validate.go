@@ -8,6 +8,7 @@ import (
 
 	"github.com/pmaojo/n8n-ops/internal/utils"
 	"github.com/pmaojo/n8n-ops/internal/workflow"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +22,13 @@ Examples:
   n8n-ops validate workflow.json         # Validate single file
   n8n-ops validate workflows/            # Validate directory
   n8n-ops validate --strict              # Enable strict validation mode`,
-	RunE: runValidate,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cli := cliFrom(cmd)
+		if cli == nil {
+			return fmt.Errorf("CLI not initialized")
+		}
+		return runValidate(cmd, args, cli)
+	},
 }
 
 var (
@@ -36,8 +43,11 @@ func init() {
 	validateCmd.Flags().BoolVarP(&recursive, "recursive", "r", false, "validate files recursively")
 }
 
-func runValidate(cmd *cobra.Command, args []string) error {
-	logger.Info("Starting workflow validation", "strict", strict, "recursive", recursive)
+func runValidate(cmd *cobra.Command, args []string, cli *CLI) error {
+	if cli == nil {
+		return fmt.Errorf("CLI not initialized")
+	}
+	cli.Logger.Info("Starting workflow validation", "strict", strict, "recursive", recursive)
 
 	// Determine files to validate
 	var files []string
@@ -65,31 +75,31 @@ func runValidate(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(files) == 0 {
-		logger.Info("No workflow files found to validate")
+		cli.Logger.Info("No workflow files found to validate")
 		return nil
 	}
 
-	logger.Info("Found workflow files to validate", "count", len(files))
+	cli.Logger.Info("Found workflow files to validate", "count", len(files))
 
 	// Validate each file
 	var validationErrors []ValidationError
 	validCount := 0
 
 	for _, file := range files {
-		if err := validateWorkflowFile(file, strict); err != nil {
+		if err := validateWorkflowFile(file, strict, cli.Logger); err != nil {
 			validationErrors = append(validationErrors, ValidationError{
 				File:  file,
 				Error: err,
 			})
-			logger.Error("Validation failed", "file", file, "error", err)
+			cli.Logger.Error("Validation failed", "file", file, "error", err)
 		} else {
 			validCount++
-			logger.Info("Validation passed", "file", file)
+			cli.Logger.Info("Validation passed", "file", file)
 		}
 	}
 
 	// Print summary
-	logger.Info("Validation completed",
+	cli.Logger.Info("Validation completed",
 		"total", len(files),
 		"valid", validCount,
 		"invalid", len(validationErrors),
@@ -159,7 +169,7 @@ func isDirectory(path string) bool {
 	return err == nil && info.IsDir()
 }
 
-func validateWorkflowFile(file string, strict bool) error {
+func validateWorkflowFile(file string, strict bool, lg *logrus.Logger) error {
 	// Basic file validation
 	if err := workflow.ValidateWorkflowFile(file); err != nil {
 		return err
@@ -173,7 +183,7 @@ func validateWorkflowFile(file string, strict bool) error {
 		}
 
 		// Strict validation checks
-		if err := workflow.ValidateWorkflowStrict(wf, logger); err != nil {
+		if err := workflow.ValidateWorkflowStrict(wf, lg); err != nil {
 			return fmt.Errorf("strict validation failed: %w", err)
 		}
 	}

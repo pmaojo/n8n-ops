@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
-	"github.com/pmaojo/n8n-ops/internal/cliutils"
+	"github.com/pmaojo/n8n-ops/internal/client"
+	"github.com/pmaojo/n8n-ops/internal/credentials"
 	"github.com/pmaojo/n8n-ops/internal/i18n"
 	"github.com/pmaojo/n8n-ops/internal/issues"
 	"github.com/pmaojo/n8n-ops/internal/monitoring"
@@ -67,7 +69,6 @@ func runMonitor(cmd *cobra.Command, args []string) error {
 	i18n.PrintfKey("monitor_starting", environment)
 	i18n.PrintfKey("monitor_check_interval", checkInterval)
 	i18n.PrintfKey("monitor_failure_threshold", failureThreshold)
-
 
 	ctx := context.Background()
 	n8nClient, err := getN8nClient(ctx, environment, demoMode)

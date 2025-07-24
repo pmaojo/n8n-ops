@@ -73,7 +73,12 @@ var (
 
 func init() {
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		return initConfig()
+		cli, err := initCLI()
+		if err != nil {
+			return err
+		}
+		cmd.SetContext(withCLI(cmd.Context(), cli))
+		return nil
 	}
 	// Global flags
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.n8n-ops.yaml)")
@@ -91,8 +96,8 @@ func init() {
 	viper.BindPFlag("daemon", rootCmd.PersistentFlags().Lookup("daemon"))
 }
 
-// initConfig reads in config file and ENV variables if set.
-func initConfig() error {
+// initCLI reads configuration and prepares the CLI context.
+func initCLI() (*CLI, error) {
 	// Set language first
 	if language != "" {
 		i18n.SetLanguage(language)
@@ -106,7 +111,7 @@ func initConfig() error {
 		// Find home directory.
 		home, err := os.UserHomeDir()
 		if err != nil {
-			return fmt.Errorf("determine home directory: %w", err)
+			return nil, fmt.Errorf("determine home directory: %w", err)
 		}
 
 		// Search config in home directory with name ".n8n-ops" (without extension).
@@ -133,7 +138,7 @@ func initConfig() error {
 	var err error
 	cfg, err = config.NewConfig(provider)
 	if err != nil {
-		return fmt.Errorf("initialize config: %w", err)
+		return nil, fmt.Errorf("initialize config: %w", err)
 	}
 
 	// Setup logger
@@ -150,5 +155,5 @@ func initConfig() error {
 	if viper.GetBool("verbose") {
 		utils.SetLogLevel(logger, "debug")
 	}
-	return nil
+	return &CLI{Environment: environment, Logger: logger, Config: cfg}, nil
 }
