@@ -68,6 +68,6 @@ func runTUI(cmd *cobra.Command, args []string) error {
 	logger := utils.NewLogger()
 	ctx := context.Background()
 	var uiImpl ui.DashboardUI
-	uiImpl = bubbleui.NewDashboard(c, 3*time.Second, logger, tuiRefresh)
+	uiImpl = bubbleui.NewDashboard(c, tuiRefresh, logger)
 	return uiImpl.Run(ctx)
 }
