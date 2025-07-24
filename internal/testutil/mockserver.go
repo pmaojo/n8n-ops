@@ -39,6 +39,25 @@ func BuildMockServer() (func(), error) {
 	return cleanup, nil
 }
 
+// SetupMockServer builds the mock server binary and starts it. It returns
+// functions to stop the running server and clean up the binary.
+func SetupMockServer() (stop func(), cleanup func(), err error) {
+	cleanup, err = BuildMockServer()
+	if err != nil {
+		return nil, nil, err
+	}
+	stop, err = StartMockServer()
+	if err != nil {
+		if cleanup != nil {
+			cleanup()
+		}
+		return nil, nil, err
+	}
+	return stop, cleanup, nil
+}
+
+// StartMockServer launches the mock n8n server binary built by BuildMockServer.
+// It returns a stop function that should be deferred by the caller.
 func StartMockServer() (func(), error) {
 	var logBuf bytes.Buffer
 	cmd := exec.Command("./mock-n8n-server")
