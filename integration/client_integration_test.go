@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/pmaojo/n8n-ops/internal/client"
+	"github.com/pmaojo/n8n-ops/internal/testutil"
 	"github.com/pmaojo/n8n-ops/internal/workflow"
 )
 
@@ -20,7 +21,7 @@ func TestMain(m *testing.M) {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	stopServer, err = testutil.StartMockServer()
+	stopServer, err = testutil.StartMockServer(0)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		cleanup()
@@ -40,12 +41,6 @@ func TestClientWorkflowCRUD(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
 	}
-
-	stop, err := testutil.StartMockServer(0)
-	if err != nil {
-		t.Fatalf("start mock server: %v", err)
-	}
-	defer stop()
 
 	c, err := client.New("http://localhost:3001", "n8n_api_mock_development", nil)
 	if err != nil {

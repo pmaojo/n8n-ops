@@ -39,7 +39,10 @@ func BuildMockServer() (func(), error) {
 	return cleanup, nil
 }
 
-func StartMockServer() (func(), error) {
+// StartMockServer launches the pre-built mock n8n server binary.
+// The returned function terminates the server process. The timeout
+// parameter controls how long to wait for the server to become ready.
+func StartMockServer(timeout time.Duration) (func(), error) {
 	var logBuf bytes.Buffer
 	cmd := exec.Command("./mock-n8n-server")
 	cmd.Dir = filepath.Join("..", "mock-n8n-server")

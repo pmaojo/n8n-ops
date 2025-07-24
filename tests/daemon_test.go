@@ -12,26 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pmaojo/n8n-ops/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-var stopServer func()
-
-func TestMain(m *testing.M) {
-	var err error
-	stopServer, err = testutil.StartMockServer(0)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-	code := m.Run()
-	if stopServer != nil {
-		stopServer()
-	}
-	os.Exit(code)
-}
 
 const (
 	mockN8nURL       = "http://localhost:3001"
@@ -122,8 +105,15 @@ func TestN8nAPIWorkflowOperations(t *testing.T) {
 	assert.True(t, resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusCreated,
 		"Crear workflow debe retornar 200 o 201, recibido: %d", resp.StatusCode)
 
+	var created TestWorkflow
+	err = json.NewDecoder(resp.Body).Decode(&created)
+	require.NoError(t, err)
+
 	// Verificar que podemos leer el workflow
-	getResp, err := client.Get(mockN8nURL + "/api/v1/workflows/" + testWorkflowID)
+	getReq, err := http.NewRequest("GET", mockN8nURL+"/api/v1/workflows/"+created.ID, nil)
+	require.NoError(t, err)
+	getReq.Header.Set("X-N8N-API-KEY", testAPIKey)
+	getResp, err := client.Do(getReq)
 	require.NoError(t, err)
 	defer getResp.Body.Close()
 
