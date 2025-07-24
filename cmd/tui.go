@@ -33,12 +33,16 @@ Flags:
 	},
 }
 
-var tuiRefresh time.Duration
+var (
+	tuiRefresh time.Duration
+	tuiRetro   bool
+)
 
 func init() {
 	rootCmd.AddCommand(tuiCmd)
 
 	tuiCmd.Flags().DurationVar(&tuiRefresh, "refresh", 3*time.Second, "dashboard refresh interval")
+	tuiCmd.Flags().BoolVar(&tuiRetro, "retro", false, "use retro dashboard style")
 }
 
 func runTUI(cmd *cobra.Command, args []string, cli *CLI) error {
@@ -51,6 +55,10 @@ func runTUI(cmd *cobra.Command, args []string, cli *CLI) error {
 	}
 	ctx := context.Background()
 	var uiImpl ui.DashboardUI
-	uiImpl = bubbleui.NewDashboard(n8nClient, tuiRefresh, cli.Logger)
+	if tuiRetro {
+		uiImpl = bubbleui.NewRetroDashboard(n8nClient, tuiRefresh, cli.Logger)
+	} else {
+		uiImpl = bubbleui.NewDashboard(n8nClient, tuiRefresh, cli.Logger)
+	}
 	return uiImpl.Run(ctx)
 }
