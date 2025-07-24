@@ -53,7 +53,29 @@ jobs:
           go-version: '1.23'
       - name: Run Go vet
         run: go vet ./...
-      - name: Run unit tests
-        run: go test ./...
+      - name: Run unit tests with coverage
+        run: go test ./... -coverprofile=coverage.out
         env:
           GOFLAGS: -buildvcs=false
+      - name: Calculate coverage
+        id: coverage
+        run: |
+          total=$(go tool cover -func=coverage.out | awk '/^total:/ {sub("%","",$3); print $3}')
+          echo "total=$total" >> "$GITHUB_OUTPUT"
+          if [ "$total" != "100.0" ]; then
+            echo "Coverage $total% is below 100%" >&2
+            exit 1
+          fi
+        env:
+          GOFLAGS: -buildvcs=false
+      - name: Generate coverage badge
+        run: |
+          value=$(printf '%s' "${{ steps.coverage.outputs.total }}" | cut -d'.' -f1)
+          curl -L "https://img.shields.io/badge/coverage-${value}%25-brightgreen" -o coverage.svg
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: |
+            coverage.out
+            coverage.svg
