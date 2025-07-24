@@ -8,6 +8,8 @@ import (
 
 	"github.com/pmaojo/n8n-ops/internal/client"
 	"github.com/pmaojo/n8n-ops/internal/credentials"
+	"github.com/pmaojo/n8n-ops/internal/git"
+	isync "github.com/pmaojo/n8n-ops/internal/sync"
 	iwatch "github.com/pmaojo/n8n-ops/internal/watch"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -64,7 +66,9 @@ func runWatch(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create n8n client: %w", err)
 	}
 
-	svc := iwatch.NewService(n8nClient, cm, logEntry, environment)
+	gitChecker := git.NewGitStatusChecker(".", nil)
+	syncSvc := isync.NewService(n8nClient, cm, gitChecker, logEntry, environment)
+	svc := iwatch.NewService(n8nClient, cm, gitChecker, syncSvc, logEntry, environment)
 
 	return svc.Watch(context.Background(), iwatch.Options{
 		Interval:   watchInterval,

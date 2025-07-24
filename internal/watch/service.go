@@ -10,8 +10,19 @@ import (
 
 	"github.com/pmaojo/n8n-ops/internal/client"
 	"github.com/pmaojo/n8n-ops/internal/credentials"
+	isync "github.com/pmaojo/n8n-ops/internal/sync"
 	"github.com/sirupsen/logrus"
 )
+
+// gitAutoCommitter defines the subset of git.GitStatusChecker used by the watch service.
+type gitAutoCommitter interface {
+	AutoCommitWorkflows(message string) (string, error)
+}
+
+// workflowSyncer abstracts the sync.Service dependency.
+type workflowSyncer interface {
+	Sync(ctx context.Context, opts isync.Options) error
+}
 
 // Service watches workflows for changes using a polling mechanism.
 type Service struct {
@@ -19,6 +30,8 @@ type Service struct {
 	CredentialManager *credentials.CredentialManager
 	Logger            logrus.FieldLogger
 	Environment       string
+	Git               gitAutoCommitter
+	Syncer            workflowSyncer
 }
 
 // Options configures the watch behaviour.
@@ -29,8 +42,15 @@ type Options struct {
 }
 
 // NewService constructs a new watcher service.
-func NewService(cli client.Client, cm *credentials.CredentialManager, logger logrus.FieldLogger, env string) *Service {
-	return &Service{Client: cli, CredentialManager: cm, Logger: logger, Environment: env}
+func NewService(cli client.Client, cm *credentials.CredentialManager, gitChecker gitAutoCommitter, syncer workflowSyncer, logger logrus.FieldLogger, env string) *Service {
+	return &Service{
+		Client:            cli,
+		CredentialManager: cm,
+		Logger:            logger,
+		Environment:       env,
+		Git:               gitChecker,
+		Syncer:            syncer,
+	}
 }
 
 // Watch starts monitoring workflow changes until the context is canceled.
@@ -81,16 +101,37 @@ func (s *Service) checkChanges(state map[string]time.Time, opts Options) error {
 		return err
 	}
 
+	changed := false
 	for _, wf := range wfs {
 		last, ok := state[wf.ID]
 		if !ok {
 			s.Logger.Infof("new workflow detected: %s", wf.Name)
 			state[wf.ID] = time.Now()
+			changed = true
 			continue
 		}
 		if time.Since(last) > time.Minute {
 			s.Logger.Infof("workflow updated: %s", wf.Name)
 			state[wf.ID] = time.Now()
+			changed = true
+		}
+	}
+
+	if !changed {
+		return nil
+	}
+
+	if opts.AutoSync && s.Syncer != nil {
+		if err := s.Syncer.Sync(context.Background(), isync.Options{}); err != nil {
+			s.Logger.WithError(err).Warn("auto-sync failed")
+		}
+	}
+
+	if opts.AutoCommit && s.Git != nil {
+		if msg, err := s.Git.AutoCommitWorkflows(""); err != nil {
+			s.Logger.WithError(err).Warn("auto-commit failed")
+		} else if msg != "" {
+			s.Logger.Info(msg)
 		}
 	}
 
