@@ -68,57 +68,101 @@ func runMonitor(cmd *cobra.Command, args []string) error {
 	i18n.PrintfKey("monitor_check_interval", checkInterval)
 	i18n.PrintfKey("monitor_failure_threshold", failureThreshold)
 
-	// Create n8n client using unified credential system
-	n8nClient, _, err := cliutils.SetupClient(environment, demoMode)
+
+	ctx := context.Background()
+	n8nClient, err := getN8nClient(ctx, environment, demoMode)
 	if err != nil {
 		return err
 	}
 
-	// Test connection
-	ctx := context.Background()
-	if err := n8nClient.HealthCheck(ctx); err != nil {
-		return fmt.Errorf("failed to connect to n8n: %w", err)
+	issueManager, projectID, err := setupIssueManager(demoMode, gitlabURL, gitlabProjectID)
+	if err != nil {
+		return err
 	}
 
-	// Setup GitLab issue manager
-	if gitlabProjectID == "" {
-		gitlabProjectID = os.Getenv("GITLAB_PROJECT_ID")
-		if gitlabProjectID == "" {
-			gitlabProjectID = os.Getenv("GITLAB_PROJECT")
-		}
-		if gitlabProjectID == "" && !demoMode {
-			return fmt.Errorf("gitlab-project or GITLAB_PROJECT_ID is required")
-		}
-	}
-
-	gitlabToken := os.Getenv("GITLAB_TOKEN")
-	if gitlabToken == "" && !demoMode {
-		return fmt.Errorf("GITLAB_TOKEN environment variable is required")
-	}
-
-	var issueManager issues.IssueManager
 	if demoMode {
-		issueManager = NewMockIssueManager()
 		fmt.Println("📋 Using mock issue manager (demo mode)")
 	} else {
-		issueManager = issues.NewGitLabIssueManager(gitlabURL, gitlabProjectID, gitlabToken)
-		fmt.Printf("📋 Connected to GitLab project: %s\n", gitlabProjectID)
+		fmt.Printf("📋 Connected to GitLab project: %s\n", projectID)
 	}
 
-	// Create failure detector
 	detector := monitoring.NewFailureDetector(n8nClient, issueManager, logger)
 	detector.SetCheckInterval(checkInterval)
 	detector.SetRetryThreshold(failureThreshold)
 
-	// Setup signal handling for graceful shutdown
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	return startMonitoring(detector, logEntry, nil)
+}
 
-	// Create context for cancellation
+var monitorClientFactory = func(url, apiKey string) (client.Client, error) {
+	return client.New(url, apiKey, nil)
+}
+
+// getN8nClient creates and verifies the n8n client.
+func getN8nClient(ctx context.Context, env string, demo bool) (client.Client, error) {
+	var n8nURL, apiKey string
+	if demo {
+		n8nURL = "http://localhost:3001"
+		apiKey = "n8n_api_mock_development"
+	} else {
+		cm := credentials.NewCredentialManager(env)
+		var err error
+		n8nURL, apiKey, err = cm.GetN8nCredentials()
+		if err != nil {
+			return nil, fmt.Errorf("failed to load credentials: %w", err)
+		}
+		if n8nURL == "" || apiKey == "" {
+			return nil, fmt.Errorf("n8n credentials not configured for %s environment. Set N8N_%s_URL and N8N_%s_API_KEY or use --demo",
+				env, strings.ToUpper(env), strings.ToUpper(env))
+		}
+	}
+
+	n8nClient, err := monitorClientFactory(n8nURL, apiKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create n8n client: %w", err)
+
+	}
+
+	if err := n8nClient.HealthCheck(ctx); err != nil {
+		return nil, fmt.Errorf("failed to connect to n8n: %w", err)
+	}
+
+	return n8nClient, nil
+}
+
+// setupIssueManager configures the issue manager implementation.
+func setupIssueManager(demo bool, url, projectID string) (issues.IssueManager, string, error) {
+	if projectID == "" {
+		projectID = os.Getenv("GITLAB_PROJECT_ID")
+		if projectID == "" {
+			projectID = os.Getenv("GITLAB_PROJECT")
+		}
+		if projectID == "" && !demo {
+			return nil, "", fmt.Errorf("gitlab-project or GITLAB_PROJECT_ID is required")
+		}
+	}
+
+	token := os.Getenv("GITLAB_TOKEN")
+	if token == "" && !demo {
+		return nil, "", fmt.Errorf("GITLAB_TOKEN environment variable is required")
+	}
+
+	if demo {
+		return NewMockIssueManager(), projectID, nil
+	}
+
+	return issues.NewGitLabIssueManager(url, projectID, token), projectID, nil
+}
+
+// startMonitoring launches the detector and waits for termination signals.
+func startMonitoring(detector interface{ Start(context.Context) error }, logEntry *logrus.Entry, sigChan chan os.Signal) error {
+	if sigChan == nil {
+		sigChan = make(chan os.Signal, 1)
+		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// Start monitoring in background
 	go func() {
 		if err := detector.Start(ctx); err != nil && err != context.Canceled {
 			logEntry.WithError(err).Error("Monitoring failed")
@@ -128,10 +172,8 @@ func runMonitor(cmd *cobra.Command, args []string) error {
 	fmt.Printf("✅ Monitoring started. Creating issues for workflow failures...\n")
 	i18n.PrintlnKey("monitor_stop")
 
-	// Wait for shutdown signal
 	sig := <-sigChan
 	fmt.Printf("\n🛑 Received signal %v, stopping monitoring...\n", sig)
-
 	cancel()
 	return nil
 }
