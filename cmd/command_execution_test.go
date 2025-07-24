@@ -17,6 +17,8 @@ func executeRoot(args ...string) (string, error) {
 	os.Stdout = writer
 
 	rootCmd.SetArgs(args)
+	cfg = nil
+	logger = nil
 	err := rootCmd.Execute()
 
 	writer.Close()
@@ -73,5 +75,18 @@ func TestStatusCommandExecute(t *testing.T) {
 	}
 	if !strings.Contains(output, "\"environment\"") {
 		t.Errorf("unexpected status output: %s", output)
+	}
+}
+
+func TestExecuteInvalidConfig(t *testing.T) {
+	dir := t.TempDir()
+	cfgPath := filepath.Join(dir, "config.yaml")
+	if err := os.WriteFile(cfgPath, []byte("environments: bad"), 0o644); err != nil {
+		t.Fatalf("failed to write config: %v", err)
+	}
+
+	_, err := executeRoot("--config", cfgPath)
+	if err == nil {
+		t.Fatal("expected error for invalid config")
 	}
 }
