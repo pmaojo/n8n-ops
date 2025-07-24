@@ -147,7 +147,8 @@ func (m model) View() string {
 	var b strings.Builder
 	highlight := lipgloss.NewStyle().Foreground(lipgloss.Color("0")).Background(lipgloss.Color("2"))
 	for i, r := range rows {
-		row := fmt.Sprintf("%-8s %-30s %-10s", r[0], r[1], r[2])
+		status := statusStyle(r[2]).Render(r[2])
+		row := fmt.Sprintf("%-8s %-30s %-10s", r[0], r[1], status)
 		if i == m.selectedIndex+1 { // +1 because rows include header
 			row = highlight.Render(row)
 		}
