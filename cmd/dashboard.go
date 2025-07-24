@@ -11,6 +11,7 @@ import (
 
 	"github.com/pmaojo/n8n-ops/internal/client"
 	"github.com/pmaojo/n8n-ops/internal/credentials"
+	"github.com/pmaojo/n8n-ops/internal/i18n"
 	"github.com/pmaojo/n8n-ops/internal/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -95,15 +96,9 @@ func runDashboard(cmd *cobra.Command, args []string) error {
     ================================================
 `)
 
-	if language == "es" {
-		fmt.Printf("🌐 Iniciando dashboard en puerto %d\n", dashboardPort)
-		fmt.Printf("📊 Ambiente: %s\n", environment)
-		fmt.Printf("🔗 URL: http://localhost:%d\n", dashboardPort)
-	} else {
-		fmt.Printf("🌐 Starting dashboard on port %d\n", dashboardPort)
-		fmt.Printf("📊 Environment: %s\n", environment)
-		fmt.Printf("🔗 URL: http://localhost:%d\n", dashboardPort)
-	}
+	i18n.PrintfKey("dashboard_starting", dashboardPort)
+	i18n.PrintfKey("dashboard_environment", environment)
+	i18n.PrintfKey("dashboard_url", dashboardPort)
 
 	// Setup HTTP handlers
 	http.HandleFunc("/", serveDashboard)

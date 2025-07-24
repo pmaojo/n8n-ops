@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/pmaojo/n8n-ops/internal/git"
+	"github.com/pmaojo/n8n-ops/internal/i18n"
 )
 
 var (
@@ -84,11 +85,7 @@ func init() {
 }
 
 func runBranchCmd(cmd *cobra.Command, args []string, svc *git.Service) error {
-	if language == "es" {
-		fmt.Println("🌿 Iniciando análisis de ramas...")
-	} else {
-		fmt.Println("🌿 Starting branch workflow analysis...")
-	}
+	i18n.PrintlnKey("branch_analysis_start")
 
 	// Handle different command modes
 	switch {
@@ -359,13 +356,8 @@ func compareBranchWorkflows(branchA, branchB *BranchWorkflowInfo) *WorkflowCompa
 }
 
 func displayBranchInfo(info *BranchWorkflowInfo) error {
-	if language == "es" {
-		fmt.Printf("🌿 INFORMACIÓN DE RAMA: %s\n", info.Branch)
-		fmt.Println("=" + strings.Repeat("=", 50))
-	} else {
-		fmt.Printf("🌿 BRANCH INFORMATION: %s\n", info.Branch)
-		fmt.Println("=" + strings.Repeat("=", 50))
-	}
+	i18n.PrintfKey("branch_info_title", info.Branch)
+	fmt.Println("=" + strings.Repeat("=", 50))
 
 	fmt.Printf("📁 Environment: %s\n", info.Environment)
 	fmt.Printf("📝 Last Commit: %s\n", info.LastCommit[:8])
@@ -415,13 +407,8 @@ func displayBranchInfo(info *BranchWorkflowInfo) error {
 }
 
 func displayAllBranches(branches map[string]*BranchWorkflowInfo) error {
-	if language == "es" {
-		fmt.Println("🌳 ANÁLISIS DE TODAS LAS RAMAS")
-		fmt.Println("=" + strings.Repeat("=", 50))
-	} else {
-		fmt.Println("🌳 ALL BRANCHES ANALYSIS")
-		fmt.Println("=" + strings.Repeat("=", 50))
-	}
+	i18n.PrintlnKey("all_branches_analysis")
+	fmt.Println("=" + strings.Repeat("=", 50))
 
 	if len(branches) == 0 {
 		fmt.Println("📭 No branches with workflows found")
@@ -483,13 +470,8 @@ func displayAllBranches(branches map[string]*BranchWorkflowInfo) error {
 }
 
 func displayBranchComparison(comparison *WorkflowComparison) error {
-	if language == "es" {
-		fmt.Printf("🔍 COMPARACIÓN DE RAMAS: %s vs %s\n", comparison.BranchA, comparison.BranchB)
-		fmt.Println("=" + strings.Repeat("=", 60))
-	} else {
-		fmt.Printf("🔍 BRANCH COMPARISON: %s vs %s\n", comparison.BranchA, comparison.BranchB)
-		fmt.Println("=" + strings.Repeat("=", 60))
-	}
+	i18n.PrintfKey("branch_comparison_title", comparison.BranchA, comparison.BranchB)
+	fmt.Println("=" + strings.Repeat("=", 60))
 
 	fmt.Printf("📊 SUMMARY:\n")
 	fmt.Printf("   ✅ Added: %d workflows\n", len(comparison.Added))
