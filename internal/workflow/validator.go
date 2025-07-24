@@ -217,10 +217,11 @@ func validateNodeConnectivity(nodes []Node, connections map[string]interface{}) 
 
 	// Check if all nodes (except start nodes) have incoming connections
 	startNodeTypes := map[string]bool{
-		"n8n-nodes-base.start":    true,
-		"n8n-nodes-base.webhook":  true,
-		"n8n-nodes-base.cron":     true,
-		"n8n-nodes-base.interval": true,
+		"n8n-nodes-base.start":         true,
+		"n8n-nodes-base.webhook":       true,
+		"n8n-nodes-base.cron":          true,
+		"n8n-nodes-base.interval":      true,
+		"n8n-nodes-base.manualTrigger": true,
 	}
 
 	hasIncomingConnection := make(map[string]bool)

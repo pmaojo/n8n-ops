@@ -28,7 +28,7 @@ func NewLogger() *logrus.Logger {
 	logger.SetOutput(os.Stdout)
 
 	// Configure from environment or config if available
-	configureLogger(logger)
+	configureLogger(logger, OSProvider{})
 
 	return logger
 }
@@ -108,19 +108,22 @@ func CloseLogFile() error {
 }
 
 // configureLogger applies configuration from environment variables
-func configureLogger(logger *logrus.Logger) {
+func configureLogger(logger *logrus.Logger, provider EnvProvider) {
+	if provider == nil {
+		provider = OSProvider{}
+	}
 	// Check for log level in environment
-	if level := os.Getenv("LOG_LEVEL"); level != "" {
+	if level := provider.Getenv("LOG_LEVEL"); level != "" {
 		SetLogLevel(logger, level)
 	}
 
 	// Check for log format in environment
-	if format := os.Getenv("LOG_FORMAT"); format == "json" {
+	if format := provider.Getenv("LOG_FORMAT"); format == "json" {
 		SetLogFormat(logger, "json")
 	}
 
 	// Check for log file in environment
-	if logFile := os.Getenv("LOG_FILE"); logFile != "" {
+	if logFile := provider.Getenv("LOG_FILE"); logFile != "" {
 		SetLogFile(logger, logFile)
 	} else {
 		CloseLogFile()

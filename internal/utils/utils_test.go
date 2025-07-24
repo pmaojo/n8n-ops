@@ -72,13 +72,13 @@ func TestCheckN8nCredentials(t *testing.T) {
 	os.Setenv("N8N_DEVELOPMENT_URL", "http://localhost")
 	os.Setenv("N8N_DEVELOPMENT_API_KEY", "key")
 
-	if err := CheckN8nCredentials("development"); err != nil {
+	if err := CheckN8nCredentials(OSProvider{}, "development"); err != nil {
 		t.Fatalf("expected credentials to pass, got %v", err)
 	}
 
 	os.Unsetenv("N8N_DEVELOPMENT_URL")
 	os.Unsetenv("N8N_DEVELOPMENT_API_KEY")
-	if err := CheckN8nCredentials("development"); err == nil {
+	if err := CheckN8nCredentials(OSProvider{}, "development"); err == nil {
 		t.Fatal("expected error when credentials are missing")
 	}
 }
