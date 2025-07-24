@@ -17,22 +17,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var stopServer func()
-
-func TestMain(m *testing.M) {
-	var err error
-	stopServer, err = testutil.StartMockServer()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-	code := m.Run()
-	if stopServer != nil {
-		stopServer()
-	}
-	os.Exit(code)
-}
-
 const (
 	mockN8nURL       = "http://localhost:3001"
 	testWorkflowsDir = "./test-workflows/development"
