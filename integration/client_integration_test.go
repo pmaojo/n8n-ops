@@ -2,46 +2,19 @@ package integration_test
 
 import (
 	"context"
-	"fmt"
-	"os"
 	"testing"
 
 	"github.com/pmaojo/n8n-ops/internal/client"
+	"github.com/pmaojo/n8n-ops/internal/testutil"
 	"github.com/pmaojo/n8n-ops/internal/workflow"
 )
-
-var stopServer func()
-var cleanup func()
-
-func TestMain(m *testing.M) {
-	var err error
-	cleanup, err = testutil.BuildMockServer()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-	stopServer, err = testutil.StartMockServer()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		cleanup()
-		os.Exit(1)
-	}
-	code := m.Run()
-	if stopServer != nil {
-		stopServer()
-	}
-	if cleanup != nil {
-		cleanup()
-	}
-	os.Exit(code)
-}
 
 func TestClientWorkflowCRUD(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
 	}
 
-	stop, err := testutil.StartMockServer(0)
+	stop, err := testutil.StartMockServer()
 	if err != nil {
 		t.Fatalf("start mock server: %v", err)
 	}
