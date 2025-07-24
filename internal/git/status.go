@@ -147,8 +147,12 @@ func (gsc *GitStatusChecker) GetStatus() (*GitStatus, error) {
 
 // isWorkflowFile checks if a file path is a workflow JSON file
 func (gsc *GitStatusChecker) isWorkflowFile(filePath string) bool {
-	// Check if file is in workflows directory and has .json extension
-	return strings.Contains(filePath, "workflows/") && strings.HasSuffix(filePath, ".json")
+	normalized := filepath.ToSlash(filePath)
+	dir, file := filepath.Split(normalized)
+	if !strings.HasSuffix(strings.ToLower(file), ".json") {
+		return false
+	}
+	return strings.Contains(dir, "workflows/")
 }
 
 // extractWorkflowName extracts workflow name from file path
@@ -169,14 +173,17 @@ func (gsc *GitStatusChecker) extractWorkflowName(filePath string) string {
 
 // extractEnvironment extracts environment from file path
 func (gsc *GitStatusChecker) extractEnvironment(filePath string) string {
-	if strings.Contains(filePath, "workflows/development/") {
+	path := filepath.ToSlash(filePath)
+	switch {
+	case strings.Contains(path, "workflows/development/"):
 		return "development"
-	} else if strings.Contains(filePath, "workflows/staging/") {
+	case strings.Contains(path, "workflows/staging/"):
 		return "staging"
-	} else if strings.Contains(filePath, "workflows/production/") {
+	case strings.Contains(path, "workflows/production/"):
 		return "production"
+	default:
+		return "unknown"
 	}
-	return "unknown"
 }
 
 // getCurrentBranch gets the current Git branch
