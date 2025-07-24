@@ -44,9 +44,16 @@ environments:
   development:
     url: "https://your-dev-n8n.com"
     api_key: "your-dev-api-key"
-    
+    workflow_credentials:
+      - id: smtp_dev
+        name: SMTP Dev
+        type: smtp
+        data:
+          host: smtp.mailtrap.io
+          user: dev_user
+
   staging:
-    url: "https://your-staging-n8n.com"  
+    url: "https://your-staging-n8n.com"
     api_key: "your-staging-api-key"
     
   production:
