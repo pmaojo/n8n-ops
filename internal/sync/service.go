@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -23,6 +22,8 @@ type Service struct {
 	GitChecker        *git.GitStatusChecker
 	Logger            logrus.FieldLogger
 	Environment       string
+	FS                FileSystem
+	Env               EnvProvider
 }
 
 // Options configures the sync operation.
@@ -40,6 +41,8 @@ func NewService(cli client.Client, cm *credentials.CredentialManager, checker *g
 		GitChecker:        checker,
 		Logger:            logger,
 		Environment:       env,
+		FS:                OSFileSystem{},
+		Env:               OSEnvProvider{},
 	}
 }
 
@@ -60,7 +63,7 @@ func (s *Service) Sync(ctx context.Context, opts Options) error {
 		}
 	}
 
-	if err := os.MkdirAll(opts.OutputDir, 0o755); err != nil {
+	if err := s.FS.MkdirAll(opts.OutputDir, 0o755); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
@@ -81,11 +84,11 @@ func (s *Service) Sync(ctx context.Context, opts Options) error {
 		wf.SyncMetadata = &workflow.SyncMetadata{
 			SyncDate:    time.Now(),
 			Environment: s.Environment,
-			SyncedBy:    getSyncUser(),
-			GitCommit:   os.Getenv("CI_COMMIT_SHA"),
+			SyncedBy:    getSyncUser(s.Env),
+			GitCommit:   s.Env.Get("CI_COMMIT_SHA"),
 		}
 
-		if err := writeFile(path, wf); err != nil {
+		if err := s.writeFile(path, wf); err != nil {
 			s.Logger.Error("failed to write workflow file", "workflow", wf.Name, "error", err)
 			if !opts.Force {
 				return fmt.Errorf("failed to write workflow %s: %w", wf.Name, err)
@@ -101,10 +104,10 @@ func (s *Service) Sync(ctx context.Context, opts Options) error {
 		"environment":     s.Environment,
 		"totalWorkflows":  len(workflows),
 		"syncedWorkflows": synced,
-		"syncedBy":        getSyncUser(),
+		"syncedBy":        getSyncUser(s.Env),
 	}
 	metaPath := filepath.Join(opts.OutputDir, "_sync_metadata.json")
-	if err := utils.WriteJSONFile(metadata, metaPath); err != nil {
+	if err := s.writeJSONFile(metaPath, metadata); err != nil {
 		s.Logger.Warn("failed to write sync metadata", "error", err)
 	}
 
@@ -112,8 +115,8 @@ func (s *Service) Sync(ctx context.Context, opts Options) error {
 	return nil
 }
 
-func writeFile(p string, wf *workflow.Workflow) error {
-	f, err := os.Create(p)
+func (s *Service) writeFile(p string, wf *workflow.Workflow) error {
+	f, err := s.FS.Create(p)
 	if err != nil {
 		return err
 	}
@@ -123,17 +126,31 @@ func writeFile(p string, wf *workflow.Workflow) error {
 	return enc.Encode(wf)
 }
 
-func getSyncUser() string {
-	if u := os.Getenv("GITLAB_USER_EMAIL"); u != "" {
+func (s *Service) writeJSONFile(p string, data interface{}) error {
+	dir := filepath.Dir(p)
+	if dir != "" && dir != "." {
+		if err := s.FS.MkdirAll(dir, 0o755); err != nil {
+			return err
+		}
+	}
+	b, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return err
+	}
+	return s.FS.WriteFile(p, b, 0o644)
+}
+
+func getSyncUser(env EnvProvider) string {
+	if u := env.Get("GITLAB_USER_EMAIL"); u != "" {
 		return u
 	}
-	if u := os.Getenv("CI_COMMIT_AUTHOR_EMAIL"); u != "" {
+	if u := env.Get("CI_COMMIT_AUTHOR_EMAIL"); u != "" {
 		return u
 	}
 	if u := getGitUser(); u != "" {
 		return u
 	}
-	if u := os.Getenv("USER"); u != "" {
+	if u := env.Get("USER"); u != "" {
 		return u + "@local"
 	}
 	return "n8n-ops-user"
