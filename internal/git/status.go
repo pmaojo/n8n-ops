@@ -6,6 +6,9 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // GitStatus represents the status of files in Git
@@ -159,9 +162,9 @@ func (gsc *GitStatusChecker) extractWorkflowName(filePath string) string {
 		name = name[:idx]
 	}
 
-	// Convert hyphens to spaces and capitalize
+	// Convert hyphens to spaces and capitalize using Unicode-aware title casing
 	name = strings.ReplaceAll(name, "-", " ")
-	return strings.Title(name)
+	return cases.Title(language.Und, cases.NoLower).String(name)
 }
 
 // extractEnvironment extracts environment from file path
