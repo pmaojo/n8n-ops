@@ -9,7 +9,20 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	wf "github.com/pmaojo/n8n-ops/internal/workflow"
 )
+
+type stubClient struct{}
+
+func (stubClient) GetWorkflows(ctx context.Context) ([]*wf.Workflow, error) {
+	return []*wf.Workflow{{ID: "1", Name: "A", Nodes: []wf.Node{{Name: "start", Type: "start", Position: []float64{0, 0}}}}}, nil
+}
+
+func (stubClient) GetWorkflow(ctx context.Context, id string) (*wf.Workflow, error) {
+	return &wf.Workflow{ID: id, Name: "A", Active: true, Nodes: []wf.Node{{Name: "start", Type: "start", Position: []float64{0, 0}}}, Tags: []wf.Tag{{Name: "t1"}}, UpdatedAt: time.Now()}, nil
+}
+
+func (stubClient) HealthCheck(ctx context.Context) error { return nil }
 
 func TestUpdateSelectedIndex(t *testing.T) {
 	m := newModel(context.Background(), nil, time.Second)
@@ -78,5 +91,20 @@ func TestViewColorsStatus(t *testing.T) {
 	inactiveColored := statusStyle("inactive").Render("inactive")
 	if !strings.Contains(view, inactiveColored) {
 		t.Errorf("expected inactive status color not found")
+    
+func TestEnterToggleDetailView(t *testing.T) {
+	m := newModel(context.Background(), stubClient{}, time.Second)
+	m.refreshData()
+
+	mdl, _ := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m2 := mdl.(model)
+	if !m2.viewingDetails || m2.workflowDetail == nil {
+		t.Fatal("expected detail view on enter")
+	}
+
+	mdl, _ = m2.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m3 := mdl.(model)
+	if m3.viewingDetails || m3.workflowDetail != nil {
+		t.Fatal("expected to return to list view on enter") 
 	}
 }
