@@ -1,6 +1,7 @@
 package git
 
 import (
+	"context"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -174,7 +175,7 @@ func TestAutoCommitWorkflows(t *testing.T) {
 		StatusOutput: " M workflows/development/mod.json\n?? workflows/development/new.json\n",
 	}
 	checker := NewGitStatusChecker("", exec)
-	msg, err := checker.AutoCommitWorkflows("commit msg")
+	msg, err := checker.AutoCommitWorkflows(context.Background(), "commit msg")
 	require.NoError(t, err)
 	assert.Contains(t, msg, "Auto-committed")
 	assert.ElementsMatch(t, []string{"workflows/development/mod.json", "workflows/development/new.json"}, exec.Added)
