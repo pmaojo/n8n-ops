@@ -40,6 +40,12 @@ n8n-ops observability test-connection --sentry --grafana
 n8n-ops observability create-dashboard
 ```
 
+To view the metrics directly in your terminal, run:
+
+```bash
+n8n-ops tui --env development
+```
+
 ## Configuration
 
 ### Sentry Setup

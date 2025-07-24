@@ -124,6 +124,11 @@ cli:
   # Progress bars and animations
   show_progress: true
 
+# Terminal dashboard (tui) settings
+tui:
+  # Theme for the dashboard: default or cyberpunk
+  theme: default
+
 # GitLab integration settings
 gitlab:
   # Base URL for GitLab API
