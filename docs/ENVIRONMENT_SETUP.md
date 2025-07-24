@@ -89,6 +89,12 @@ n8n-ops es compatible con múltiples formatos de nombres de variables:
 | `N8N_STAGING_API_KEY` | `N8N_STAGING_API_KEY` | Staging |
 | `N8N_PROD_API_KEY` | `N8N_PRODUCTION_API_KEY` | Producción |
 
+## Variables para pruebas
+
+Define `MOCK_SERVER_TIMEOUT` para ajustar el tiempo de espera al iniciar el
+servidor `mock` utilizado en las pruebas. El valor debe seguir el formato de
+duración de Go (`5s`, `1m`, ...). Si no se especifica, se usa `5s`.
+
 ## Solución de Problemas
 
 ### Error: "API key not found"

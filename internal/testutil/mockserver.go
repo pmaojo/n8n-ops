@@ -10,8 +10,16 @@ import (
 	"time"
 )
 
+const (
+	// DefaultServerTimeout is the time to wait for the mock server to become ready.
+	DefaultServerTimeout = 5 * time.Second
+	// EnvMockServerTimeout can override the startup timeout when running tests.
+	EnvMockServerTimeout = "MOCK_SERVER_TIMEOUT"
+)
+
 // StartMockServer launches the mock n8n server used in tests and returns a
 // function to stop it. It waits until the server is responsive before returning.
+
 // The caller should defer the returned stop function.
 // BuildMockServer compiles the mock n8n server binary used in tests.
 // It returns a cleanup function to remove the generated binary when tests complete.
@@ -46,7 +54,9 @@ func StartMockServer() (func(), error) {
 		close(done)
 	}()
 
-	if err := WaitForServer("http://localhost:3001/health", 5*time.Second); err != nil {
+	timeout = resolveTimeout(timeout)
+
+	if err := WaitForServer("http://localhost:3001/health", timeout); err != nil {
 		cmd.Process.Kill()
 		<-done
 		return nil, fmt.Errorf("mock server did not start: %w", err)
@@ -62,6 +72,10 @@ func StartMockServer() (func(), error) {
 // WaitForServer polls the provided URL until it returns a successful response
 // or the timeout is reached.
 func WaitForServer(url string, timeout time.Duration) error {
+	if timeout <= 0 {
+		timeout = DefaultServerTimeout
+	}
+
 	deadline := time.Now().Add(timeout)
 	for {
 		if time.Now().After(deadline) {
@@ -77,4 +91,21 @@ func WaitForServer(url string, timeout time.Duration) error {
 		}
 		time.Sleep(100 * time.Millisecond)
 	}
+}
+
+// resolveTimeout returns the provided timeout or a value derived from the
+// EnvMockServerTimeout environment variable. If neither is set, it falls back
+// to DefaultServerTimeout.
+func resolveTimeout(provided time.Duration) time.Duration {
+	if provided > 0 {
+		return provided
+	}
+
+	if v := os.Getenv(EnvMockServerTimeout); v != "" {
+		if d, err := time.ParseDuration(v); err == nil {
+			return d
+		}
+	}
+
+	return DefaultServerTimeout
 }

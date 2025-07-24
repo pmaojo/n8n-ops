@@ -41,6 +41,12 @@ func TestClientWorkflowCRUD(t *testing.T) {
 		t.Skip("skipping integration test")
 	}
 
+	stop, err := testutil.StartMockServer(0)
+	if err != nil {
+		t.Fatalf("start mock server: %v", err)
+	}
+	defer stop()
+
 	c, err := client.New("http://localhost:3001", "n8n_api_mock_development", nil)
 	if err != nil {
 		t.Fatalf("create client: %v", err)

@@ -8,6 +8,8 @@ This project contains n8n workflows managed with the n8n-ops tool for collaborat
 2. Set up environment variables in `.env`
 3. Sync workflows: `n8n-ops sync --env development`
 4. Make changes and deploy: `n8n-ops deploy --env development`
+5. *(Optional)* Adjust `MOCK_SERVER_TIMEOUT` to increase the wait time when
+   starting the mock server for tests.
 
 ## Commands
 
