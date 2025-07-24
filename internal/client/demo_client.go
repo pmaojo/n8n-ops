@@ -8,10 +8,16 @@ import (
 	"github.com/pmaojo/n8n-ops/internal/workflow"
 )
 
+// DemoN8nClient is an in-memory implementation of the Client interface used
+// for demos and tests. It avoids any network calls and stores workflows in a
+// map keyed by workflow ID.
 type DemoN8nClient struct {
 	workflows map[string]*workflow.Workflow
 }
 
+// NewDemoN8nClient creates a DemoN8nClient pre-populated with example
+// workflows. It is safe for concurrent use in tests since it operates only on
+// local memory.
 func NewDemoN8nClient() *DemoN8nClient {
 	workflows := map[string]*workflow.Workflow{
 		"1001": {
@@ -141,6 +147,9 @@ func NewDemoN8nClient() *DemoN8nClient {
 	return &DemoN8nClient{workflows: workflows}
 }
 
+// GetMe returns static user information representing the currently authenticated
+// user. It mirrors the behavior of the real n8n API without performing any
+// network requests.
 func (c *DemoN8nClient) GetMe() (*User, error) {
 	return &User{
 		ID:    "demo-user-123",
@@ -152,10 +161,12 @@ func (c *DemoN8nClient) GetMe() (*User, error) {
 	}, nil
 }
 
+// HealthCheck simulates an API health check and always succeeds.
 func (c *DemoN8nClient) HealthCheck(ctx context.Context) error {
 	return nil
 }
 
+// GetWorkflows returns a copy of all in-memory workflows.
 func (c *DemoN8nClient) GetWorkflows(ctx context.Context) ([]*workflow.Workflow, error) {
 	var workflows []*workflow.Workflow
 	for _, wf := range c.workflows {
@@ -165,6 +176,7 @@ func (c *DemoN8nClient) GetWorkflows(ctx context.Context) ([]*workflow.Workflow,
 	return workflows, nil
 }
 
+// GetWorkflow retrieves a single workflow by ID.
 func (c *DemoN8nClient) GetWorkflow(ctx context.Context, id string) (*workflow.Workflow, error) {
 	wf, exists := c.workflows[id]
 	if !exists {
@@ -174,6 +186,7 @@ func (c *DemoN8nClient) GetWorkflow(ctx context.Context, id string) (*workflow.W
 	return &copy, nil
 }
 
+// CreateWorkflow stores a new workflow and returns a copy with generated fields.
 func (c *DemoN8nClient) CreateWorkflow(ctx context.Context, wf *workflow.Workflow) (*workflow.Workflow, error) {
 	newID := fmt.Sprintf("demo-%d", len(c.workflows)+1001)
 	wf.ID = newID
@@ -186,6 +199,7 @@ func (c *DemoN8nClient) CreateWorkflow(ctx context.Context, wf *workflow.Workflo
 	return &copy, nil
 }
 
+// UpdateWorkflow replaces an existing workflow with the provided one.
 func (c *DemoN8nClient) UpdateWorkflow(ctx context.Context, id string, wf *workflow.Workflow) (*workflow.Workflow, error) {
 	existing, exists := c.workflows[id]
 	if !exists {
@@ -202,6 +216,7 @@ func (c *DemoN8nClient) UpdateWorkflow(ctx context.Context, id string, wf *workf
 	return &copy, nil
 }
 
+// ActivateWorkflow marks a workflow as active.
 func (c *DemoN8nClient) ActivateWorkflow(ctx context.Context, id string) (*workflow.Workflow, error) {
 	wf, exists := c.workflows[id]
 	if !exists {
@@ -214,6 +229,7 @@ func (c *DemoN8nClient) ActivateWorkflow(ctx context.Context, id string) (*workf
 	return &copy, nil
 }
 
+// DeactivateWorkflow marks a workflow as inactive.
 func (c *DemoN8nClient) DeactivateWorkflow(ctx context.Context, id string) (*workflow.Workflow, error) {
 	wf, exists := c.workflows[id]
 	if !exists {
@@ -226,6 +242,7 @@ func (c *DemoN8nClient) DeactivateWorkflow(ctx context.Context, id string) (*wor
 	return &copy, nil
 }
 
+// DeleteWorkflow removes a workflow from the in-memory store.
 func (c *DemoN8nClient) DeleteWorkflow(ctx context.Context, id string) error {
 	if _, exists := c.workflows[id]; !exists {
 		return fmt.Errorf("workflow not found: %s", id)
@@ -235,19 +252,23 @@ func (c *DemoN8nClient) DeleteWorkflow(ctx context.Context, id string) error {
 	return nil
 }
 
+// TestConnection is a no-op that always succeeds for the demo client.
 func (c *DemoN8nClient) TestConnection() error {
 	// Demo client always passes connection test
 	return nil
 }
 
+// ExecuteWorkflow is not implemented for the demo client.
 func (c *DemoN8nClient) ExecuteWorkflow(ctx context.Context, id string) (*workflow.ExecutionResult, error) {
 	return nil, fmt.Errorf("ExecuteWorkflow not implemented in demo client")
 }
 
+// GetExecution is not implemented for the demo client.
 func (c *DemoN8nClient) GetExecution(ctx context.Context, id string) (*workflow.ExecutionResult, error) {
 	return nil, fmt.Errorf("GetExecution not implemented in demo client")
 }
 
+// GetExecutions is not implemented for the demo client.
 func (c *DemoN8nClient) GetExecutions(ctx context.Context, workflowID string, status string, limit int) ([]*workflow.ExecutionResult, error) {
 	return nil, fmt.Errorf("GetExecutions not implemented in demo client")
 }

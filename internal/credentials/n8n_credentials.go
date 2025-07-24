@@ -45,6 +45,8 @@ type CredentialMapping struct {
 	ProductionID   string `json:"productionId"`
 }
 
+// NewN8nCredentialManager returns a manager that reads n8n credentials from
+// environment variables. It does not validate the credentials on creation.
 func NewN8nCredentialManager(environment string) *N8nCredentialManager {
 	return &N8nCredentialManager{
 		Environment: environment,
@@ -226,6 +228,9 @@ type SecureCredentialManager struct {
 	Environment string
 }
 
+// NewSecureCredentialManager creates a SecureCredentialManager that maps
+// workflow credential nodes to environment variables based on the given
+// environment.
 func NewSecureCredentialManager(environment string) *SecureCredentialManager {
 	return &SecureCredentialManager{
 		Environment: environment,
