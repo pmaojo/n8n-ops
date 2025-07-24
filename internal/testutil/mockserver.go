@@ -57,9 +57,7 @@ func StartMockServer() (func(), error) {
 		close(done)
 	}()
 
-	timeout = resolveTimeout(timeout)
-
-	if err := WaitForServer("http://localhost:3001/health", timeout); err != nil {
+	if err := WaitForServer("http://localhost:3001/health", 0); err != nil {
 		cmd.Process.Kill()
 		<-done
 		fmt.Fprint(os.Stderr, logBuf.String())
