@@ -231,8 +231,8 @@ deploy-production:
 # Configurar observabilidad
 n8n-ops observability setup --sentry-dsn $SENTRY_DSN --grafana-token $GRAFANA_TOKEN
 
-# Activar monitoreo automático
-n8n-ops monitor --env production --failure-threshold 3 --create-issues
+# Activar monitoreo automático (las incidencias se crean automáticamente)
+n8n-ops monitor --env production --failure-threshold 3
 ```
 
 ### Dashboard de Monitoreo

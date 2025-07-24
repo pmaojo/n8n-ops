@@ -582,10 +582,6 @@ func ShowMonitoringTutorial() {
 			description: "Check every 5 minutes",
 		},
 		{
-			flag:        "--create-issues",
-			description: "Automatically create GitLab issues for failures",
-		},
-		{
 			flag:        "--notify slack",
 			description: "Send notifications to Slack",
 		},
