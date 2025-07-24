@@ -160,12 +160,14 @@ func TestRefreshDataFailureLogs(t *testing.T) {
 		t.Errorf("unexpected log message: %s", hook.LastEntry().Message)
 	}
 }
+
 func TestNewDashboardUsesRefreshInterval(t *testing.T) {
 	d := NewDashboard(nil, 5*time.Second, nil)
 	if d.refresh != 5*time.Second {
 		t.Fatalf("expected refresh interval 5s, got %s", d.refresh)
 	}
 }
+
 func TestViewColorsStatus(t *testing.T) {
 	m := newModel(context.Background(), nil, time.Second, nil)
 	m.workflows = []WorkflowStatus{
@@ -184,6 +186,7 @@ func TestViewColorsStatus(t *testing.T) {
 		t.Errorf("expected inactive status color not found")
 	}
 }
+
 func TestEnterToggleDetailView(t *testing.T) {
 	m := newModel(context.Background(), stubClient{}, time.Second, nil)
 	m.refreshData()

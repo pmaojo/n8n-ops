@@ -207,7 +207,6 @@ func (m model) View() string {
 	if m.viewingDetails && m.workflowDetail != nil {
 		return renderDetailView(m.workflowDetail)
 	}
-	rows = workflowTableRows(m.workflows)
 	percent, label := summaryGauge(m.summary.Active, m.summary.Active+m.summary.Inactive)
 	barWidth := m.width - len(label) - 5
 	if barWidth < 0 {
