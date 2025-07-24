@@ -1,6 +1,7 @@
 package bubbleui
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -11,7 +12,7 @@ import (
 )
 
 func TestUpdateSelectedIndex(t *testing.T) {
-	m := newModel(nil, time.Second)
+	m := newModel(context.Background(), nil, time.Second)
 	m.workflows = []WorkflowStatus{
 		{ID: "1", Name: "A", Status: "active"},
 		{ID: "2", Name: "B", Status: "inactive"},
@@ -43,7 +44,7 @@ func TestUpdateSelectedIndex(t *testing.T) {
 }
 
 func TestViewHighlightsSelectedRow(t *testing.T) {
-	m := newModel(nil, time.Second)
+	m := newModel(context.Background(), nil, time.Second)
 	m.workflows = []WorkflowStatus{
 		{ID: "1", Name: "A", Status: "active"},
 		{ID: "2", Name: "B", Status: "inactive"},

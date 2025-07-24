@@ -14,7 +14,9 @@ import (
 
 // Dashboard implements a Bubble Tea terminal dashboard.
 type Dashboard struct {
-	model *model
+	client  client.WorkflowReader
+	refresh time.Duration
+	model   *model
 }
 
 // Ensure Dashboard satisfies the ui.DashboardUI interface.
@@ -22,12 +24,13 @@ var _ interface{ Run(context.Context) error } = (*Dashboard)(nil)
 
 // NewDashboard initializes a Bubble Tea dashboard.
 func NewDashboard(c client.WorkflowReader, refresh time.Duration) *Dashboard {
-	m := newModel(c, refresh)
-	return &Dashboard{model: &m}
+	return &Dashboard{client: c, refresh: refresh}
 }
 
 // Run starts the Bubble Tea program.
 func (d *Dashboard) Run(ctx context.Context) error {
+	m := newModel(ctx, d.client, d.refresh)
+	d.model = &m
 	p := tea.NewProgram(d.model, tea.WithContext(ctx))
 	_, err := p.Run()
 	return err
@@ -55,8 +58,14 @@ type model struct {
 	selectedIndex int
 }
 
-func newModel(c client.WorkflowReader, refresh time.Duration) model {
-	return model{client: c, refresh: refresh, start: time.Now(), selectedIndex: 0}
+func newModel(ctx context.Context, c client.WorkflowReader, refresh time.Duration) model {
+	return model{
+		ctx:           ctx,
+		client:        c,
+		refresh:       refresh,
+		start:         time.Now(),
+		selectedIndex: 0,
+	}
 }
 
 func (m model) Init() tea.Cmd {
@@ -113,7 +122,10 @@ func (m *model) fetchWorkflows() []*wf.Workflow {
 	if m.client == nil {
 		return nil
 	}
-	workflows, err := m.client.GetWorkflows(context.Background())
+	if m.ctx == nil {
+		m.ctx = context.Background()
+	}
+	workflows, err := m.client.GetWorkflows(m.ctx)
 	if err != nil {
 		return nil
 	}
