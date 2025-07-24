@@ -3,6 +3,8 @@ package bubbleui
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -20,6 +22,10 @@ type Dashboard struct {
 	logger  logrus.FieldLogger
 	theme   Theme
 	model   *model
+
+	docsEnabled bool
+	docsDir     string
+	renderer    DocRenderer
 }
 
 // Ensure Dashboard satisfies the ui.DashboardUI interface.
@@ -30,9 +36,20 @@ func NewDashboard(c client.WorkflowReader, refresh time.Duration, logger logrus.
 	return &Dashboard{client: c, refresh: refresh, logger: logger, theme: theme}
 }
 
+// EnableDocs configures documentation browsing support.
+func (d *Dashboard) EnableDocs(renderer DocRenderer, dir string) {
+	d.renderer = renderer
+	d.docsDir = dir
+	d.docsEnabled = true
+}
+
 // Run starts the Bubble Tea program.
 func (d *Dashboard) Run(ctx context.Context) error {
 	m := newModel(ctx, d.client, d.refresh, d.logger, d.theme)
+	if d.docsEnabled {
+		m.docsDir = d.docsDir
+		m.docRenderer = d.renderer
+	}
 	d.model = &m
 	p := tea.NewProgram(d.model, tea.WithContext(ctx))
 	_, err := p.Run()
@@ -65,6 +82,14 @@ type model struct {
 	inputMode      bool
 	viewingDetails bool
 	workflowDetail *wf.Workflow
+
+	docsDir     string
+	docList     []string
+	docIndex    int
+	docRenderer DocRenderer
+	docsMode    bool
+	viewingDoc  bool
+	docContent  string
 }
 
 func newModel(ctx context.Context, c client.WorkflowReader, refresh time.Duration, logger logrus.FieldLogger, theme Theme) model {
@@ -78,6 +103,7 @@ func newModel(ctx context.Context, c client.WorkflowReader, refresh time.Duratio
 		selectedIndex: 0,
 		filterText:    "",
 		inputMode:     false,
+		docIndex:      0,
 	}
 }
 
@@ -88,6 +114,28 @@ func (m model) Init() tea.Cmd {
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		if m.docsMode {
+			switch msg.String() {
+			case "q", "d":
+				m.docsMode = false
+				m.viewingDoc = false
+			case "up":
+				if m.docIndex > 0 {
+					m.docIndex--
+				}
+			case "down":
+				if m.docIndex < len(m.docList)-1 {
+					m.docIndex++
+				}
+			case "enter":
+				if m.viewingDoc {
+					m.viewingDoc = false
+				} else {
+					m.loadDoc()
+				}
+			}
+			return m, nil
+		}
 		if m.inputMode {
 			switch msg.Type {
 			case tea.KeyEnter:
@@ -114,6 +162,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "q", "ctrl+c":
 			return m, tea.Quit
+		case "d":
+			if m.docRenderer != nil && m.docsDir != "" {
+				if len(m.docList) == 0 {
+					m.docList, _ = listDocs(m.docsDir)
+				}
+				m.docsMode = true
+			}
 		case "/":
 			m.inputMode = true
 			m.filterText = ""
@@ -204,7 +259,45 @@ func (m *model) loadWorkflowDetail() {
 	m.viewingDetails = true
 }
 
+func (m *model) loadDoc() {
+	if m.docsDir == "" || m.docRenderer == nil || m.docIndex >= len(m.docList) {
+		return
+	}
+	path := filepath.Join(m.docsDir, m.docList[m.docIndex])
+	data, err := os.ReadFile(path)
+	if err != nil {
+		m.docContent = err.Error()
+		m.viewingDoc = true
+		return
+	}
+	out, err := m.docRenderer.Render(data)
+	if err != nil {
+		m.docContent = err.Error()
+	} else {
+		m.docContent = out + "\nPress Enter to return"
+	}
+	m.viewingDoc = true
+}
+
 func (m model) View() string {
+	if m.docsMode {
+		if m.viewingDoc {
+			return m.docContent
+		}
+		var b strings.Builder
+		highlight := m.theme.HighlightStyle
+		for i, name := range m.docList {
+			line := name
+			if i == m.docIndex {
+				line = highlight.Render(line)
+			}
+			b.WriteString(line + "\n")
+		}
+		return lipgloss.JoinVertical(lipgloss.Left,
+			lipgloss.NewStyle().Bold(true).Render("Documentation"),
+			b.String(),
+			"Press Enter to open, d to exit")
+	}
 	filtered := filterWorkflows(m.workflows, m.filterText)
 	rows := workflowTableRows(filtered)
 	if m.viewingDetails && m.workflowDetail != nil {

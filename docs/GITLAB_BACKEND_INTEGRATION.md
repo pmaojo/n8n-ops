@@ -373,6 +373,7 @@ n8n-ops fix generate-mr \
 
 ### 2. **GitLab Pages for Documentation**
 
+Generate HTML docs from the command comments and publish them with GitLab Pages:
 ```yaml
 pages:
   stage: deploy
