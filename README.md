@@ -4,7 +4,7 @@ This project contains n8n workflows managed with the n8n-ops tool for collaborat
 
 ## Quick Start
 
-1. Configure your environments in `.n8n-ops.yaml`
+1. Configure your environments in `.n8n-ops.yaml` (including optional `workflow_credentials`)
 2. Set up environment variables in `.env`
 3. Sync workflows: `n8n-ops sync --env development`
 4. Make changes and deploy: `n8n-ops deploy --env development`
