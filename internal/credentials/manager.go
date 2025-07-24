@@ -48,6 +48,23 @@ func NewCredentialManager(environment string) *CredentialManager {
 	}
 }
 
+// loadConfig creates a new Viper instance and reads the configuration file.
+// It sets environment variable handling consistent with other credential methods.
+func (cm *CredentialManager) loadConfig() (*viper.Viper, error) {
+	v := viper.New()
+	v.SetConfigFile(cm.ConfigPath)
+	v.SetConfigType("yaml")
+
+	v.AutomaticEnv()
+	v.SetEnvPrefix("N8N_OPS")
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+	if err := v.ReadInConfig(); err != nil {
+		return v, err
+	}
+	return v, nil
+}
+
 // GetEnvironmentCredentials retrieves credentials for the current environment
 func (cm *CredentialManager) GetEnvironmentCredentials() (*EnvironmentCredentials, error) {
 	viper.SetConfigFile(cm.ConfigPath)
@@ -208,68 +225,25 @@ func (cm *CredentialManager) getCredentialSource(key, value string) string {
 
 // GetWorkflowCredentials retrieves credentials that workflows can use
 func (cm *CredentialManager) GetWorkflowCredentials() ([]WorkflowCredentials, error) {
-	// This would integrate with n8n's credential system
-	// For now, return example structure
-
-	var workflowCreds []WorkflowCredentials
-
-	// Example workflow credentials by environment
-	switch cm.Environment {
-	case "development":
-		workflowCreds = []WorkflowCredentials{
-			{
-				ID:          "smtp_dev",
-				Name:        "SMTP Development",
-				Type:        "smtp",
-				Environment: "development",
-				Data: map[string]string{
-					"host": "smtp.mailtrap.io",
-					"port": "587",
-					"user": "dev_smtp_user",
-					// password would be retrieved securely
-				},
-			},
-			{
-				ID:          "db_dev",
-				Name:        "Database Development",
-				Type:        "postgres",
-				Environment: "development",
-				Data: map[string]string{
-					"host":     "localhost",
-					"database": "n8n_dev",
-					"user":     "dev_user",
-				},
-			},
+	cfg, err := cm.loadConfig()
+	if err != nil {
+		if os.IsNotExist(err) {
+			return []WorkflowCredentials{}, nil
 		}
-
-	case "production":
-		workflowCreds = []WorkflowCredentials{
-			{
-				ID:          "smtp_prod",
-				Name:        "SMTP Production",
-				Type:        "smtp",
-				Environment: "production",
-				Data: map[string]string{
-					"host": "smtp.sendgrid.net",
-					"port": "587",
-					"user": "apikey",
-				},
-			},
-			{
-				ID:          "db_prod",
-				Name:        "Database Production",
-				Type:        "postgres",
-				Environment: "production",
-				Data: map[string]string{
-					"host":     "prod-db.company.com",
-					"database": "n8n_production",
-					"user":     "prod_user",
-				},
-			},
-		}
+		return nil, fmt.Errorf("failed to load config: %w", err)
 	}
 
-	return workflowCreds, nil
+	key := fmt.Sprintf("environments.%s.workflow_credentials", cm.Environment)
+	if !cfg.IsSet(key) {
+		return []WorkflowCredentials{}, nil
+	}
+
+	var creds []WorkflowCredentials
+	if err := cfg.UnmarshalKey(key, &creds); err != nil {
+		return nil, fmt.Errorf("failed to parse workflow credentials: %w", err)
+	}
+
+	return creds, nil
 }
 
 // SyncCredentialsToN8n ensures workflow credentials exist in n8n
@@ -304,6 +278,18 @@ func (cm *CredentialManager) ExportCredentialsTemplate(outputPath string) error 
 					"stripe_key": "sk_test_...",
 					"aws_key":    "AKIA...",
 				},
+				"workflow_credentials": []map[string]interface{}{
+					{
+						"id":   "smtp_dev",
+						"name": "SMTP Development",
+						"type": "smtp",
+						"data": map[string]string{
+							"host": "smtp.mailtrap.io",
+							"port": "587",
+							"user": "dev_smtp_user",
+						},
+					},
+				},
 			},
 			"staging": map[string]interface{}{
 				"n8n_url":      "https://n8n-staging.company.com",
@@ -313,6 +299,18 @@ func (cm *CredentialManager) ExportCredentialsTemplate(outputPath string) error 
 					"stripe_key": "sk_test_...",
 					"aws_key":    "AKIA...",
 				},
+				"workflow_credentials": []map[string]interface{}{
+					{
+						"id":   "smtp_staging",
+						"name": "SMTP Staging",
+						"type": "smtp",
+						"data": map[string]string{
+							"host": "smtp-staging.company.com",
+							"port": "587",
+							"user": "staging_user",
+						},
+					},
+				},
 			},
 			"production": map[string]interface{}{
 				"n8n_url":      "https://n8n.company.com",
@@ -321,6 +319,18 @@ func (cm *CredentialManager) ExportCredentialsTemplate(outputPath string) error 
 				"custom_credentials": map[string]string{
 					"stripe_key": "sk_live_...",
 					"aws_key":    "AKIA...",
+				},
+				"workflow_credentials": []map[string]interface{}{
+					{
+						"id":   "smtp_prod",
+						"name": "SMTP Production",
+						"type": "smtp",
+						"data": map[string]string{
+							"host": "smtp.sendgrid.net",
+							"port": "587",
+							"user": "apikey",
+						},
+					},
 				},
 			},
 		},

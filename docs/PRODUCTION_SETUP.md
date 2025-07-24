@@ -50,6 +50,18 @@ export SLACK_WEBHOOK_URL_DEVELOPMENT="https://hooks.slack.com/..."
 export DISCORD_WEBHOOK_URL_DEVELOPMENT="https://discord.com/api/webhooks/..."
 export DISCORD_BOT_TOKEN_DEVELOPMENT="your_bot_token"
 ```
+Alternatively, define workflow credentials in `~/.n8n-ops.yaml`:
+```yaml
+environments:
+  development:
+    workflow_credentials:
+      - id: smtp_dev
+        name: SMTP Development
+        type: smtp
+        data:
+          host: smtp.mailtrap.io
+          user: dev_user
+```
 
 ## How to Get n8n API Key
 
