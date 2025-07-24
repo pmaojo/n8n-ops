@@ -13,6 +13,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/pmaojo/n8n-ops/internal/client"
+	"github.com/pmaojo/n8n-ops/internal/i18n"
 	"github.com/pmaojo/n8n-ops/internal/workflow"
 	"github.com/sirupsen/logrus"
 )
@@ -67,15 +68,9 @@ func runDaemonModeCtx(ctx context.Context, env string) {
 
 	logEntry.Info("Starting n8n-ops daemon mode")
 
-	if language == "es" {
-		fmt.Printf("🤖 Modo daemon iniciado - %s\n", env)
-		fmt.Printf("👁️ Monitoreando archivos JSON en ./workflows/%s/\n", env)
-		fmt.Printf("💾 Creando backups automáticos antes de actualizar workflows\n")
-	} else {
-		fmt.Printf("🤖 Daemon mode started - %s environment\n", env)
-		fmt.Printf("👁️ Watching JSON files in ./workflows/%s/\n", env)
-		fmt.Printf("💾 Creating automatic backups before updating workflows\n")
-	}
+	i18n.PrintfKey("daemon_started", env)
+	i18n.PrintfKey("daemon_watching_files", env)
+	i18n.PrintlnKey("daemon_creating_backups")
 
 	// Create n8n client with proper URL for demo mode
 	var n8nURL string

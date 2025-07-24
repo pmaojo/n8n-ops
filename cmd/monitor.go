@@ -12,6 +12,7 @@ import (
 	"github.com/pmaojo/n8n-ops/internal/credentials"
 
 	"github.com/pmaojo/n8n-ops/internal/client"
+	"github.com/pmaojo/n8n-ops/internal/i18n"
 	"github.com/pmaojo/n8n-ops/internal/issues"
 	"github.com/pmaojo/n8n-ops/internal/monitoring"
 	"github.com/pmaojo/n8n-ops/internal/utils"
@@ -66,15 +67,9 @@ func runMonitor(cmd *cobra.Command, args []string) error {
 
 	logEntry.Info("Starting workflow monitoring")
 
-	if language == "es" {
-		fmt.Printf("👁️ Iniciando monitoreo de workflows - %s\n", environment)
-		fmt.Printf("⏰ Intervalo de verificación: %s\n", checkInterval)
-		fmt.Printf("🎯 Umbral de fallos: %d fallos consecutivos\n", failureThreshold)
-	} else {
-		fmt.Printf("👁️ Starting workflow monitoring - %s environment\n", environment)
-		fmt.Printf("⏰ Check interval: %s\n", checkInterval)
-		fmt.Printf("🎯 Failure threshold: %d consecutive failures\n", failureThreshold)
-	}
+	i18n.PrintfKey("monitor_starting", environment)
+	i18n.PrintfKey("monitor_check_interval", checkInterval)
+	i18n.PrintfKey("monitor_failure_threshold", failureThreshold)
 
 	// Create n8n client using unified credential system
 	var n8nURL, apiKey string
@@ -151,11 +146,7 @@ func runMonitor(cmd *cobra.Command, args []string) error {
 	}()
 
 	fmt.Printf("✅ Monitoring started. Creating issues for workflow failures...\n")
-	if language == "es" {
-		fmt.Printf("⏹️ Presiona Ctrl+C para detener el monitoreo\n\n")
-	} else {
-		fmt.Printf("⏹️ Press Ctrl+C to stop monitoring\n\n")
-	}
+	i18n.PrintlnKey("monitor_stop")
 
 	// Wait for shutdown signal
 	sig := <-sigChan
