@@ -377,16 +377,28 @@ func GetRelativePath(base, target string) (string, error) {
 }
 
 // ValidateFilePath validates that a file path is safe and within expected boundaries
-func ValidateFilePath(path string) error {
-	// Convert to absolute path
-	absPath, err := filepath.Abs(path)
+// ValidateFilePath validates that a file path is safe and within the provided
+// base directory. The path is cleaned before validation.
+func ValidateFilePath(path, baseDir string) error {
+	cleanPath := filepath.Clean(path)
+
+	absBase, err := filepath.Abs(baseDir)
+	if err != nil {
+		return fmt.Errorf("invalid base directory: %w", err)
+	}
+
+	absClean, err := filepath.Abs(cleanPath)
 	if err != nil {
 		return fmt.Errorf("invalid file path: %w", err)
 	}
 
-	// Check for path traversal attempts
-	if strings.Contains(absPath, "..") {
-		return fmt.Errorf("path traversal not allowed")
+	rel, err := filepath.Rel(absBase, absClean)
+	if err != nil {
+		return fmt.Errorf("failed to evaluate path: %w", err)
+	}
+
+	if strings.HasPrefix(rel, "..") {
+		return fmt.Errorf("path outside allowed directory")
 	}
 
 	// Additional security checks can be added here

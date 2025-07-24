@@ -118,3 +118,18 @@ func TestHashWorkflow(t *testing.T) {
 		t.Error("expected error for invalid workflow")
 	}
 }
+
+func TestValidateFilePath(t *testing.T) {
+	base := t.TempDir()
+	inside := filepath.Join(base, "allowed.txt")
+
+	if err := ValidateFilePath(inside, base); err != nil {
+		t.Fatalf("expected path inside base to be valid, got %v", err)
+	}
+
+	outside := filepath.Join(base, "..", "outside.txt")
+
+	if err := ValidateFilePath(outside, base); err == nil {
+		t.Fatal("expected error for path outside base directory")
+	}
+}
