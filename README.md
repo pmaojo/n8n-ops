@@ -1,5 +1,5 @@
 # n8n Workflow Project
-![coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
+![coverage](https://img.shields.io/badge/coverage-21%25-red)
 
 This project contains n8n workflows managed with the n8n-ops tool for collaborative development.
 
