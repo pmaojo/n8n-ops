@@ -5,6 +5,7 @@ import (
 	"github.com/pmaojo/n8n-ops/internal/ascii"
 )
 
+// ShowConceptsTutorial walks the user through the core ideas of n8n-ops.
 func ShowConceptsTutorial() {
 	fmt.Println(ascii.TutorialHeader("Understanding n8n-ops"))
 
@@ -71,6 +72,8 @@ func ShowConceptsTutorial() {
 	}
 }
 
+// ShowSyncTutorial explains how to synchronize workflows between n8n and the
+// local filesystem.
 func ShowSyncTutorial() {
 	fmt.Println(ascii.TutorialHeader("Syncing Workflows"))
 
@@ -124,6 +127,7 @@ func ShowSyncTutorial() {
 	fmt.Printf("%s%sn8n-ops sync --env development --dry-run%s\n", ascii.Bold, ascii.Green, ascii.Reset)
 }
 
+// ShowDeployTutorial guides the user through deploying workflows back to n8n.
 func ShowDeployTutorial() {
 	fmt.Println(ascii.TutorialHeader("Deploying Workflows"))
 
@@ -181,6 +185,8 @@ func ShowDeployTutorial() {
 	fmt.Printf("%s%sn8n-ops deploy --env staging --dry-run%s\n", ascii.Bold, ascii.Green, ascii.Reset)
 }
 
+// ShowValidateTutorial demonstrates how to validate workflow files for common
+// mistakes before deployment.
 func ShowValidateTutorial() {
 	fmt.Println(ascii.TutorialHeader("Validating Workflows"))
 
@@ -255,6 +261,8 @@ func ShowValidateTutorial() {
 	fmt.Printf("%s%sn8n-ops validate ./workflows/development/%s\n", ascii.Bold, ascii.Green, ascii.Reset)
 }
 
+// ShowGitTutorial covers Git integration features such as tracking workflow
+// changes and creating branches.
 func ShowGitTutorial() {
 	fmt.Println(ascii.TutorialHeader("Git Integration"))
 
@@ -331,6 +339,8 @@ func ShowGitTutorial() {
 	fmt.Printf("%s%sn8n-ops branch current%s\n", ascii.Bold, ascii.Green, ascii.Reset)
 }
 
+// ShowMultiEnvTutorial highlights how to work with multiple environments such
+// as development, staging and production.
 func ShowMultiEnvTutorial() {
 	fmt.Println(ascii.TutorialHeader("Multi-Environment Setup"))
 
@@ -404,6 +414,7 @@ func ShowMultiEnvTutorial() {
 	fmt.Printf("%s%sn8n-ops status%s\n", ascii.Bold, ascii.Green, ascii.Reset)
 }
 
+// ShowCICDTutorial explains how to integrate n8n-ops into CI/CD pipelines.
 func ShowCICDTutorial() {
 	fmt.Println(ascii.TutorialHeader("CI/CD Integration"))
 
@@ -526,6 +537,8 @@ func ShowCICDTutorial() {
 	fmt.Printf("3. Merge to main branch → Manual approval → Deploy to production\n\n")
 }
 
+// ShowMonitoringTutorial introduces monitoring and observability options for
+// workflows managed by n8n-ops.
 func ShowMonitoringTutorial() {
 	fmt.Println(ascii.TutorialHeader("Monitoring & Alerts"))
 

@@ -7,18 +7,23 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Config represents the root configuration for n8n-ops. It groups environment
+// specific settings and defaults that drive command behaviour.
 type Config struct {
 	Environments map[string]EnvironmentConfig `mapstructure:"environments"`
 	Defaults     DefaultConfig                `mapstructure:"defaults"`
 	Logging      LoggingConfig                `mapstructure:"logging"`
 }
 
+// EnvironmentConfig defines connection information for a single environment.
 type EnvironmentConfig struct {
 	URL       string `mapstructure:"url"`
 	APIKeyEnv string `mapstructure:"api_key_env"`
 	APIKey    string // Resolved from environment variable
 }
 
+// DefaultConfig holds global defaults that apply when specific flags are not
+// provided.
 type DefaultConfig struct {
 	Environment string           `mapstructure:"environment"`
 	Validation  ValidationConfig `mapstructure:"validation"`
@@ -26,19 +31,23 @@ type DefaultConfig struct {
 	Deploy      DeployConfig     `mapstructure:"deploy"`
 }
 
+// ValidationConfig configures workflow validation behaviour.
 type ValidationConfig struct {
 	Strict bool `mapstructure:"strict"`
 }
 
+// SyncConfig defines options used during the sync command.
 type SyncConfig struct {
 	AutoBackup bool `mapstructure:"auto_backup"`
 }
 
+// DeployConfig holds deploy command configuration.
 type DeployConfig struct {
 	DryRun         bool `mapstructure:"dry_run"`
 	SkipValidation bool `mapstructure:"skip_validation"`
 }
 
+// LoggingConfig configures the CLI logger.
 type LoggingConfig struct {
 	Level  string `mapstructure:"level"`
 	Format string `mapstructure:"format"`
