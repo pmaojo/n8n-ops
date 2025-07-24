@@ -1,12 +1,13 @@
 package testutil
 
 import (
+	"bytes"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"testing"
 	"time"
 )
 
@@ -39,12 +40,14 @@ func BuildMockServer() (func(), error) {
 }
 
 func StartMockServer() (func(), error) {
+	var logBuf bytes.Buffer
 	cmd := exec.Command("./mock-n8n-server")
 	cmd.Dir = filepath.Join("..", "mock-n8n-server")
-	cmd.Stdout = io.Discard
-	cmd.Stderr = io.Discard
+	cmd.Stdout = &logBuf
+	cmd.Stderr = &logBuf
 
 	if err := cmd.Start(); err != nil {
+		fmt.Fprint(os.Stderr, logBuf.String())
 		return nil, fmt.Errorf("failed to start mock server: %w", err)
 	}
 
@@ -59,12 +62,16 @@ func StartMockServer() (func(), error) {
 	if err := WaitForServer("http://localhost:3001/health", timeout); err != nil {
 		cmd.Process.Kill()
 		<-done
+		fmt.Fprint(os.Stderr, logBuf.String())
 		return nil, fmt.Errorf("mock server did not start: %w", err)
 	}
 
 	stop := func() {
 		cmd.Process.Kill()
 		<-done
+		if testing.Verbose() {
+			fmt.Fprint(os.Stdout, logBuf.String())
+		}
 	}
 	return stop, nil
 }
