@@ -65,5 +65,7 @@ func runTUI(cmd *cobra.Command, args []string, cli *CLI) error {
 	}
 	ctx := context.Background()
 	uiImpl := bubbleui.NewDashboard(n8nClient, tuiRefresh, cli.Logger, theme)
+	renderer := bubbleui.NewGlamourRenderer("dark")
+	uiImpl.EnableDocs(renderer, "docs")
 	return uiImpl.Run(ctx)
 }

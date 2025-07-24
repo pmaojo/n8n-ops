@@ -3,6 +3,8 @@ package bubbleui
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -200,5 +202,24 @@ func TestEnterToggleDetailView(t *testing.T) {
 	m3 := mdl.(model)
 	if m3.viewingDetails || m3.workflowDetail != nil {
 		t.Fatal("expected to return to list view on enter")
+	}
+}
+
+func TestDocsToggle(t *testing.T) {
+	m := newModel(context.Background(), nil, time.Second, nil, DefaultTheme)
+	m.docsDir = t.TempDir()
+	os.WriteFile(filepath.Join(m.docsDir, "test.md"), []byte("# Doc"), 0644)
+	m.docRenderer = NewGlamourRenderer("dark")
+
+	mdl, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'d'}})
+	m = mdl.(model)
+	if !m.docsMode {
+		t.Fatal("docs mode not enabled")
+	}
+
+	mdl, _ = m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m = mdl.(model)
+	if !m.viewingDoc {
+		t.Fatal("doc not opened")
 	}
 }

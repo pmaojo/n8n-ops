@@ -19,6 +19,7 @@ This project contains n8n workflows managed with the n8n-ops tool for collaborat
 - `n8n-ops validate` - Validate workflow files
 - `n8n-ops status` - Check workflow status
 - `n8n-ops tui` - Interactive terminal dashboard
+- `n8n-ops docs generate` - Generate CLI documentation
 
 ## Directory Structure
 
@@ -31,6 +32,7 @@ This project contains n8n workflows managed with the n8n-ops tool for collaborat
 ## Terminal Dashboard
 
 Run `n8n-ops tui` to open a real-time dashboard powered by [Bubble Tea](https://github.com/charmbracelet/bubbletea). Use `--refresh` to control the update interval.
+Press `d` inside the dashboard to browse generated documentation.
 
 ```bash
 n8n-ops tui --env development --refresh 5s
