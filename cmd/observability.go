@@ -10,6 +10,8 @@ import (
 
 var (
 	sentryDSN     string
+	sentryEnv     string
+	sentrySample  float64
 	grafanaURL    string
 	grafanaAPIKey string
 	grafanaOrgID  int
@@ -54,11 +56,21 @@ var setupObservabilityCmd = &cobra.Command{
 				return fmt.Errorf("sentry DSN is required")
 			}
 
+			envVal := environment
+			if cfg.SentryEnvironment != "" {
+				envVal = cfg.SentryEnvironment
+			}
+
+			sample := cfg.SentrySampleRate
+			if sample == 0 {
+				sample = 1.0
+			}
+
 			sentryConfig := observability.SentryConfig{
 				DSN:         cfg.SentryDSN,
-				Environment: environment,
+				Environment: envVal,
 				Release:     "1.0.0",
-				SampleRate:  1.0,
+				SampleRate:  sample,
 			}
 
 			sentry := observability.NewSentryIntegration(sentryConfig, logger)
@@ -109,11 +121,21 @@ var testConnectionCmd = &cobra.Command{
 
 		// Test Sentry
 		if enableSentry && cfg.SentryDSN != "" {
+			envVal := cfg.SentryEnvironment
+			if envVal == "" {
+				envVal = "test"
+			}
+
+			sample := cfg.SentrySampleRate
+			if sample == 0 {
+				sample = 0.1
+			}
+
 			sentryConfig := observability.SentryConfig{
 				DSN:         cfg.SentryDSN,
-				Environment: "test",
+				Environment: envVal,
 				Release:     "test",
-				SampleRate:  0.1,
+				SampleRate:  sample,
 			}
 
 			sentry := observability.NewSentryIntegration(sentryConfig, logger)
@@ -201,6 +223,8 @@ func init() {
 	// Sentry flags
 	observabilityCmd.PersistentFlags().BoolVar(&enableSentry, "sentry", false, "enable Sentry integration")
 	observabilityCmd.PersistentFlags().StringVar(&sentryDSN, "sentry-dsn", "", "Sentry DSN")
+	observabilityCmd.PersistentFlags().StringVar(&sentryEnv, "sentry-environment", "", "Sentry environment (defaults to --env)")
+	observabilityCmd.PersistentFlags().Float64Var(&sentrySample, "sentry-sample-rate", 1.0, "Sentry traces sample rate (0-1)")
 
 	// Grafana flags
 	observabilityCmd.PersistentFlags().BoolVar(&enableGrafana, "grafana", false, "enable Grafana integration")
@@ -210,11 +234,15 @@ func init() {
 
 	// Bind flags and environment variables
 	viper.BindPFlag("sentry_dsn", observabilityCmd.PersistentFlags().Lookup("sentry-dsn"))
+	viper.BindPFlag("sentry_environment", observabilityCmd.PersistentFlags().Lookup("sentry-environment"))
+	viper.BindPFlag("sentry_sample_rate", observabilityCmd.PersistentFlags().Lookup("sentry-sample-rate"))
 	viper.BindPFlag("grafana_url", observabilityCmd.PersistentFlags().Lookup("grafana-url"))
 	viper.BindPFlag("grafana_api_key", observabilityCmd.PersistentFlags().Lookup("grafana-api-key"))
 	viper.BindPFlag("grafana_org_id", observabilityCmd.PersistentFlags().Lookup("grafana-org-id"))
 
 	viper.BindEnv("sentry_dsn", "SENTRY_DSN")
+	viper.BindEnv("sentry_environment", "SENTRY_ENVIRONMENT")
+	viper.BindEnv("sentry_sample_rate", "SENTRY_SAMPLE_RATE")
 	viper.BindEnv("grafana_url", "GRAFANA_URL")
 	viper.BindEnv("grafana_api_key", "GRAFANA_API_KEY")
 	viper.BindEnv("grafana_org_id", "GRAFANA_ORG_ID")

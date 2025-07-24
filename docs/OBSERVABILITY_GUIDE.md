@@ -10,6 +10,8 @@ The observability system provides:
 - **Automated Issue Creation**: Workflow failures tracked in both GitLab and Sentry
 - **Performance Analytics**: Response times, failure rates, and operational metrics
 
+The implementation uses the official [Sentry Go SDK](https://github.com/getsentry/sentry-go).
+
 ## Quick Start
 
 ### 1. Setup Environment Variables
@@ -17,8 +19,10 @@ The observability system provides:
 ```bash
 # Sentry Configuration
 export SENTRY_DSN="https://your-key@sentry.io/project-id"
+export SENTRY_ENVIRONMENT="development"
+export SENTRY_SAMPLE_RATE=1.0
 
-# Grafana Configuration  
+# Grafana Configuration
 export GRAFANA_URL="https://your-grafana-instance.com"
 export GRAFANA_API_KEY="your-grafana-api-key"
 ```
@@ -45,12 +49,19 @@ n8n-ops observability create-dashboard
    - Create new project for "n8n-ops"
    - Copy the DSN
 
-2. **Configure Environment**:
+2. **Install the Go SDK**:
    ```bash
-   export SENTRY_DSN="https://key@sentry.io/project"
+   go get github.com/getsentry/sentry-go
    ```
 
-3. **Test Integration**:
+3. **Configure Environment**:
+   ```bash
+   export SENTRY_DSN="https://key@sentry.io/project"
+   export SENTRY_ENVIRONMENT="production"
+   export SENTRY_SAMPLE_RATE=1.0
+   ```
+
+4. **Test Integration**:
    ```bash
    n8n-ops observability setup --sentry
    n8n-ops observability test-connection --sentry
