@@ -21,7 +21,7 @@ var stopServer func()
 
 func TestMain(m *testing.M) {
 	var err error
-	stopServer, err = testutil.StartMockServer()
+	stopServer, err = testutil.StartMockServer(0)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

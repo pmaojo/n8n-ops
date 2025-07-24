@@ -14,7 +14,7 @@ func TestClientWorkflowCRUD(t *testing.T) {
 		t.Skip("skipping integration test")
 	}
 
-	stop, err := testutil.StartMockServer()
+	stop, err := testutil.StartMockServer(0)
 	if err != nil {
 		t.Fatalf("start mock server: %v", err)
 	}
