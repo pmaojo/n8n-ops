@@ -2,12 +2,9 @@ package cmd
 
 import (
 	"context"
-	"fmt"
-	"strings"
 	"time"
 
-	"github.com/pmaojo/n8n-ops/internal/client"
-	"github.com/pmaojo/n8n-ops/internal/credentials"
+	"github.com/pmaojo/n8n-ops/internal/cliutils"
 	"github.com/pmaojo/n8n-ops/internal/git"
 	isync "github.com/pmaojo/n8n-ops/internal/sync"
 	iwatch "github.com/pmaojo/n8n-ops/internal/watch"
@@ -49,21 +46,9 @@ func runWatch(cmd *cobra.Command, args []string) error {
 		"env":     environment,
 	})
 
-	cm := credentials.NewCredentialManager(environment)
-	n8nURL, apiKey, err := cm.GetN8nCredentials()
+	n8nClient, cm, err := cliutils.SetupClient(environment, demoMode)
 	if err != nil {
-		return fmt.Errorf("failed to load credentials: %w", err)
-	}
-	if n8nURL == "" {
-		n8nURL = "http://localhost:5678"
-	}
-	if apiKey == "" {
-		return fmt.Errorf("N8N_%s_API_KEY environment variable not set", strings.ToUpper(environment))
-	}
-
-	n8nClient, err := client.New(n8nURL, apiKey, nil)
-	if err != nil {
-		return fmt.Errorf("failed to create n8n client: %w", err)
+		return err
 	}
 
 	gitChecker := git.NewGitStatusChecker(".", nil)

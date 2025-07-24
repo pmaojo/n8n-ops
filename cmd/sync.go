@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/pmaojo/n8n-ops/internal/client"
-	"github.com/pmaojo/n8n-ops/internal/credentials"
+	"github.com/pmaojo/n8n-ops/internal/cliutils"
 	"github.com/pmaojo/n8n-ops/internal/git"
 	isync "github.com/pmaojo/n8n-ops/internal/sync"
 	"github.com/spf13/cobra"
@@ -59,23 +59,10 @@ func init() {
 func runSync(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 
-	cm := credentials.NewCredentialManager(environment)
-
-	var (
-		apiURL    string
-		apiKey    string
-		n8nClient client.Client
-		err       error
-	)
-
-	if demoMode {
-		n8nClient = client.NewDemoN8nClient()
-	} else {
-		apiURL, apiKey, err = cm.GetN8nCredentials()
-		if err != nil {
-			return fmt.Errorf("failed to load credentials: %w", err)
-		}
-		if apiURL == "" || apiKey == "" {
+	n8nClient, cm, err := cliutils.SetupClient(environment, demoMode)
+	if err != nil {
+		var missing cliutils.MissingCredentialError
+		if errors.As(err, &missing) {
 			envSuffix := strings.ToUpper(environment)
 			fmt.Printf("⚠️  n8n credentials not configured for %s environment\n", environment)
 			fmt.Printf("💡 Set environment variables or use --demo flag:\n")
@@ -83,10 +70,7 @@ func runSync(cmd *cobra.Command, args []string) error {
 			fmt.Printf("   export N8N_%s_API_KEY=n8n_api_mock_%s\n", envSuffix, environment)
 			return nil
 		}
-		n8nClient, err = client.New(apiURL, apiKey, nil)
-		if err != nil {
-			return fmt.Errorf("failed to create n8n client: %w", err)
-		}
+		return err
 	}
 
 	checker := git.NewGitStatusChecker(".", nil)
