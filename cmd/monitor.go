@@ -5,13 +5,10 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
-	"github.com/pmaojo/n8n-ops/internal/credentials"
-
-	"github.com/pmaojo/n8n-ops/internal/client"
+	"github.com/pmaojo/n8n-ops/internal/cliutils"
 	"github.com/pmaojo/n8n-ops/internal/i18n"
 	"github.com/pmaojo/n8n-ops/internal/issues"
 	"github.com/pmaojo/n8n-ops/internal/monitoring"
@@ -72,26 +69,9 @@ func runMonitor(cmd *cobra.Command, args []string) error {
 	i18n.PrintfKey("monitor_failure_threshold", failureThreshold)
 
 	// Create n8n client using unified credential system
-	var n8nURL, apiKey string
-	if demoMode {
-		n8nURL = "http://localhost:3001"
-		apiKey = "n8n_api_mock_development"
-	} else {
-		cm := credentials.NewCredentialManager(environment)
-		var err error
-		n8nURL, apiKey, err = cm.GetN8nCredentials()
-		if err != nil {
-			return fmt.Errorf("failed to load credentials: %w", err)
-		}
-		if n8nURL == "" || apiKey == "" {
-			return fmt.Errorf("n8n credentials not configured for %s environment. Set N8N_%s_URL and N8N_%s_API_KEY or use --demo",
-				environment, strings.ToUpper(environment), strings.ToUpper(environment))
-		}
-	}
-
-	n8nClient, err := client.New(n8nURL, apiKey, nil)
+	n8nClient, _, err := cliutils.SetupClient(environment, demoMode)
 	if err != nil {
-		return fmt.Errorf("failed to create n8n client: %w", err)
+		return err
 	}
 
 	// Test connection

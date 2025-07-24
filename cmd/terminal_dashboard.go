@@ -11,9 +11,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/pmaojo/n8n-ops/internal/credentials"
-
 	"github.com/pmaojo/n8n-ops/internal/client"
+	"github.com/pmaojo/n8n-ops/internal/cliutils"
 	"github.com/pmaojo/n8n-ops/internal/utils"
 	"github.com/spf13/cobra"
 )
@@ -146,28 +145,10 @@ func runTerminalDashboard(cmd *cobra.Command, args []string) error {
 	defer cancel()
 
 	// Connect to n8n client
-	var n8nURL, apiKey string
-	if demoMode {
-		n8nURL = "http://localhost:3001"
-		apiKey = "n8n_api_mock_development"
-	} else {
-		cm := credentials.NewCredentialManager(environment)
-		var err error
-		n8nURL, apiKey, err = cm.GetN8nCredentials()
-		if err != nil {
-			return fmt.Errorf("failed to load credentials: %w", err)
-		}
-		if n8nURL == "" {
-			n8nURL = "http://localhost:5678"
-		}
-		if apiKey == "" {
-			return fmt.Errorf("N8N_%s_API_KEY environment variable is required", strings.ToUpper(environment))
-		}
-	}
-
-	n8nClient, err := client.New(n8nURL, apiKey, nil)
+	n8nClient, _, err := cliutils.SetupClient(environment, demoMode)
 	if err != nil {
 		logger.Warn("Failed to create n8n client, using demo data")
+		n8nClient = client.NewDemoN8nClient()
 	}
 
 	// Initial clear screen
