@@ -13,6 +13,9 @@ import (
 	"github.com/pmaojo/n8n-ops/internal/ascii"
 	"github.com/pmaojo/n8n-ops/internal/utils"
 	"github.com/spf13/cobra"
+
+	"golang.org/x/text/cases"
+	langpkg "golang.org/x/text/language"
 )
 
 var onboardCmd = &cobra.Command{
@@ -272,7 +275,7 @@ logging:
 
 	for _, env := range envConfig {
 		envVarName := fmt.Sprintf("N8N_%s_API_KEY", strings.ToUpper(env.Name))
-		envContent += fmt.Sprintf("# %s environment\n", strings.Title(env.Name))
+		envContent += fmt.Sprintf("# %s environment\n", cases.Title(langpkg.Und, cases.NoLower).String(env.Name))
 		envContent += fmt.Sprintf("%s=your_%s_api_key_here\n", envVarName, env.Name)
 		envContent += fmt.Sprintf("N8N_%s_URL=%s\n\n", strings.ToUpper(env.Name), env.URL)
 	}
@@ -301,7 +304,7 @@ logging:
 		shortName = strings.ToUpper(strings.Replace(shortName, "production", "PROD", 1))
 		shortVarName := fmt.Sprintf("N8N_%s_API_KEY", shortName)
 
-		envInstructions += fmt.Sprintf("# %s environment\n", strings.Title(env.Name))
+		envInstructions += fmt.Sprintf("# %s environment\n", cases.Title(langpkg.Und, cases.NoLower).String(env.Name))
 		envInstructions += fmt.Sprintf("# Use either %s or %s\n", envVarName, shortVarName)
 		envInstructions += fmt.Sprintf("%s=\n", envVarName)
 
@@ -392,10 +395,10 @@ func setupAPIKeys(projectDir string, envConfig []EnvironmentConfig) {
 		}
 
 		if apiKey == "" {
-			fmt.Printf("❌ %s environment API key not set\n", strings.Title(env.Name))
+			fmt.Printf("❌ %s environment API key not set\n", cases.Title(langpkg.Und, cases.NoLower).String(env.Name))
 			allSet = false
 		} else {
-			fmt.Printf("✅ %s environment API key found\n", strings.Title(env.Name))
+			fmt.Printf("✅ %s environment API key found\n", cases.Title(langpkg.Und, cases.NoLower).String(env.Name))
 		}
 	}
 
@@ -428,11 +431,11 @@ func showEnvironmentVariableInstructions(envConfig []EnvironmentConfig) {
 
 		if shortName != "" {
 			fmt.Printf("# %s environment - use either %s or %s\n",
-				strings.Title(env.Name), fullName, shortName)
+				cases.Title(langpkg.Und, cases.NoLower).String(env.Name), fullName, shortName)
 			fmt.Printf("export %s=\"your_%s_api_key_here\"\n\n",
 				shortName, env.Name)
 		} else {
-			fmt.Printf("# %s environment\n", strings.Title(env.Name))
+			fmt.Printf("# %s environment\n", cases.Title(langpkg.Und, cases.NoLower).String(env.Name))
 			fmt.Printf("export %s=\"your_%s_api_key_here\"\n\n",
 				fullName, env.Name)
 		}
