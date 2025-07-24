@@ -75,6 +75,11 @@ func TestViewHighlightsSelectedRow(t *testing.T) {
 	}
 }
 
+func TestNewDashboardUsesRefreshInterval(t *testing.T) {
+	d := NewDashboard(nil, 5*time.Second)
+	if d.refresh != 5*time.Second {
+		t.Fatalf("expected refresh interval 5s, got %s", d.refresh)
+
 func TestViewColorsStatus(t *testing.T) {
 	m := newModel(context.Background(), nil, time.Second)
 	m.workflows = []WorkflowStatus{
@@ -105,6 +110,6 @@ func TestEnterToggleDetailView(t *testing.T) {
 	mdl, _ = m2.Update(tea.KeyMsg{Type: tea.KeyEnter})
 	m3 := mdl.(model)
 	if m3.viewingDetails || m3.workflowDetail != nil {
-		t.Fatal("expected to return to list view on enter") 
+		t.Fatal("expected to return to list view on enter")
 	}
 }
