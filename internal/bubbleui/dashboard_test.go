@@ -10,6 +10,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	wf "github.com/pmaojo/n8n-ops/internal/workflow"
+	"github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus/hooks/test"
 )
 
 type stubClient struct{}
@@ -25,7 +27,7 @@ func (stubClient) GetWorkflow(ctx context.Context, id string) (*wf.Workflow, err
 func (stubClient) HealthCheck(ctx context.Context) error { return nil }
 
 func TestUpdateSelectedIndex(t *testing.T) {
-	m := newModel(context.Background(), nil, time.Second)
+	m := newModel(context.Background(), nil, time.Second, nil)
 	m.workflows = []WorkflowStatus{
 		{ID: "1", Name: "A", Status: "active"},
 		{ID: "2", Name: "B", Status: "inactive"},
@@ -57,7 +59,7 @@ func TestUpdateSelectedIndex(t *testing.T) {
 }
 
 func TestViewHighlightsSelectedRow(t *testing.T) {
-	m := newModel(context.Background(), nil, time.Second)
+	m := newModel(context.Background(), nil, time.Second, nil)
 	m.workflows = []WorkflowStatus{
 		{ID: "1", Name: "A", Status: "active"},
 		{ID: "2", Name: "B", Status: "inactive"},
@@ -74,6 +76,45 @@ func TestViewHighlightsSelectedRow(t *testing.T) {
 		t.Errorf("highlighted row not found in view")
 	}
 }
+
+type mockWorkflowReader struct {
+	GetWorkflowsFunc func(context.Context) ([]*wf.Workflow, error)
+}
+
+func (m *mockWorkflowReader) GetWorkflows(ctx context.Context) ([]*wf.Workflow, error) {
+	if m.GetWorkflowsFunc != nil {
+		return m.GetWorkflowsFunc(ctx)
+	}
+	return nil, nil
+}
+
+func (m *mockWorkflowReader) GetWorkflow(ctx context.Context, id string) (*wf.Workflow, error) {
+	return nil, nil
+}
+
+func (m *mockWorkflowReader) HealthCheck(ctx context.Context) error {
+	return nil
+}
+
+func TestRefreshDataFailureLogs(t *testing.T) {
+	logger := logrus.New()
+	hook := test.NewLocal(logger)
+	reader := &mockWorkflowReader{
+		GetWorkflowsFunc: func(ctx context.Context) ([]*wf.Workflow, error) {
+			return nil, fmt.Errorf("boom")
+		},
+	}
+	m := newModel(context.Background(), reader, time.Second, logger)
+	m.refreshData()
+
+	if len(m.events) == 0 || !strings.Contains(m.events[0], "failed") {
+		t.Fatalf("expected failure event, got %v", m.events)
+	}
+	if len(hook.AllEntries()) == 0 {
+		t.Fatal("expected log entry for failure")
+	}
+	if hook.LastEntry().Message != "failed to fetch workflows" {
+		t.Errorf("unexpected log message: %s", hook.LastEntry().Message)
 
 func TestNewDashboardUsesRefreshInterval(t *testing.T) {
 	d := NewDashboard(nil, 5*time.Second)

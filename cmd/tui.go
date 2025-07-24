@@ -10,6 +10,7 @@ import (
 	"github.com/pmaojo/n8n-ops/internal/client"
 	"github.com/pmaojo/n8n-ops/internal/credentials"
 	"github.com/pmaojo/n8n-ops/internal/ui"
+	"github.com/pmaojo/n8n-ops/internal/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -64,8 +65,9 @@ func runTUI(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	logger := utils.NewLogger()
 	ctx := context.Background()
 	var uiImpl ui.DashboardUI
-	uiImpl = bubbleui.NewDashboard(c, tuiRefresh)
+	uiImpl = bubbleui.NewDashboard(c, 3*time.Second, logger, tuiRefresh)
 	return uiImpl.Run(ctx)
 }

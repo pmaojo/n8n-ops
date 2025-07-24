@@ -10,12 +10,14 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/pmaojo/n8n-ops/internal/client"
 	wf "github.com/pmaojo/n8n-ops/internal/workflow"
+	"github.com/sirupsen/logrus"
 )
 
 // Dashboard implements a Bubble Tea terminal dashboard.
 type Dashboard struct {
 	client  client.WorkflowReader
 	refresh time.Duration
+	logger  logrus.FieldLogger
 	model   *model
 }
 
@@ -23,13 +25,13 @@ type Dashboard struct {
 var _ interface{ Run(context.Context) error } = (*Dashboard)(nil)
 
 // NewDashboard initializes a Bubble Tea dashboard.
-func NewDashboard(c client.WorkflowReader, refresh time.Duration) *Dashboard {
-	return &Dashboard{client: c, refresh: refresh}
+func NewDashboard(c client.WorkflowReader, refresh time.Duration, logger logrus.FieldLogger) *Dashboard {
+	return &Dashboard{client: c, refresh: refresh, logger: logger}
 }
 
 // Run starts the Bubble Tea program.
 func (d *Dashboard) Run(ctx context.Context) error {
-	m := newModel(ctx, d.client, d.refresh)
+	m := newModel(ctx, d.client, d.refresh, d.logger)
 	d.model = &m
 	p := tea.NewProgram(d.model, tea.WithContext(ctx))
 	_, err := p.Run()
@@ -46,6 +48,7 @@ type model struct {
 	ctx     context.Context
 	client  client.WorkflowReader
 	refresh time.Duration
+	logger  logrus.FieldLogger
 	start   time.Time
 
 	width  int
@@ -61,11 +64,12 @@ type model struct {
 	workflowDetail *wf.Workflow
 }
 
-func newModel(ctx context.Context, c client.WorkflowReader, refresh time.Duration) model {
+func newModel(ctx context.Context, c client.WorkflowReader, refresh time.Duration, logger logrus.FieldLogger) model {
 	return model{
 		ctx:           ctx,
 		client:        c,
 		refresh:       refresh,
+		logger:        logger,
 		start:         time.Now(),
 		selectedIndex: 0,
 	}
@@ -108,7 +112,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *model) refreshData() {
-	workflows := m.fetchWorkflows()
+	workflows, err := m.fetchWorkflows()
+	if err != nil {
+		if m.logger != nil {
+			m.logger.WithError(err).Error("failed to fetch workflows")
+		}
+		m.workflows = nil
+		m.metrics = Metrics{Uptime: time.Since(m.start).Truncate(time.Second).String()}
+		m.summary = Summary{}
+		m.events = []string{time.Now().Format("15:04:05") + " failed to fetch workflows"}
+		return
+	}
 	statuses := make([]WorkflowStatus, 0, len(workflows))
 	active := 0
 	for _, wf := range workflows {
@@ -128,18 +142,18 @@ func (m *model) refreshData() {
 	m.events = []string{time.Now().Format("15:04:05") + " dashboard refreshed"}
 }
 
-func (m *model) fetchWorkflows() []*wf.Workflow {
+func (m *model) fetchWorkflows() ([]*wf.Workflow, error) {
 	if m.client == nil {
-		return nil
+		return nil, nil
 	}
 	if m.ctx == nil {
 		m.ctx = context.Background()
 	}
 	workflows, err := m.client.GetWorkflows(m.ctx)
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return workflows
+	return workflows, nil
 }
 
 func (m *model) loadWorkflowDetail() {
