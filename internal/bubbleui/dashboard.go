@@ -54,13 +54,13 @@ type model struct {
 	width  int
 	height int
 
-	workflows     []WorkflowStatus
-	metrics       Metrics
-	events        []string
-	summary       Summary
-	selectedIndex int
-	filterText    string
-	inputMode     bool
+	workflows      []WorkflowStatus
+	metrics        Metrics
+	events         []string
+	summary        Summary
+	selectedIndex  int
+	filterText     string
+	inputMode      bool
 	viewingDetails bool
 	workflowDetail *wf.Workflow
 }
@@ -207,7 +207,6 @@ func (m model) View() string {
 	if m.viewingDetails && m.workflowDetail != nil {
 		return renderDetailView(m.workflowDetail)
 	}
-	rows := workflowTableRows(m.workflows)
 	percent, label := summaryGauge(m.summary.Active, m.summary.Active+m.summary.Inactive)
 	barWidth := m.width - len(label) - 5
 	if barWidth < 0 {
