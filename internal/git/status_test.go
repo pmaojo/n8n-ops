@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -102,6 +103,12 @@ func TestGetStatusDetectsWorkflowChanges(t *testing.T) {
 	assert.True(t, modified)
 	assert.True(t, untracked)
 
+	for _, wf := range status.UncommittedWorkflows {
+		info, statErr := os.Stat(filepath.Join(repo, filepath.FromSlash(wf.FilePath)))
+		require.NoError(t, statErr)
+		assert.WithinDuration(t, info.ModTime(), wf.LastModified, time.Second)
+	}
+
 	summary, err := checker.GetUncommittedWorkflowSummary()
 	require.NoError(t, err)
 	assert.Contains(t, summary, "2 uncommitted workflow changes")
@@ -138,6 +145,7 @@ func TestGetStatusWithMockExecutor(t *testing.T) {
 		case "workflows/production/add.json":
 			foundAdd = wf.Status == "added" && wf.Environment == "production"
 		}
+		assert.True(t, wf.LastModified.IsZero())
 	}
 	assert.True(t, foundMod)
 	assert.True(t, foundNew)

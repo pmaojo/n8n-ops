@@ -4,13 +4,17 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/pmaojo/n8n-ops/internal/utils"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
+
+var logger = utils.NewLogger()
 
 // GitStatus represents the status of files in Git
 type GitStatus struct {
@@ -104,11 +108,21 @@ func (gsc *GitStatusChecker) GetStatus() (*GitStatus, error) {
 		if isWorkflowFile {
 			status.WorkflowFiles = append(status.WorkflowFiles, filePath)
 
+			absPath := filepath.Join(gsc.WorkingDir, filepath.FromSlash(filePath))
+			info, statErr := os.Stat(absPath)
+			var modTime time.Time
+			if statErr != nil {
+				logger.WithError(statErr).WithField("file", absPath).
+					Warn("failed to retrieve modification time")
+			} else {
+				modTime = info.ModTime()
+			}
+
 			workflowChange := WorkflowChange{
 				FilePath:     filePath,
 				WorkflowName: gsc.extractWorkflowName(filePath),
 				Environment:  gsc.extractEnvironment(filePath),
-				LastModified: time.Now(), // Would get from file stats in real implementation
+				LastModified: modTime,
 				Branch:       branch,
 			}
 
