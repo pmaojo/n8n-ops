@@ -70,7 +70,7 @@ Examples:
 		if err != nil {
 			return fmt.Errorf("failed to get working directory: %w", err)
 		}
-		return runBranchCmd(cmd, args, git.NewExecutor(cwd))
+		return runBranchCmd(cmd, args, git.NewService(git.NewExecutor(cwd)))
 	},
 }
 
@@ -83,7 +83,7 @@ func init() {
 	branchCmd.Flags().BoolVar(&branchShowActive, "active", false, "Show only branches with active workflows")
 }
 
-func runBranchCmd(cmd *cobra.Command, args []string, executor git.Executor) error {
+func runBranchCmd(cmd *cobra.Command, args []string, svc *git.Service) error {
 	if language == "es" {
 		fmt.Println("🌿 Iniciando análisis de ramas...")
 	} else {
@@ -93,23 +93,23 @@ func runBranchCmd(cmd *cobra.Command, args []string, executor git.Executor) erro
 	// Handle different command modes
 	switch {
 	case branchListAll:
-		return handleListAllBranches(executor)
+		return handleListAllBranches(svc)
 	case branchCompare != "":
-		return handleCompareBranches(executor, branchCompare)
+		return handleCompareBranches(svc, branchCompare)
 	default:
-		return handleCurrentBranch(executor)
+		return handleCurrentBranch(svc)
 	}
 }
 
-func handleCurrentBranch(exec git.Executor) error {
-	currentBranch, err := getCurrentBranch(exec)
+func handleCurrentBranch(svc *git.Service) error {
+	currentBranch, err := getCurrentBranch(svc)
 	if err != nil {
 		return fmt.Errorf("failed to get current branch: %w", err)
 	}
 
 	fmt.Printf("Analyzing current branch: %s\n", currentBranch)
 
-	branchInfo, err := getBranchWorkflows(exec, currentBranch)
+	branchInfo, err := getBranchWorkflows(svc, currentBranch)
 	if err != nil {
 		return fmt.Errorf("failed to analyze branch workflows: %w", err)
 	}
@@ -121,10 +121,10 @@ func handleCurrentBranch(exec git.Executor) error {
 	return displayBranchInfo(branchInfo)
 }
 
-func handleListAllBranches(exec git.Executor) error {
+func handleListAllBranches(svc *git.Service) error {
 	fmt.Println("Analyzing all branches...")
 
-	allBranches, err := getAllBranchesWorkflows(exec)
+	allBranches, err := getAllBranchesWorkflows(svc)
 	if err != nil {
 		return fmt.Errorf("failed to analyze all branches: %w", err)
 	}
@@ -153,20 +153,20 @@ func handleListAllBranches(exec git.Executor) error {
 	return displayAllBranches(allBranches)
 }
 
-func handleCompareBranches(exec git.Executor, targetBranch string) error {
-	currentBranch, err := getCurrentBranch(exec)
+func handleCompareBranches(svc *git.Service, targetBranch string) error {
+	currentBranch, err := getCurrentBranch(svc)
 	if err != nil {
 		return fmt.Errorf("failed to get current branch: %w", err)
 	}
 
 	fmt.Printf("Comparing branches: %s vs %s\n", currentBranch, targetBranch)
 
-	branchInfoA, err := getBranchWorkflows(exec, currentBranch)
+	branchInfoA, err := getBranchWorkflows(svc, currentBranch)
 	if err != nil {
 		return fmt.Errorf("failed to get workflows for branch %s: %w", currentBranch, err)
 	}
 
-	branchInfoB, err := getBranchWorkflows(exec, targetBranch)
+	branchInfoB, err := getBranchWorkflows(svc, targetBranch)
 	if err != nil {
 		return fmt.Errorf("failed to get workflows for branch %s: %w", targetBranch, err)
 	}
@@ -181,12 +181,12 @@ func handleCompareBranches(exec git.Executor, targetBranch string) error {
 }
 
 // Helper functions for branch operations
-func getCurrentBranch(exec git.Executor) (string, error) {
-	return exec.CurrentBranch()
+func getCurrentBranch(svc *git.Service) (string, error) {
+	return svc.GetCurrentBranch()
 }
 
-func getBranchWorkflows(exec git.Executor, branch string) (*BranchWorkflowInfo, error) {
-	output, err := exec.Log(branch, "%H|%s|%an|%ct")
+func getBranchWorkflows(svc *git.Service, branch string) (*BranchWorkflowInfo, error) {
+	output, err := svc.Log(branch, "%H|%s|%an|%ct")
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +196,7 @@ func getBranchWorkflows(exec git.Executor, branch string) (*BranchWorkflowInfo, 
 		return nil, fmt.Errorf("unexpected git log format")
 	}
 
-	workflowFiles, err := findWorkflowFiles(exec, branch)
+	workflowFiles, err := findWorkflowFiles(svc, branch)
 	if err != nil {
 		return nil, err
 	}
@@ -224,15 +224,15 @@ func getBranchWorkflows(exec git.Executor, branch string) (*BranchWorkflowInfo, 
 	return branchInfo, nil
 }
 
-func getAllBranchesWorkflows(exec git.Executor) (map[string]*BranchWorkflowInfo, error) {
-	branches, err := getAllBranches(exec)
+func getAllBranchesWorkflows(svc *git.Service) (map[string]*BranchWorkflowInfo, error) {
+	branches, err := getAllBranches(svc)
 	if err != nil {
 		return nil, err
 	}
 
 	result := make(map[string]*BranchWorkflowInfo)
 	for _, branch := range branches {
-		branchInfo, err := getBranchWorkflows(exec, branch)
+		branchInfo, err := getBranchWorkflows(svc, branch)
 		if err != nil {
 			fmt.Printf("Warning: Failed to analyze branch %s: %v\n", branch, err)
 			continue
@@ -243,8 +243,8 @@ func getAllBranchesWorkflows(exec git.Executor) (map[string]*BranchWorkflowInfo,
 	return result, nil
 }
 
-func findWorkflowFiles(exec git.Executor, branch string) ([]WorkflowFile, error) {
-	files, err := exec.LsTree(branch, "workflows/")
+func findWorkflowFiles(svc *git.Service, branch string) ([]WorkflowFile, error) {
+	files, err := svc.LsTree(branch, "workflows/")
 	if err != nil {
 		return []WorkflowFile{}, nil // No workflows directory
 	}
@@ -266,8 +266,8 @@ func findWorkflowFiles(exec git.Executor, branch string) ([]WorkflowFile, error)
 	return workflowFiles, nil
 }
 
-func getAllBranches(exec git.Executor) ([]string, error) {
-	branches, err := exec.RemoteBranches()
+func getAllBranches(svc *git.Service) ([]string, error) {
+	branches, err := svc.RemoteBranches()
 	if err != nil {
 		return nil, err
 	}

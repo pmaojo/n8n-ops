@@ -39,7 +39,8 @@ func TestRunBranchCmd_ListAllJSON(t *testing.T) {
 	exec.LogFunc = func(branch, format string) (string, error) { return "abc|msg|user|1", nil }
 	exec.LsTreeFunc = func(branch, path string) ([]string, error) { return []string{"workflows/dev/test.json"}, nil }
 
-	output := captureStdout(t, func() { require.NoError(t, runBranchCmd(nil, nil, exec)) })
+	svc := git.NewService(exec)
+	output := captureStdout(t, func() { require.NoError(t, runBranchCmd(nil, nil, svc)) })
 	idx := strings.Index(output, "\n{")
 	if idx == -1 {
 		t.Fatalf("no json output: %s", output)
@@ -56,8 +57,8 @@ func TestHandleCurrentBranch_JSON(t *testing.T) {
 	exec.CurrentBranchFunc = func() (string, error) { return "feat", nil }
 	exec.LogFunc = func(branch, format string) (string, error) { return "abc|msg|user|1", nil }
 	exec.LsTreeFunc = func(branch, path string) ([]string, error) { return []string{"workflows/dev/test.json"}, nil }
-
-	output := captureStdout(t, func() { require.NoError(t, handleCurrentBranch(exec)) })
+	svc := git.NewService(exec)
+	output := captureStdout(t, func() { require.NoError(t, handleCurrentBranch(svc)) })
 	idx := strings.Index(output, "\n{")
 	require.NotEqual(t, -1, idx)
 	var out BranchWorkflowInfo
@@ -81,8 +82,8 @@ func TestHandleCompareBranches_JSON(t *testing.T) {
 		}
 		return []string{"workflows/dev/b.json"}, nil
 	}
-
-	output := captureStdout(t, func() { require.NoError(t, handleCompareBranches(exec, "main")) })
+	svc := git.NewService(exec)
+	output := captureStdout(t, func() { require.NoError(t, handleCompareBranches(svc, "main")) })
 	idx := strings.Index(output, "\n{")
 	require.NotEqual(t, -1, idx)
 	var out WorkflowComparison
