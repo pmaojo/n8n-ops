@@ -17,7 +17,13 @@ and configuration files for collaborative development.
 Examples:
   n8n-ops init my-workflows       # Initialize project in ./my-workflows
   n8n-ops init .                  # Initialize project in current directory`,
-	RunE: runInit,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cli := cliFrom(cmd)
+		if cli == nil {
+			return fmt.Errorf("CLI not initialized")
+		}
+		return runInit(cmd, args, cli)
+	},
 }
 
 var (
@@ -30,13 +36,13 @@ func init() {
 	initCmd.Flags().BoolVarP(&initForce, "force", "f", false, "force initialization, overwriting existing files")
 }
 
-func runInit(cmd *cobra.Command, args []string) error {
+func runInit(cmd *cobra.Command, args []string, cli *CLI) error {
 	projectDir := "."
 	if len(args) > 0 {
 		projectDir = args[0]
 	}
 
-	logger.Info("Initializing n8n workflow project", "directory", projectDir)
+	cli.Logger.Info("Initializing n8n workflow project", "directory", projectDir)
 
 	// Create project directory if it doesn't exist
 	if err := os.MkdirAll(projectDir, 0755); err != nil {
@@ -84,7 +90,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create .gitignore: %w", err)
 	}
 
-	logger.Info("Project initialized successfully", "directory", projectDir)
+	cli.Logger.Info("Project initialized successfully", "directory", projectDir)
 
 	fmt.Printf("✅ n8n workflow project initialized successfully!\n\n")
 	fmt.Printf("Next steps:\n")

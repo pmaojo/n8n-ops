@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/pmaojo/n8n-ops/internal/cliutils"
@@ -23,7 +24,13 @@ Examples:
   n8n-ops watch --env development     # Watch development n8n instance
   n8n-ops watch --env production      # Watch production instance  
   n8n-ops watch --interval 30s        # Check every 30 seconds`,
-	RunE: runWatch,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cli := cliFrom(cmd)
+		if cli == nil {
+			return fmt.Errorf("CLI not initialized")
+		}
+		return runWatch(cmd, args, cli)
+	},
 }
 
 var (
@@ -40,20 +47,20 @@ func init() {
 	watchCmd.Flags().BoolVar(&autoSync, "auto-sync", true, "automatically sync detected changes")
 }
 
-func runWatch(cmd *cobra.Command, args []string) error {
-	logEntry := logger.WithFields(logrus.Fields{
+func runWatch(cmd *cobra.Command, args []string, cli *CLI) error {
+	logEntry := cli.Logger.WithFields(logrus.Fields{
 		"command": "watch",
-		"env":     environment,
+		"env":     cli.Environment,
 	})
 
-	n8nClient, cm, err := cliutils.SetupClient(environment, demoMode)
+	n8nClient, cm, err := cliutils.SetupClient(cli.Environment, demoMode)
 	if err != nil {
 		return err
 	}
 
 	gitChecker := git.NewGitStatusChecker(".", nil)
-	syncSvc := isync.NewService(n8nClient, cm, gitChecker, logEntry, environment)
-	svc := iwatch.NewService(n8nClient, cm, gitChecker, syncSvc, logEntry, environment)
+	syncSvc := isync.NewService(n8nClient, cm, gitChecker, logEntry, cli.Environment)
+	svc := iwatch.NewService(n8nClient, cm, gitChecker, syncSvc, logEntry, cli.Environment)
 
 	return svc.Watch(context.Background(), iwatch.Options{
 		Interval:   watchInterval,

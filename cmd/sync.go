@@ -33,7 +33,13 @@ Examples:
   n8n-ops sync --from-n8n          # Only download from n8n to Git
   n8n-ops sync --to-n8n            # Only upload from Git to n8n  
   n8n-ops sync --force             # Force sync, auto-resolve conflicts`,
-	RunE: runSync,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cli := cliFrom(cmd)
+		if cli == nil {
+			return fmt.Errorf("CLI not initialized")
+		}
+		return runSync(cmd, args, cli)
+	},
 }
 
 var (
@@ -56,25 +62,25 @@ func init() {
 	syncCmd.Flags().BoolVar(&syncDryRun, "dry-run", false, "show what would be synced without making changes")
 }
 
-func runSync(cmd *cobra.Command, args []string) error {
+func runSync(cmd *cobra.Command, args []string, cli *CLI) error {
 	ctx := context.Background()
 
-	n8nClient, cm, err := cliutils.SetupClient(environment, demoMode)
+	n8nClient, cm, err := cliutils.SetupClient(cli.Environment, demoMode)
 	if err != nil {
 		var missing cliutils.MissingCredentialError
 		if errors.As(err, &missing) {
-			envSuffix := strings.ToUpper(environment)
-			fmt.Printf("⚠️  n8n credentials not configured for %s environment\n", environment)
+			envSuffix := strings.ToUpper(cli.Environment)
+			fmt.Printf("⚠️  n8n credentials not configured for %s environment\n", cli.Environment)
 			fmt.Printf("💡 Set environment variables or use --demo flag:\n")
 			fmt.Printf("   export N8N_%s_URL=http://localhost:3001\n", envSuffix)
-			fmt.Printf("   export N8N_%s_API_KEY=n8n_api_mock_%s\n", envSuffix, environment)
+			fmt.Printf("   export N8N_%s_API_KEY=n8n_api_mock_%s\n", envSuffix, cli.Environment)
 			return nil
 		}
 		return err
 	}
 
 	checker := git.NewGitStatusChecker(".", nil)
-	svc := isync.NewService(n8nClient, cm, checker, logger, environment)
+	svc := isync.NewService(n8nClient, cm, checker, cli.Logger, cli.Environment)
 
 	return svc.Sync(ctx, isync.Options{
 		OutputDir: outputDir,

@@ -35,7 +35,13 @@ Examples:
   n8n-ops status --env production         # Status for specific environment
   n8n-ops status --json                   # JSON output for automation
   n8n-ops status --check-uncommitted      # Focus on uncommitted changes`,
-	RunE: runStatus,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cli := cliFrom(cmd)
+		if cli == nil {
+			return fmt.Errorf("CLI not initialized")
+		}
+		return runStatus(cmd, args, cli)
+	},
 }
 
 var (
@@ -51,19 +57,22 @@ func init() {
 	statusCmd.Flags().BoolVar(&statusShowCredentials, "credentials", false, "include credential validation in status")
 }
 
-func runStatus(cmd *cobra.Command, args []string) error {
+func runStatus(cmd *cobra.Command, args []string, cli *CLI) error {
+	if cli == nil {
+		return fmt.Errorf("CLI not initialized")
+	}
 	if statusCheckUncommitted {
-		return runUncommittedCheck()
+		return runUncommittedCheck(cli.Environment)
 	}
 
 	if statusJsonOutput {
-		return runStatusJSON()
+		return runStatusJSON(cli.Environment)
 	}
 
-	return runStatusHuman()
+	return runStatusHuman(cli.Environment)
 }
 
-func runUncommittedCheck() error {
+func runUncommittedCheck(env string) error {
 	fmt.Printf("🔍 Checking for Uncommitted Workflow Changes\n")
 	fmt.Printf("===========================================\n\n")
 
@@ -90,7 +99,7 @@ func runUncommittedCheck() error {
 	return nil
 }
 
-func runStatusJSON() error {
+func runStatusJSON(env string) error {
 	checker := git.NewGitStatusChecker(".", nil)
 	gitStatus, err := checker.GetStatus()
 	if err != nil {
@@ -99,7 +108,7 @@ func runStatusJSON() error {
 
 	status := map[string]interface{}{
 		"timestamp":   time.Now(),
-		"environment": environment,
+		"environment": env,
 		"git":         gitStatus,
 		"workflows": map[string]interface{}{
 			"total":       len(gitStatus.WorkflowFiles),
@@ -122,7 +131,7 @@ func runStatusJSON() error {
 	return encoder.Encode(status)
 }
 
-func runStatusHuman() error {
+func runStatusHuman(env string) error {
 	// ASCII Art Header
 	fmt.Printf(`
         ad88888ba   888888888888          db   888888888888 88        88   ad88888ba   
@@ -135,7 +144,7 @@ func runStatusHuman() error {
         Y88888P"        88        d8'         8b   88       Y8888888P"    Y88888P"   
 
 `)
-	fmt.Printf("🚀 n8n-ops Status Dashboard - %s Environment\n", strings.ToUpper(environment))
+	fmt.Printf("🚀 n8n-ops Status Dashboard - %s Environment\n", strings.ToUpper(env))
 	fmt.Printf("================================================\n\n")
 
 	// Git Status
@@ -178,13 +187,13 @@ func runStatusHuman() error {
 	fmt.Printf("===================\n")
 	fmt.Printf("Total Workflows:     %d\n", len(gitStatus.WorkflowFiles))
 	fmt.Printf("Uncommitted Changes: %d\n", len(gitStatus.UncommittedWorkflows))
-	fmt.Printf("Current Environment: %s\n", environment)
+	fmt.Printf("Current Environment: %s\n", env)
 
 	// Environment Status
 	fmt.Printf("\n🌍 Environment Status\n")
 	fmt.Printf("===================\n")
 
-	cm := credentials.NewCredentialManager(environment)
+	cm := credentials.NewCredentialManager(env)
 	n8nURL, n8nAPIKey, _ := cm.GetN8nCredentials()
 
 	if n8nURL != "" {
@@ -226,8 +235,8 @@ func runStatusHuman() error {
 	fmt.Printf("\n🔧 Quick Actions\n")
 	fmt.Printf("===============\n")
 	fmt.Printf("• Commit changes:     git add . && git commit -m \"Update workflows\"\n")
-	fmt.Printf("• Sync workflows:     n8n-ops sync --env %s\n", environment)
-	fmt.Printf("• Validate credentials: n8n-ops credentials validate --env %s\n", environment)
+	fmt.Printf("• Sync workflows:     n8n-ops sync --env %s\n", env)
+	fmt.Printf("• Validate credentials: n8n-ops credentials validate --env %s\n", env)
 	fmt.Printf("• Check branches:     n8n-ops branch list\n")
 
 	return nil

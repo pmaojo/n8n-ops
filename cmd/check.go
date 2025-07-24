@@ -23,7 +23,8 @@ Examples:
   n8n-ops check --env production --json  # JSON output for scripting
   n8n-ops check --env staging --quiet    # Silent mode (exit code only)`,
 	Run: func(cmd *cobra.Command, args []string) {
-		exitCode, err := runCheck(cmd, args)
+		cli := cliFrom(cmd)
+		exitCode, err := runCheck(cmd, args, cli)
 		if err != nil && !quiet {
 			fmt.Printf("❌ %v\n", err)
 		}
@@ -70,10 +71,13 @@ func init() {
 	checkCmd.Flags().BoolVar(&alertOnly, "alert-only", false, "only show alerts, don't suggest actions")
 }
 
-func runCheck(cmd *cobra.Command, args []string) (int, error) {
-	logger.WithField("env", environment).Info("Checking workflow sync status")
+func runCheck(cmd *cobra.Command, args []string, cli *CLI) (int, error) {
+	if cli == nil {
+		return 1, fmt.Errorf("CLI not initialized")
+	}
+	cli.Logger.WithField("env", cli.Environment).Info("Checking workflow sync status")
 
-	result, err := checkWorkflowSync()
+	result, err := checkWorkflowSync(cli.Environment)
 	if err != nil {
 		return 1, fmt.Errorf("error checking sync status: %w", err)
 	}
@@ -91,9 +95,9 @@ func runCheck(cmd *cobra.Command, args []string) (int, error) {
 	return 0, nil
 }
 
-func checkWorkflowSync() (*CheckResult, error) {
+func checkWorkflowSync(env string) (*CheckResult, error) {
 	// Read local workflows
-	workflowDir := fmt.Sprintf("./workflows/%s", environment)
+	workflowDir := fmt.Sprintf("./workflows/%s", env)
 	localWorkflows, err := getLocalWorkflows(workflowDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read local workflows: %w", err)
@@ -101,11 +105,11 @@ func checkWorkflowSync() (*CheckResult, error) {
 
 	// Use demo mode or real API
 	if len(localWorkflows) == 0 {
-		return checkWorkflowSyncDemo(localWorkflows)
+		return checkWorkflowSyncDemo(env, localWorkflows)
 	}
 
 	// Real API comparison (when implemented)
-	return checkWorkflowSyncReal(localWorkflows)
+	return checkWorkflowSyncReal(env, localWorkflows)
 }
 
 // WorkflowData represents a workflow from the filesystem
@@ -149,9 +153,9 @@ func getLocalWorkflows(workflowDir string) ([]WorkflowData, error) {
 	return workflows, nil
 }
 
-func checkWorkflowSyncDemo(localWorkflows []WorkflowData) (*CheckResult, error) {
+func checkWorkflowSyncDemo(env string, localWorkflows []WorkflowData) (*CheckResult, error) {
 	result := &CheckResult{
-		Environment:    environment,
+		Environment:    env,
 		LastSync:       time.Now().Add(-15 * time.Minute),
 		TotalWorkflows: 3, // Demo has 3 workflows
 		Workflows: WorkflowStatuses{
@@ -200,10 +204,10 @@ func checkWorkflowSyncDemo(localWorkflows []WorkflowData) (*CheckResult, error) 
 	return result, nil
 }
 
-func checkWorkflowSyncReal(localWorkflows []WorkflowData) (*CheckResult, error) {
+func checkWorkflowSyncReal(env string, localWorkflows []WorkflowData) (*CheckResult, error) {
 	// This would implement real n8n API comparison
 	result := &CheckResult{
-		Environment:    environment,
+		Environment:    env,
 		LastSync:       time.Now().Add(-15 * time.Minute),
 		TotalWorkflows: len(localWorkflows),
 		Workflows: WorkflowStatuses{
@@ -237,7 +241,7 @@ func formatTimeAgo(t time.Time) string {
 }
 
 func printCheckResultTable(result *CheckResult) {
-	fmt.Printf("\n🔍 Workflow Sync Status - %s Environment\n", environment)
+	fmt.Printf("\n🔍 Workflow Sync Status - %s Environment\n", result.Environment)
 	fmt.Printf("Last sync: %s\n\n", result.LastSync.Format("2006-01-02 15:04:05"))
 
 	if result.Modified == 0 {
@@ -263,8 +267,8 @@ func printCheckResultTable(result *CheckResult) {
 
 	if !alertOnly {
 		fmt.Printf("💡 To sync changes:\n")
-		fmt.Printf("   ./n8n-ops sync --env %s\n", environment)
-		fmt.Printf("   git add workflows/%s/ && git commit -m \"sync: update workflows\"\n", environment)
+		fmt.Printf("   ./n8n-ops sync --env %s\n", result.Environment)
+		fmt.Printf("   git add workflows/%s/ && git commit -m \"sync: update workflows\"\n", result.Environment)
 	}
 }
 
