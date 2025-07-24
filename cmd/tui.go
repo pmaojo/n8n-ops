@@ -20,12 +20,19 @@ var tuiCmd = &cobra.Command{
 
 Controls:
   Up/Down - move selection
-  Q       - quit`,
+  Q       - quit
+
+Flags:
+  --refresh duration   dashboard refresh interval (default 3s)`,
 	RunE: runTUI,
 }
 
+var tuiRefresh time.Duration
+
 func init() {
 	rootCmd.AddCommand(tuiCmd)
+
+	tuiCmd.Flags().DurationVar(&tuiRefresh, "refresh", 3*time.Second, "dashboard refresh interval")
 }
 
 func runTUI(cmd *cobra.Command, args []string) error {
@@ -59,6 +66,6 @@ func runTUI(cmd *cobra.Command, args []string) error {
 
 	ctx := context.Background()
 	var uiImpl ui.DashboardUI
-	uiImpl = bubbleui.NewDashboard(c, 3*time.Second)
+	uiImpl = bubbleui.NewDashboard(c, tuiRefresh)
 	return uiImpl.Run(ctx)
 }

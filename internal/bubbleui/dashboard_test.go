@@ -60,3 +60,10 @@ func TestViewHighlightsSelectedRow(t *testing.T) {
 		t.Errorf("highlighted row not found in view")
 	}
 }
+
+func TestNewDashboardUsesRefreshInterval(t *testing.T) {
+	d := NewDashboard(nil, 5*time.Second)
+	if d.refresh != 5*time.Second {
+		t.Fatalf("expected refresh interval 5s, got %s", d.refresh)
+	}
+}
