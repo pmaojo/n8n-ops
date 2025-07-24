@@ -14,6 +14,18 @@ import (
 	"github.com/sirupsen/logrus/hooks/test"
 )
 
+type stubClient struct{}
+
+func (stubClient) GetWorkflows(ctx context.Context) ([]*wf.Workflow, error) {
+	return []*wf.Workflow{{ID: "1", Name: "A", Nodes: []wf.Node{{Name: "start", Type: "start", Position: []float64{0, 0}}}}}, nil
+}
+
+func (stubClient) GetWorkflow(ctx context.Context, id string) (*wf.Workflow, error) {
+	return &wf.Workflow{ID: id, Name: "A", Active: true, Nodes: []wf.Node{{Name: "start", Type: "start", Position: []float64{0, 0}}}, Tags: []wf.Tag{{Name: "t1"}}, UpdatedAt: time.Now()}, nil
+}
+
+func (stubClient) HealthCheck(ctx context.Context) error { return nil }
+
 func TestUpdateSelectedIndex(t *testing.T) {
 	m := newModel(context.Background(), nil, time.Second, nil)
 	m.workflows = []WorkflowStatus{
@@ -56,7 +68,8 @@ func TestViewHighlightsSelectedRow(t *testing.T) {
 
 	view := m.View()
 	highlight := lipgloss.NewStyle().Foreground(lipgloss.Color("0")).Background(lipgloss.Color("2"))
-	row := fmt.Sprintf("%-8s %-30s %-10s", "2", "B", "inactive")
+	status := statusStyle("inactive").Render("inactive")
+	row := fmt.Sprintf("%-8s %-30s %-10s", "2", "B", status)
 	expected := highlight.Render(row)
 
 	if !strings.Contains(view, expected) {
@@ -102,5 +115,42 @@ func TestRefreshDataFailureLogs(t *testing.T) {
 	}
 	if hook.LastEntry().Message != "failed to fetch workflows" {
 		t.Errorf("unexpected log message: %s", hook.LastEntry().Message)
+
+func TestNewDashboardUsesRefreshInterval(t *testing.T) {
+	d := NewDashboard(nil, 5*time.Second)
+	if d.refresh != 5*time.Second {
+		t.Fatalf("expected refresh interval 5s, got %s", d.refresh)
+
+func TestViewColorsStatus(t *testing.T) {
+	m := newModel(context.Background(), nil, time.Second)
+	m.workflows = []WorkflowStatus{
+		{ID: "1", Name: "A", Status: "active"},
+		{ID: "2", Name: "B", Status: "inactive"},
+	}
+
+	view := m.View()
+
+	activeColored := statusStyle("active").Render("active")
+	if !strings.Contains(view, activeColored) {
+		t.Errorf("expected active status color not found")
+	}
+	inactiveColored := statusStyle("inactive").Render("inactive")
+	if !strings.Contains(view, inactiveColored) {
+		t.Errorf("expected inactive status color not found")
+    
+func TestEnterToggleDetailView(t *testing.T) {
+	m := newModel(context.Background(), stubClient{}, time.Second)
+	m.refreshData()
+
+	mdl, _ := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m2 := mdl.(model)
+	if !m2.viewingDetails || m2.workflowDetail == nil {
+		t.Fatal("expected detail view on enter")
+	}
+
+	mdl, _ = m2.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m3 := mdl.(model)
+	if m3.viewingDetails || m3.workflowDetail != nil {
+		t.Fatal("expected to return to list view on enter")
 	}
 }

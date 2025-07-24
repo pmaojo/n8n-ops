@@ -4,6 +4,7 @@ import (
 	"fmt"
 )
 
+// Language represents a supported localization option.
 type Language string
 
 const (
