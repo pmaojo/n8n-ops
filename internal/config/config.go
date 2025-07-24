@@ -2,9 +2,10 @@ package config
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/spf13/viper"
+
+	"github.com/pmaojo/n8n-ops/internal/utils"
 )
 
 // Config represents the root configuration for n8n-ops. It groups environment
@@ -65,7 +66,10 @@ func (c *Config) GetLoggingConfig() *LoggingConfig {
 }
 
 // NewConfig creates and initializes a new Config object
-func NewConfig() (*Config, error) {
+func NewConfig(provider utils.EnvProvider) (*Config, error) {
+	if provider == nil {
+		provider = utils.OSProvider{}
+	}
 	config := &Config{}
 
 	// Set defaults
@@ -85,7 +89,7 @@ func NewConfig() (*Config, error) {
 	// Resolve API keys from environment variables
 	for name, env := range config.Environments {
 		if env.APIKeyEnv != "" {
-			apiKey := os.Getenv(env.APIKeyEnv)
+			apiKey := provider.Getenv(env.APIKeyEnv)
 			if apiKey == "" {
 				fmt.Printf("Warning: Environment variable %s not set for environment %s\n", env.APIKeyEnv, name)
 			}

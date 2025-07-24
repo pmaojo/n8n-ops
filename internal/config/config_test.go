@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/pmaojo/n8n-ops/internal/utils"
 	"github.com/spf13/viper"
 )
 
@@ -36,7 +37,7 @@ func TestInitConfigLoadsConfiguration(t *testing.T) {
 	prepareConfig(cfgYAML)
 	t.Setenv("TEST_KEY", "secret")
 
-	cfg, err := NewConfig()
+	cfg, err := NewConfig(utils.OSProvider{})
 	if err != nil {
 		t.Fatalf("init config: %v", err)
 	}
@@ -65,7 +66,7 @@ func TestInitConfigLoadsConfiguration(t *testing.T) {
 
 func TestGetEnvironmentConfigErrors(t *testing.T) {
 	prepareConfig("environments: {}")
-	cfg, err := NewConfig()
+	cfg, err := NewConfig(utils.OSProvider{})
 	if err != nil {
 		t.Fatalf("init config: %v", err)
 	}
@@ -84,7 +85,7 @@ func TestGetEnvironmentConfigMissingValues(t *testing.T) {
 		prepareConfig(cfgYAML)
 		t.Setenv("TEST_KEY", "secret")
 
-		cfg, err := NewConfig()
+		cfg, err := NewConfig(utils.OSProvider{})
 		if err != nil {
 			t.Fatalf("init config: %v", err)
 		}
@@ -103,7 +104,7 @@ func TestGetEnvironmentConfigMissingValues(t *testing.T) {
 		prepareConfig(cfgYAML)
 		t.Setenv("TEST_KEY", "")
 
-		cfg, err := NewConfig()
+		cfg, err := NewConfig(utils.OSProvider{})
 		if err != nil {
 			t.Fatalf("init config: %v", err)
 		}
@@ -116,7 +117,7 @@ func TestGetEnvironmentConfigMissingValues(t *testing.T) {
 func TestDefaultValuesAndLogging(t *testing.T) {
 	prepareConfig("")
 
-	cfg, err := NewConfig()
+	cfg, err := NewConfig(utils.OSProvider{})
 	if err != nil {
 		t.Fatalf("init config: %v", err)
 	}

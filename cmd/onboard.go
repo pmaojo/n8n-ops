@@ -44,7 +44,7 @@ func init() {
 
 func runOnboard(cmd *cobra.Command, args []string) {
 	// Load .env file if it exists
-	utils.LoadEnvFile(".env")
+	utils.LoadEnvFile(utils.OSProvider{}, ".env")
 
 	if !onboardSkipIntro {
 		showOnboardingIntro()

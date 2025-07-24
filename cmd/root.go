@@ -113,8 +113,9 @@ func initConfig() {
 		viper.SetConfigName(".n8n-ops")
 	}
 
+	provider := utils.OSProvider{}
 	// Load .env file if it exists
-	utils.LoadEnvFile(".env")
+	utils.LoadEnvFile(provider, ".env")
 
 	viper.AutomaticEnv() // read in environment variables that match
 
@@ -127,7 +128,7 @@ func initConfig() {
 
 	// Initialize configuration
 	var err error
-	cfg, err = config.NewConfig()
+	cfg, err = config.NewConfig(provider)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error initializing config: %v\n", err)
 		os.Exit(1)

@@ -9,21 +9,21 @@ import (
 )
 
 // GetGitLabCredentials retrieves GitLab token and project ID
-func GetGitLabCredentials(environment string) (token, projectID string) {
+func GetGitLabCredentials(provider EnvProvider, environment string) (token, projectID string) {
 	envSuffix := strings.ToUpper(environment)
 
 	// Try environment-specific variables first
-	token = os.Getenv(fmt.Sprintf("GITLAB_TOKEN_%s", envSuffix))
-	projectID = os.Getenv(fmt.Sprintf("GITLAB_PROJECT_ID_%s", envSuffix))
+	token = provider.Getenv(fmt.Sprintf("GITLAB_TOKEN_%s", envSuffix))
+	projectID = provider.Getenv(fmt.Sprintf("GITLAB_PROJECT_ID_%s", envSuffix))
 
 	// Fallback to generic variables
 	if token == "" {
-		token = os.Getenv("GITLAB_TOKEN")
+		token = provider.Getenv("GITLAB_TOKEN")
 	}
 	if projectID == "" {
-		projectID = os.Getenv("GITLAB_PROJECT_ID")
+		projectID = provider.Getenv("GITLAB_PROJECT_ID")
 		if projectID == "" {
-			projectID = os.Getenv("GITLAB_PROJECT")
+			projectID = provider.Getenv("GITLAB_PROJECT")
 		}
 	}
 
@@ -31,7 +31,7 @@ func GetGitLabCredentials(environment string) (token, projectID string) {
 }
 
 // LoadEnvFile loads environment variables from a .env file
-func LoadEnvFile(filename string) error {
+func LoadEnvFile(provider EnvProvider, filename string) error {
 	if !filepath.IsAbs(filename) {
 		wd, err := os.Getwd()
 		if err != nil {
@@ -77,8 +77,8 @@ func LoadEnvFile(filename string) error {
 		}
 
 		// Only set if not already in environment
-		if os.Getenv(key) == "" {
-			os.Setenv(key, value)
+		if provider.Getenv(key) == "" {
+			provider.Setenv(key, value)
 		}
 	}
 
