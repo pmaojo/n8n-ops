@@ -34,12 +34,14 @@ Flags:
 
 var (
 	tuiRefresh time.Duration
+	tuiTheme   string
 )
 
 func init() {
 	rootCmd.AddCommand(tuiCmd)
 
 	tuiCmd.Flags().DurationVar(&tuiRefresh, "refresh", 3*time.Second, "dashboard refresh interval")
+	tuiCmd.Flags().StringVar(&tuiTheme, "theme", "", "dashboard theme (default|cyberpunk)")
 }
 
 func runTUI(cmd *cobra.Command, args []string, cli *CLI) error {
@@ -50,7 +52,18 @@ func runTUI(cmd *cobra.Command, args []string, cli *CLI) error {
 			return fmt.Errorf("N8N_%s_API_KEY is required", strings.ToUpper(cli.Environment))
 		}
 	}
+	themeName := tuiTheme
+	if themeName == "" {
+		themeName = cli.Config.GetTUITheme()
+	}
+	var theme bubbleui.Theme
+	switch strings.ToLower(themeName) {
+	case "cyberpunk":
+		theme = bubbleui.CyberpunkTheme
+	default:
+		theme = bubbleui.DefaultTheme
+	}
 	ctx := context.Background()
-	uiImpl := bubbleui.NewDashboard(n8nClient, tuiRefresh, cli.Logger, bubbleui.DefaultTheme)
+	uiImpl := bubbleui.NewDashboard(n8nClient, tuiRefresh, cli.Logger, theme)
 	return uiImpl.Run(ctx)
 }
