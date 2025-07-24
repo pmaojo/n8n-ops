@@ -1,11 +1,13 @@
 package testutil
 
 import (
+	"bytes"
 	"fmt"
-	"io"
 	"net/http"
+	"os"
 	"os/exec"
 	"path/filepath"
+	"testing"
 	"time"
 )
 
@@ -13,12 +15,15 @@ import (
 // function to stop it. It waits until the server is responsive before returning.
 // The caller should defer the returned stop function.
 func StartMockServer() (func(), error) {
+	var logBuf bytes.Buffer
+
 	cmd := exec.Command("go", "run", "main.go")
 	cmd.Dir = filepath.Join("..", "mock-n8n-server")
-	cmd.Stdout = io.Discard
-	cmd.Stderr = io.Discard
+	cmd.Stdout = &logBuf
+	cmd.Stderr = &logBuf
 
 	if err := cmd.Start(); err != nil {
+		fmt.Fprint(os.Stderr, logBuf.String())
 		return nil, fmt.Errorf("failed to start mock server: %w", err)
 	}
 
@@ -31,12 +36,16 @@ func StartMockServer() (func(), error) {
 	if err := WaitForServer("http://localhost:3001/health", 5*time.Second); err != nil {
 		cmd.Process.Kill()
 		<-done
+		fmt.Fprint(os.Stderr, logBuf.String())
 		return nil, fmt.Errorf("mock server did not start: %w", err)
 	}
 
 	stop := func() {
 		cmd.Process.Kill()
 		<-done
+		if testing.Verbose() {
+			fmt.Fprint(os.Stdout, logBuf.String())
+		}
 	}
 	return stop, nil
 }
