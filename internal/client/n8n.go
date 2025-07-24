@@ -17,7 +17,7 @@ type n8nClient struct {
 
 // New creates a new n8n client following SOLID principles
 // No side effects - connection testing is separate
-func New(baseURL, apiKey string, httpClient *http.Client) (Client, error) {
+func New(baseURL, apiKey string, httpClient HTTPDoer) (Client, error) {
 	if baseURL == "" {
 		return nil, ErrInvalidConfig
 	}

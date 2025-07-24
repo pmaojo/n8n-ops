@@ -13,7 +13,7 @@ import (
 // newTestClient creates a client backed by the provided handler.
 func newTestClient(t testing.TB, handler http.HandlerFunc) (Client, func()) {
 	srv := httptest.NewServer(handler)
-	c, err := New(srv.URL, "token", srv.Client())
+	c, err := New(srv.URL, "token", &DefaultHTTPDoer{srv.Client()})
 	if err != nil {
 		srv.Close()
 		t.Fatalf("failed to create client: %v", err)

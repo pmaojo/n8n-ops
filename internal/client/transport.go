@@ -21,17 +21,17 @@ const (
 	idleTimeout      = 90 * time.Second
 )
 
-// StandardHTTPTransport implements HTTPTransport using standard http.Client
+// StandardHTTPTransport implements HTTPTransport using an HTTPDoer
 type StandardHTTPTransport struct {
-	client  *http.Client
+	client  HTTPDoer
 	apiKey  string
 	baseURL string
 }
 
 // NewStandardHTTPTransport creates a new HTTP transport with optimal configuration
-func NewStandardHTTPTransport(baseURL, apiKey string, client *http.Client) *StandardHTTPTransport {
+func NewStandardHTTPTransport(baseURL, apiKey string, client HTTPDoer) *StandardHTTPTransport {
 	if client == nil {
-		client = defaultHTTPClient()
+		client = &DefaultHTTPDoer{defaultHTTPClient()}
 	}
 
 	return &StandardHTTPTransport{
@@ -119,7 +119,7 @@ type ContextualTransport struct {
 }
 
 // NewContextualTransport creates a transport that supports context cancellation
-func NewContextualTransport(baseURL, apiKey string, client *http.Client) *ContextualTransport {
+func NewContextualTransport(baseURL, apiKey string, client HTTPDoer) *ContextualTransport {
 	return &ContextualTransport{
 		transport: NewStandardHTTPTransport(baseURL, apiKey, client),
 	}
