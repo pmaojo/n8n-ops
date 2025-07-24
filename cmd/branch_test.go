@@ -17,7 +17,8 @@ func TestGetCurrentBranchUsesExecutor(t *testing.T) {
 		},
 	}
 
-	branch, err := getCurrentBranch(exec)
+	svc := git.NewService(exec)
+	branch, err := getCurrentBranch(svc)
 	require.NoError(t, err)
 	assert.Equal(t, "main", branch)
 	assert.True(t, called)
@@ -33,7 +34,8 @@ func TestGetBranchWorkflows(t *testing.T) {
 		},
 	}
 
-	info, err := getBranchWorkflows(exec, "main")
+	svc := git.NewService(exec)
+	info, err := getBranchWorkflows(svc, "main")
 	require.NoError(t, err)
 	require.Len(t, info.WorkflowFiles, 1)
 	assert.Equal(t, "abc123", info.LastCommit)
