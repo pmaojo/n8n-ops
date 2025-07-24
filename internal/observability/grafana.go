@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -36,6 +37,9 @@ type GrafanaIntegration struct {
 	client      *http.Client
 	logger      *logrus.Logger
 	metricsChan chan GrafanaMetrics
+	ctx         context.Context
+	cancel      context.CancelFunc
+	wg          sync.WaitGroup
 }
 
 // NewGrafanaIntegration creates a new Grafana integration
@@ -51,15 +55,22 @@ func NewGrafanaIntegration(config GrafanaConfig, logger *logrus.Logger) *Grafana
 }
 
 // Initialize sets up Grafana connection and starts metrics collection
-func (g *GrafanaIntegration) Initialize() error {
-	// Test connection
+func (g *GrafanaIntegration) Initialize(ctx context.Context) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	g.ctx, g.cancel = context.WithCancel(ctx)
+
 	if err := g.testConnection(); err != nil {
 		g.logger.WithError(err).Error("Failed to connect to Grafana")
 		return err
 	}
 
-	// Start metrics collector
-	go g.metricsCollector()
+	g.wg.Add(1)
+	go func() {
+		defer g.wg.Done()
+		g.metricsCollector()
+	}()
 
 	g.logger.Info("Grafana integration initialized")
 	return nil
@@ -137,6 +148,11 @@ func (g *GrafanaIntegration) metricsCollector() {
 
 	for {
 		select {
+		case <-g.ctx.Done():
+			if len(batchMetrics) > 0 {
+				g.sendMetricsBatch(batchMetrics)
+			}
+			return
 		case metric := <-g.metricsChan:
 			batchMetrics = append(batchMetrics, metric)
 
@@ -248,5 +264,8 @@ func (g *GrafanaIntegration) CreateDashboard(ctx context.Context) error {
 
 // Close stops the metrics collector
 func (g *GrafanaIntegration) Close() {
-	close(g.metricsChan)
+	if g.cancel != nil {
+		g.cancel()
+	}
+	g.wg.Wait()
 }

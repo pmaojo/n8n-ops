@@ -83,7 +83,7 @@ var setupObservabilityCmd = &cobra.Command{
 			}
 
 			grafana := observability.NewGrafanaIntegration(grafanaConfig, logger)
-			if err := grafana.Initialize(); err != nil {
+			if err := grafana.Initialize(cmd.Context()); err != nil {
 				return fmt.Errorf("failed to setup Grafana: %w", err)
 			}
 
@@ -135,7 +135,7 @@ var testConnectionCmd = &cobra.Command{
 			}
 
 			grafana := observability.NewGrafanaIntegration(grafanaConfig, logger)
-			if err := grafana.Initialize(); err != nil {
+			if err := grafana.Initialize(cmd.Context()); err != nil {
 				fmt.Printf("❌ Grafana connection failed: %v\n", err)
 				success = false
 			} else {
@@ -175,7 +175,7 @@ var createDashboardCmd = &cobra.Command{
 		}
 
 		grafana := observability.NewGrafanaIntegration(grafanaConfig, logger)
-		if err := grafana.Initialize(); err != nil {
+		if err := grafana.Initialize(cmd.Context()); err != nil {
 			return fmt.Errorf("failed to initialize Grafana: %w", err)
 		}
 
