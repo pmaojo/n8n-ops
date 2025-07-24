@@ -9,7 +9,6 @@ import (
 
 	"github.com/pmaojo/n8n-ops/internal/bubbleui"
 	"github.com/pmaojo/n8n-ops/internal/cliutils"
-	"github.com/pmaojo/n8n-ops/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -35,14 +34,12 @@ Flags:
 
 var (
 	tuiRefresh time.Duration
-	tuiRetro   bool
 )
 
 func init() {
 	rootCmd.AddCommand(tuiCmd)
 
 	tuiCmd.Flags().DurationVar(&tuiRefresh, "refresh", 3*time.Second, "dashboard refresh interval")
-	tuiCmd.Flags().BoolVar(&tuiRetro, "retro", false, "use retro dashboard style")
 }
 
 func runTUI(cmd *cobra.Command, args []string, cli *CLI) error {
@@ -54,11 +51,6 @@ func runTUI(cmd *cobra.Command, args []string, cli *CLI) error {
 		}
 	}
 	ctx := context.Background()
-	var uiImpl ui.DashboardUI
-	if tuiRetro {
-		uiImpl = bubbleui.NewRetroDashboard(n8nClient, tuiRefresh, cli.Logger)
-	} else {
-		uiImpl = bubbleui.NewDashboard(n8nClient, tuiRefresh, cli.Logger)
-	}
+	uiImpl := bubbleui.NewDashboard(n8nClient, tuiRefresh, cli.Logger, bubbleui.DefaultTheme)
 	return uiImpl.Run(ctx)
 }

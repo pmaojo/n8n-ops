@@ -8,7 +8,6 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	wf "github.com/pmaojo/n8n-ops/internal/workflow"
 	"github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/test"
@@ -27,7 +26,7 @@ func (stubClient) GetWorkflow(ctx context.Context, id string) (*wf.Workflow, err
 func (stubClient) HealthCheck(ctx context.Context) error { return nil }
 
 func TestUpdateSelectedIndex(t *testing.T) {
-	m := newModel(context.Background(), nil, time.Second, nil)
+	m := newModel(context.Background(), nil, time.Second, nil, DefaultTheme)
 	m.workflows = []WorkflowStatus{
 		{ID: "1", Name: "A", Status: "active"},
 		{ID: "2", Name: "B", Status: "inactive"},
@@ -59,7 +58,7 @@ func TestUpdateSelectedIndex(t *testing.T) {
 }
 
 func TestViewHighlightsSelectedRow(t *testing.T) {
-	m := newModel(context.Background(), nil, time.Second, nil)
+	m := newModel(context.Background(), nil, time.Second, nil, DefaultTheme)
 	m.workflows = []WorkflowStatus{
 		{ID: "1", Name: "A", Status: "active"},
 		{ID: "2", Name: "B", Status: "inactive"},
@@ -67,8 +66,8 @@ func TestViewHighlightsSelectedRow(t *testing.T) {
 	m.selectedIndex = 1
 
 	view := m.View()
-	highlight := lipgloss.NewStyle().Foreground(lipgloss.Color("0")).Background(lipgloss.Color("2"))
-	status := statusStyle("inactive").Render("inactive")
+	highlight := DefaultTheme.HighlightStyle
+	status := statusStyle(DefaultTheme, "inactive").Render("inactive")
 	row := fmt.Sprintf("%-8s %-30s %-10s", "2", "B", status)
 	expected := highlight.Render(row)
 
@@ -78,7 +77,7 @@ func TestViewHighlightsSelectedRow(t *testing.T) {
 }
 
 func TestFilterInputMode(t *testing.T) {
-	m := newModel(context.Background(), nil, time.Second, nil)
+	m := newModel(context.Background(), nil, time.Second, nil, DefaultTheme)
 	m.workflows = []WorkflowStatus{
 		{ID: "1", Name: "Alpha", Status: "active"},
 		{ID: "2", Name: "Beta", Status: "inactive"},
@@ -104,7 +103,7 @@ func TestFilterInputMode(t *testing.T) {
 }
 
 func TestViewFiltersWorkflows(t *testing.T) {
-	m := newModel(context.Background(), nil, time.Second, nil)
+	m := newModel(context.Background(), nil, time.Second, nil, DefaultTheme)
 	m.workflows = []WorkflowStatus{
 		{ID: "1", Name: "Alpha", Status: "active"},
 		{ID: "2", Name: "Beta", Status: "inactive"},
@@ -147,7 +146,7 @@ func TestRefreshDataFailureLogs(t *testing.T) {
 			return nil, fmt.Errorf("boom")
 		},
 	}
-	m := newModel(context.Background(), reader, time.Second, logger)
+	m := newModel(context.Background(), reader, time.Second, logger, DefaultTheme)
 	m.refreshData()
 
 	if len(m.events) == 0 || !strings.Contains(m.events[0], "failed") {
@@ -162,14 +161,14 @@ func TestRefreshDataFailureLogs(t *testing.T) {
 }
 
 func TestNewDashboardUsesRefreshInterval(t *testing.T) {
-	d := NewDashboard(nil, 5*time.Second, nil)
+	d := NewDashboard(nil, 5*time.Second, nil, DefaultTheme)
 	if d.refresh != 5*time.Second {
 		t.Fatalf("expected refresh interval 5s, got %s", d.refresh)
 	}
 }
 
 func TestViewColorsStatus(t *testing.T) {
-	m := newModel(context.Background(), nil, time.Second, nil)
+	m := newModel(context.Background(), nil, time.Second, nil, DefaultTheme)
 	m.workflows = []WorkflowStatus{
 		{ID: "1", Name: "A", Status: "active"},
 		{ID: "2", Name: "B", Status: "inactive"},
@@ -177,18 +176,18 @@ func TestViewColorsStatus(t *testing.T) {
 
 	view := m.View()
 
-	activeColored := statusStyle("active").Render("active")
+	activeColored := statusStyle(DefaultTheme, "active").Render("active")
 	if !strings.Contains(view, activeColored) {
 		t.Errorf("expected active status color not found")
 	}
-	inactiveColored := statusStyle("inactive").Render("inactive")
+	inactiveColored := statusStyle(DefaultTheme, "inactive").Render("inactive")
 	if !strings.Contains(view, inactiveColored) {
 		t.Errorf("expected inactive status color not found")
 	}
 }
 
 func TestEnterToggleDetailView(t *testing.T) {
-	m := newModel(context.Background(), stubClient{}, time.Second, nil)
+	m := newModel(context.Background(), stubClient{}, time.Second, nil, DefaultTheme)
 	m.refreshData()
 
 	mdl, _ := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
