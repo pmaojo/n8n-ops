@@ -96,12 +96,10 @@ func connectedWorkflow() *Workflow {
 	wf.Connections = map[string]interface{}{
 		"Start": map[string]interface{}{
 			"main": []interface{}{
-				[]interface{}{
-					map[string]interface{}{
-						"node":  "Func",
-						"type":  "main",
-						"index": 0,
-					},
+				map[string]interface{}{
+					"node":  "Func",
+					"type":  "main",
+					"index": 0,
 				},
 			},
 		},

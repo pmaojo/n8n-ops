@@ -13,22 +13,21 @@ import (
 	"github.com/pmaojo/n8n-ops/internal/workflow"
 )
 
-// mockRoundTripper implements http.RoundTripper for deterministic tests.
-type mockRoundTripper struct {
+// mockDoer implements HTTPDoer for deterministic tests.
+type mockDoer struct {
 	roundTrip func(*http.Request) (*http.Response, error)
 	lastReq   *http.Request
 }
 
-func (m *mockRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+func (m *mockDoer) Do(req *http.Request) (*http.Response, error) {
 	m.lastReq = req
 	return m.roundTrip(req)
 }
 
 // newMockClient returns a client using the provided RoundTripper.
-func newMockClient(t testing.TB, rt http.RoundTripper) *n8nClient {
+func newMockClient(t testing.TB, doer HTTPDoer) *n8nClient {
 	t.Helper()
-	httpClient := &http.Client{Transport: rt}
-	c, err := New("http://api.example.com", "token", httpClient)
+	c, err := New("http://api.example.com", "token", doer)
 	if err != nil {
 		t.Fatalf("new client: %v", err)
 	}
@@ -48,7 +47,7 @@ func TestNewInvalidConfig(t *testing.T) {
 }
 
 func TestDoRequestSuccess(t *testing.T) {
-	rt := &mockRoundTripper{roundTrip: func(req *http.Request) (*http.Response, error) {
+	rt := &mockDoer{roundTrip: func(req *http.Request) (*http.Response, error) {
 		if req.Method != http.MethodGet {
 			t.Errorf("expected GET, got %s", req.Method)
 		}
@@ -78,7 +77,7 @@ func TestDoRequestSuccess(t *testing.T) {
 }
 
 func TestDoRequestHTTPError(t *testing.T) {
-	rt := &mockRoundTripper{roundTrip: func(req *http.Request) (*http.Response, error) {
+	rt := &mockDoer{roundTrip: func(req *http.Request) (*http.Response, error) {
 		return &http.Response{
 			StatusCode: http.StatusInternalServerError,
 			Body:       io.NopCloser(strings.NewReader("fail")),
@@ -93,7 +92,7 @@ func TestDoRequestHTTPError(t *testing.T) {
 }
 
 func TestDoRequestTransportError(t *testing.T) {
-	rt := &mockRoundTripper{roundTrip: func(req *http.Request) (*http.Response, error) {
+	rt := &mockDoer{roundTrip: func(req *http.Request) (*http.Response, error) {
 		return nil, errors.New("boom")
 	}}
 	c := newMockClient(t, rt)
@@ -104,7 +103,7 @@ func TestDoRequestTransportError(t *testing.T) {
 }
 
 func TestGetWorkflowSuccess(t *testing.T) {
-	rt := &mockRoundTripper{roundTrip: func(req *http.Request) (*http.Response, error) {
+	rt := &mockDoer{roundTrip: func(req *http.Request) (*http.Response, error) {
 		if req.URL.Path != "/api/v1/workflows/42" {
 			t.Errorf("unexpected path %s", req.URL.Path)
 		}
@@ -128,7 +127,7 @@ func TestGetWorkflowSuccess(t *testing.T) {
 }
 
 func TestGetWorkflowNotFound(t *testing.T) {
-	rt := &mockRoundTripper{roundTrip: func(req *http.Request) (*http.Response, error) {
+	rt := &mockDoer{roundTrip: func(req *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusNotFound, Body: io.NopCloser(strings.NewReader("missing"))}, nil
 	}}
 	c := newMockClient(t, rt)
@@ -138,7 +137,7 @@ func TestGetWorkflowNotFound(t *testing.T) {
 }
 
 func TestGetWorkflowBadRequest(t *testing.T) {
-	c := newMockClient(t, &mockRoundTripper{roundTrip: func(req *http.Request) (*http.Response, error) {
+	c := newMockClient(t, &mockDoer{roundTrip: func(req *http.Request) (*http.Response, error) {
 		t.Fatal("http call should not occur")
 		return nil, nil
 	}})
@@ -148,7 +147,7 @@ func TestGetWorkflowBadRequest(t *testing.T) {
 }
 
 func TestCreateWorkflowMock(t *testing.T) {
-	rt := &mockRoundTripper{roundTrip: func(req *http.Request) (*http.Response, error) {
+	rt := &mockDoer{roundTrip: func(req *http.Request) (*http.Response, error) {
 		if req.Method != http.MethodPost {
 			t.Errorf("expected POST, got %s", req.Method)
 		}
