@@ -1,6 +1,9 @@
 package observability
 
 import (
+	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -131,5 +134,41 @@ func TestGrafanaConfiguration(t *testing.T) {
 		if config.OrgID <= 0 {
 			t.Error("OrgID should be positive")
 		}
+	}
+}
+
+func TestGrafanaMetricsCollectorStopsOnClose(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	config := GrafanaConfig{
+		URL:       server.URL,
+		APIKey:    "test-api-key",
+		OrgID:     1,
+		Dashboard: "n8n-ops-test",
+	}
+
+	logger := utils.NewLogger()
+	grafana := NewGrafanaIntegration(config, logger)
+	grafana.client = server.Client()
+
+	if err := grafana.Initialize(context.Background()); err != nil {
+		t.Fatalf("initialize failed: %v", err)
+	}
+
+	grafana.Close()
+
+	done := make(chan struct{})
+	go func() {
+		grafana.wg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(500 * time.Millisecond):
+		t.Error("metrics collector did not stop after Close()")
 	}
 }
