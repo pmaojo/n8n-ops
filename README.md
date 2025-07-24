@@ -18,6 +18,7 @@ This project contains n8n workflows managed with the n8n-ops tool for collaborat
 - `n8n-ops deploy` - Deploy workflows to n8n instance
 - `n8n-ops validate` - Validate workflow files
 - `n8n-ops status` - Check workflow status
+- `n8n-ops tui` - Interactive terminal dashboard
 
 ## Directory Structure
 
@@ -26,6 +27,35 @@ This project contains n8n workflows managed with the n8n-ops tool for collaborat
 - `scripts/` - Custom scripts
 - `tests/` - Tests
 - `config/` - Configuration files
+
+## Terminal Dashboard
+
+Run `n8n-ops tui` to open a real-time dashboard powered by [Bubble Tea](https://github.com/charmbracelet/bubbletea). Use `--refresh` to control the update interval.
+
+```bash
+n8n-ops tui --env development --refresh 5s
+```
+
+### Themes
+
+Two themes are available:
+
+1. **default** – standard terminal colors
+2. **cyberpunk** – neon palette for dark terminals
+
+Select the theme via `--theme` or in `.n8n-ops.yaml`:
+
+```yaml
+defaults:
+  tui:
+    theme: cyberpunk
+```
+
+Command line example:
+
+```bash
+n8n-ops tui --theme cyberpunk
+```
 
 ## Need Help?
 
