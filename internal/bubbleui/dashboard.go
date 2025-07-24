@@ -59,7 +59,8 @@ type model struct {
 	events        []string
 	summary       Summary
 	selectedIndex int
-
+	filterText    string
+	inputMode     bool
 	viewingDetails bool
 	workflowDetail *wf.Workflow
 }
@@ -72,6 +73,8 @@ func newModel(ctx context.Context, c client.WorkflowReader, refresh time.Duratio
 		logger:        logger,
 		start:         time.Now(),
 		selectedIndex: 0,
+		filterText:    "",
+		inputMode:     false,
 	}
 }
 
@@ -82,15 +85,41 @@ func (m model) Init() tea.Cmd {
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		if m.inputMode {
+			switch msg.Type {
+			case tea.KeyEnter:
+				m.inputMode = false
+			case tea.KeyEsc:
+				m.inputMode = false
+				m.filterText = ""
+			case tea.KeyBackspace:
+				if len(m.filterText) > 0 {
+					m.filterText = m.filterText[:len(m.filterText)-1]
+				}
+			default:
+				if msg.Type == tea.KeyRunes {
+					m.filterText += string(msg.Runes)
+				}
+			}
+			filtered := filterWorkflows(m.workflows, m.filterText)
+			if m.selectedIndex >= len(filtered) && len(filtered) > 0 {
+				m.selectedIndex = len(filtered) - 1
+			}
+			return m, nil
+		}
+
 		switch msg.String() {
 		case "q", "ctrl+c":
 			return m, tea.Quit
+		case "/":
+			m.inputMode = true
+			m.filterText = ""
 		case "up":
 			if m.selectedIndex > 0 {
 				m.selectedIndex--
 			}
 		case "down":
-			if m.selectedIndex < len(m.workflows)-1 {
+			if m.selectedIndex < len(filterWorkflows(m.workflows, m.filterText))-1 {
 				m.selectedIndex++
 			}
 		case "enter":
@@ -173,6 +202,8 @@ func (m *model) loadWorkflowDetail() {
 }
 
 func (m model) View() string {
+	filtered := filterWorkflows(m.workflows, m.filterText)
+	rows := workflowTableRows(filtered)
 	if m.viewingDetails && m.workflowDetail != nil {
 		return renderDetailView(m.workflowDetail)
 	}
@@ -202,12 +233,19 @@ func (m model) View() string {
 		b.String(),
 	}
 
-	if len(m.workflows) > 0 && m.selectedIndex < len(m.workflows) {
-		wf := m.workflows[m.selectedIndex]
+	if len(filtered) > 0 && m.selectedIndex < len(filtered) {
+		wf := filtered[m.selectedIndex]
 		details := fmt.Sprintf("Name: %s\nStatus: %s\nLast Updated: %s", wf.Name, wf.Status, wf.UpdatedAt.Format(time.RFC3339))
 		sections = append(sections,
 			lipgloss.NewStyle().Bold(true).Render("Details"),
 			details,
+		)
+	}
+
+	if m.inputMode || m.filterText != "" {
+		sections = append(sections,
+			lipgloss.NewStyle().Bold(true).Render("Filter"),
+			"Filter: "+m.filterText,
 		)
 	}
 
