@@ -242,6 +242,7 @@ El sistema incluye dashboard en tiempo real:
 - Monitoreo de todos los ambientes
 - Alertas automáticas via GitLab issues
 - Métricas de performance y errores
+- También puedes visualizarlo en la terminal con `n8n-ops tui`
 
 ## Resolución de Conflictos
 

@@ -30,6 +30,7 @@ type DefaultConfig struct {
 	Validation  ValidationConfig `mapstructure:"validation"`
 	Sync        SyncConfig       `mapstructure:"sync"`
 	Deploy      DeployConfig     `mapstructure:"deploy"`
+	TUI         TUIConfig        `mapstructure:"tui"`
 }
 
 // ValidationConfig configures workflow validation behaviour.
@@ -46,6 +47,11 @@ type SyncConfig struct {
 type DeployConfig struct {
 	DryRun         bool `mapstructure:"dry_run"`
 	SkipValidation bool `mapstructure:"skip_validation"`
+}
+
+// TUIConfig defines settings for the terminal dashboard.
+type TUIConfig struct {
+	Theme string `mapstructure:"theme"`
 }
 
 // LoggingConfig configures the CLI logger.
@@ -78,6 +84,7 @@ func NewConfig(provider utils.EnvProvider) (*Config, error) {
 	viper.SetDefault("defaults.sync.auto_backup", true)
 	viper.SetDefault("defaults.deploy.dry_run", false)
 	viper.SetDefault("defaults.deploy.skip_validation", false)
+	viper.SetDefault("defaults.tui.theme", "default")
 	viper.SetDefault("logging.level", "info")
 	viper.SetDefault("logging.format", "text")
 
@@ -147,4 +154,15 @@ func (c *Config) IsAutoBackupEnabled() bool {
 		return false
 	}
 	return c.Defaults.Sync.AutoBackup
+}
+
+// GetTUITheme returns the configured theme for the terminal dashboard.
+func (c *Config) GetTUITheme() string {
+	if c == nil {
+		return "default"
+	}
+	if c.Defaults.TUI.Theme != "" {
+		return c.Defaults.TUI.Theme
+	}
+	return "default"
 }
