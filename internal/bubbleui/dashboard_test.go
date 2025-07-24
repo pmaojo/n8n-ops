@@ -78,7 +78,7 @@ func TestViewHighlightsSelectedRow(t *testing.T) {
 }
 
 func TestFilterInputMode(t *testing.T) {
-	m := newModel(context.Background(), nil, time.Second)
+	m := newModel(context.Background(), nil, time.Second, nil)
 	m.workflows = []WorkflowStatus{
 		{ID: "1", Name: "Alpha", Status: "active"},
 		{ID: "2", Name: "Beta", Status: "inactive"},
@@ -104,7 +104,7 @@ func TestFilterInputMode(t *testing.T) {
 }
 
 func TestViewFiltersWorkflows(t *testing.T) {
-	m := newModel(context.Background(), nil, time.Second)
+	m := newModel(context.Background(), nil, time.Second, nil)
 	m.workflows = []WorkflowStatus{
 		{ID: "1", Name: "Alpha", Status: "active"},
 		{ID: "2", Name: "Beta", Status: "inactive"},
@@ -117,6 +117,8 @@ func TestViewFiltersWorkflows(t *testing.T) {
 	}
 	if !strings.Contains(view, "Beta") {
 		t.Fatal("filtered view should contain Beta")
+	}
+}
 
 type mockWorkflowReader struct {
 	GetWorkflowsFunc func(context.Context) ([]*wf.Workflow, error)
@@ -156,14 +158,16 @@ func TestRefreshDataFailureLogs(t *testing.T) {
 	}
 	if hook.LastEntry().Message != "failed to fetch workflows" {
 		t.Errorf("unexpected log message: %s", hook.LastEntry().Message)
-
+	}
+}
 func TestNewDashboardUsesRefreshInterval(t *testing.T) {
-	d := NewDashboard(nil, 5*time.Second)
+	d := NewDashboard(nil, 5*time.Second, nil)
 	if d.refresh != 5*time.Second {
 		t.Fatalf("expected refresh interval 5s, got %s", d.refresh)
-
+	}
+}
 func TestViewColorsStatus(t *testing.T) {
-	m := newModel(context.Background(), nil, time.Second)
+	m := newModel(context.Background(), nil, time.Second, nil)
 	m.workflows = []WorkflowStatus{
 		{ID: "1", Name: "A", Status: "active"},
 		{ID: "2", Name: "B", Status: "inactive"},
@@ -178,9 +182,10 @@ func TestViewColorsStatus(t *testing.T) {
 	inactiveColored := statusStyle("inactive").Render("inactive")
 	if !strings.Contains(view, inactiveColored) {
 		t.Errorf("expected inactive status color not found")
-    
+	}
+}
 func TestEnterToggleDetailView(t *testing.T) {
-	m := newModel(context.Background(), stubClient{}, time.Second)
+	m := newModel(context.Background(), stubClient{}, time.Second, nil)
 	m.refreshData()
 
 	mdl, _ := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
@@ -192,6 +197,6 @@ func TestEnterToggleDetailView(t *testing.T) {
 	mdl, _ = m2.Update(tea.KeyMsg{Type: tea.KeyEnter})
 	m3 := mdl.(model)
 	if m3.viewingDetails || m3.workflowDetail != nil {
-		t.Fatal("expected to return to list view on enter") 
+		t.Fatal("expected to return to list view on enter")
 	}
 }
