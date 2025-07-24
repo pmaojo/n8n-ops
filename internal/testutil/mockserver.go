@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"time"
@@ -12,8 +13,25 @@ import (
 // StartMockServer launches the mock n8n server used in tests and returns a
 // function to stop it. It waits until the server is responsive before returning.
 // The caller should defer the returned stop function.
+// BuildMockServer compiles the mock n8n server binary used in tests.
+// It returns a cleanup function to remove the generated binary when tests complete.
+func BuildMockServer() (func(), error) {
+	dir := filepath.Join("..", "mock-n8n-server")
+	cmd := exec.Command("go", "build", "-o", "mock-n8n-server")
+	cmd.Dir = dir
+
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return nil, fmt.Errorf("build mock server: %w: %s", err, out)
+	}
+
+	cleanup := func() {
+		os.Remove(filepath.Join(dir, "mock-n8n-server"))
+	}
+	return cleanup, nil
+}
+
 func StartMockServer() (func(), error) {
-	cmd := exec.Command("go", "run", "main.go")
+	cmd := exec.Command("./mock-n8n-server")
 	cmd.Dir = filepath.Join("..", "mock-n8n-server")
 	cmd.Stdout = io.Discard
 	cmd.Stderr = io.Discard
