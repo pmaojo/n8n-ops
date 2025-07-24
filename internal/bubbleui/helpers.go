@@ -2,9 +2,9 @@ package bubbleui
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/pmaojo/n8n-ops/internal/utils"
 )
 
 func workflowTableRows(workflows []WorkflowStatus) [][]string {
@@ -29,12 +29,12 @@ func summaryGauge(active, total int) (percent int, label string) {
 }
 
 func statusColor(status string) lipgloss.Color {
-	switch strings.ToLower(status) {
-	case "active", "healthy", "online", "ready":
+	switch utils.StatusColor(status) {
+	case "green":
 		return lipgloss.Color("2")
-	case "inactive", "critical", "offline", "error":
+	case "red":
 		return lipgloss.Color("1")
-	case "warning", "detecting":
+	case "yellow":
 		return lipgloss.Color("3")
 	default:
 		return lipgloss.Color("7")

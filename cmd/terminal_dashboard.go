@@ -80,13 +80,13 @@ func renderSystemStatus(status SystemStatus) {
 	fmt.Println("██ SYSTEM STATUS")
 	fmt.Println("┌───────────────────────────────────────────────────────────┐")
 	fmt.Printf("│ CLI: %-10s │ DAEMON: %-10s │ MONITOR: %-10s │\n",
-		colorStatus(status.CLI, getStatusColor(status.CLI)),
-		colorStatus(status.Daemon, getStatusColor(status.Daemon)),
-		colorStatus(status.Monitor, getStatusColor(status.Monitor)))
+		colorStatus(status.CLI, utils.StatusColor(status.CLI)),
+		colorStatus(status.Daemon, utils.StatusColor(status.Daemon)),
+		colorStatus(status.Monitor, utils.StatusColor(status.Monitor)))
 	fmt.Printf("│ GITLAB: %-7s │ SENTRY: %-10s │ GRAFANA: %-10s │\n",
-		colorStatus(status.Gitlab, getStatusColor(status.Gitlab)),
-		colorStatus(status.Sentry, getStatusColor(status.Sentry)),
-		colorStatus(status.Grafana, getStatusColor(status.Grafana)))
+		colorStatus(status.Gitlab, utils.StatusColor(status.Gitlab)),
+		colorStatus(status.Sentry, utils.StatusColor(status.Sentry)),
+		colorStatus(status.Grafana, utils.StatusColor(status.Grafana)))
 	fmt.Println("└───────────────────────────────────────────────────────────┘")
 	fmt.Println()
 }
@@ -96,7 +96,7 @@ func renderWorkflowStatus(workflows []WorkflowInfo) {
 	fmt.Println("┌───────────────────────────────────────────────────────────┐")
 	for _, wf := range workflows {
 		fmt.Printf("│ %s: %-30s [%s] │\n",
-			wf.ID, wf.Name, colorStatus(wf.Status, getStatusColor(wf.Status)))
+			wf.ID, wf.Name, colorStatus(wf.Status, utils.StatusColor(wf.Status)))
 	}
 	fmt.Println("└───────────────────────────────────────────────────────────┘")
 	fmt.Println()
@@ -289,17 +289,4 @@ func colorStatus(status, color string) string {
 
 func colorMetric(value, color string) string {
 	return colorStatus(value, color)
-}
-
-func getStatusColor(status string) string {
-	switch status {
-	case "HEALTHY", "ONLINE", "ACTIVE", "READY":
-		return "green"
-	case "CRITICAL", "OFFLINE", "ERROR":
-		return "red"
-	case "WARNING", "DETECTING":
-		return "yellow"
-	default:
-		return "cyan"
-	}
 }
