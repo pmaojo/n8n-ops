@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/pmaojo/n8n-ops/internal/client"
+	"github.com/pmaojo/n8n-ops/internal/cliutils"
 	"github.com/pmaojo/n8n-ops/internal/credentials"
 	"github.com/pmaojo/n8n-ops/internal/i18n"
 	"github.com/pmaojo/n8n-ops/internal/utils"
@@ -169,27 +169,8 @@ func serveDashboard(w http.ResponseWriter, r *http.Request) {
 
 func serveAPIData(w http.ResponseWriter, r *http.Request) {
 	// Connect to n8n to get real data
-	var n8nURL, apiKey string
-	if demoMode {
-		n8nURL = "http://localhost:3001"
-		apiKey = "n8n_api_mock_development"
-	} else {
-		cm := credentials.NewCredentialManager(environment)
-		var err error
-		n8nURL, apiKey, err = cm.GetN8nCredentials()
-		if err != nil {
-			logger.Warn("failed to load credentials, using demo data")
-		}
-		if n8nURL == "" {
-			n8nURL = "http://localhost:5678"
-		}
-		if apiKey == "" {
-			apiKey = "n8n_api_mock_development"
-		}
-	}
-
-	// Try to get real data
-	if n8nClient, err := client.New(n8nURL, apiKey, nil); err == nil {
+	n8nClient, _, err := cliutils.SetupClient(environment, demoMode)
+	if err == nil {
 		ctx := context.Background()
 		if workflows, err := n8nClient.GetWorkflows(ctx); err == nil {
 			w.Header().Set("Content-Type", "application/json")
