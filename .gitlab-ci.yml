@@ -122,8 +122,8 @@ deploy-development:
   extends: .deploy_template
   stage: deploy-dev
   variables:
-    N8N_API_KEY: ${N8N_DEV_API_KEY}
-    N8N_URL: ${N8N_DEV_URL}
+    N8N_API_KEY: ${N8N_API_KEY_DEV}
+    N8N_URL: ${N8N_URL_DEV}
   environment:
     name: development
   rules:
@@ -134,8 +134,8 @@ deploy-staging:
   extends: .deploy_template
   stage: deploy-staging
   variables:
-    N8N_API_KEY: ${N8N_STAGING_API_KEY}
-    N8N_URL: ${N8N_STAGING_URL}
+    N8N_API_KEY: ${N8N_API_KEY_STAGING}
+    N8N_URL: ${N8N_URL_STAGING}
   environment:
     name: staging
   when: manual
@@ -147,8 +147,8 @@ deploy-production:
   extends: .deploy_template
   stage: deploy-production
   variables:
-    N8N_API_KEY: ${N8N_PROD_API_KEY}
-    N8N_URL: ${N8N_PROD_URL}
+    N8N_API_KEY: ${N8N_API_KEY_PROD}
+    N8N_URL: ${N8N_URL_PROD}
   environment:
     name: production
   when: manual
@@ -160,8 +160,8 @@ rollback-production:
   extends: .deploy_template
   stage: deploy-production
   variables:
-    N8N_API_KEY: ${N8N_PROD_API_KEY}
-    N8N_URL: ${N8N_PROD_URL}
+    N8N_API_KEY: ${N8N_API_KEY_PROD}
+    N8N_URL: ${N8N_URL_PROD}
   environment:
     name: production
   when: manual

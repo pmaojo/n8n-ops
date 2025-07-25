@@ -86,7 +86,7 @@ environments:
 **Environment Variables**:
 ```bash
 # List relevant environment variables (without values)
-N8N_DEV_API_KEY=REDACTED
+N8N_API_KEY_DEV=REDACTED
 N8N_CLI_LANG=en
 ```
 

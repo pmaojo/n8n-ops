@@ -9,14 +9,14 @@ The CLI is **production-ready** and tested. You can remove all mock components a
 ### n8n API Connection
 ```bash
 # For each environment you want to manage
-export N8N_URL_DEVELOPMENT="http://localhost:5678"
-export N8N_API_KEY_DEVELOPMENT="your_real_api_key_here"
+export N8N_URL_DEV="http://localhost:5678"
+export N8N_API_KEY_DEV="your_real_api_key_here"
 
 export N8N_URL_STAGING="https://n8n-staging.yourcompany.com"
 export N8N_API_KEY_STAGING="your_staging_api_key"
 
-export N8N_URL_PRODUCTION="https://n8n.yourcompany.com"
-export N8N_API_KEY_PRODUCTION="your_production_api_key"
+export N8N_URL_PROD="https://n8n.yourcompany.com"
+export N8N_API_KEY_PROD="your_production_api_key"
 ```
 
 ### Workflow Credentials (Optional - Only if your workflows use these services)
@@ -141,8 +141,8 @@ The CLI is ready for VPS deployment with:
 
 1. Set environment variables:
 ```bash
-export N8N_URL_DEVELOPMENT="http://localhost:5678"
-export N8N_API_KEY_DEVELOPMENT="your_api_key"
+export N8N_URL_DEV="http://localhost:5678"
+export N8N_API_KEY_DEV="your_api_key"
 ```
 
 2. Test connection:

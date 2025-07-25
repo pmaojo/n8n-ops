@@ -138,25 +138,25 @@ export N8N_API_KEY="n8n_api_xxxxxxxxxx"
 ### 1. n8n Instance Setup
 ```bash
 # Required: Configure your n8n instances
-N8N_DEV_URL="https://n8n-dev.company.com"
-N8N_STAGING_URL="https://n8n-staging.company.com"  
-N8N_PROD_URL="https://n8n-production.company.com"
+N8N_URL_DEV="https://n8n-dev.company.com"
+N8N_URL_STAGING="https://n8n-staging.company.com"  
+N8N_URL_PROD="https://n8n-production.company.com"
 ```
 
 ### 2. API Key Generation
 ```bash
 # In each n8n instance, generate API keys:
 # Settings → API → Generate New Key
-N8N_DEV_API_KEY="n8n_api_dev_xxxxxxxxxx"
-N8N_STAGING_API_KEY="n8n_api_staging_xxxxxxxxxx" 
-N8N_PROD_API_KEY="n8n_api_prod_xxxxxxxxxx"
+N8N_API_KEY_DEV="n8n_api_dev_xxxxxxxxxx"
+N8N_API_KEY_STAGING="n8n_api_staging_xxxxxxxxxx" 
+N8N_API_KEY_PROD="n8n_api_prod_xxxxxxxxxx"
 ```
 
 ### 3. GitLab CI/CD Variables
 Configure in GitLab → Settings → CI/CD → Variables:
-- `N8N_DEV_URL` and `N8N_DEV_API_KEY`
-- `N8N_STAGING_URL` and `N8N_STAGING_API_KEY`  
-- `N8N_PROD_URL` and `N8N_PROD_API_KEY`
+- `N8N_URL_DEV` and `N8N_API_KEY_DEV`
+- `N8N_URL_STAGING` and `N8N_API_KEY_STAGING`  
+- `N8N_URL_PROD` and `N8N_API_KEY_PROD`
 
 ### 4. First Production Sync
 ```bash

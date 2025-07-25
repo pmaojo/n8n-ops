@@ -68,8 +68,8 @@ nano .env
 Add your API keys to the `.env` file:
 
 ```
-N8N_DEV_API_KEY=n8n_api_your_dev_key_here
-N8N_DEV_URL=http://localhost:5678
+N8N_API_KEY_DEV=n8n_api_your_dev_key_here
+N8N_URL_DEV=http://localhost:5678
 ```
 
 ### Step 5: Test Your Connection

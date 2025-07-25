@@ -18,12 +18,12 @@ Antes de ejecutar cualquier comando de n8n-ops, carga las variables de entorno:
 source .env
 
 # Verificar que se cargaron correctamente
-echo $N8N_DEV_API_KEY
+echo $N8N_API_KEY_DEV
 echo $N8N_DEVELOPMENT_API_KEY
 
 # Para el comando sync, necesitas exportar variables adicionales
-export N8N_URL=$N8N_DEV_URL
-export N8N_API_KEY=$N8N_DEV_API_KEY
+export N8N_URL=$N8N_URL_DEV
+export N8N_API_KEY=$N8N_API_KEY_DEV
 
 # Ahora ejecutar n8n-ops
 ./n8n-ops onboard
@@ -36,15 +36,15 @@ Para evitar tener que ejecutar `source .env` cada vez, puedes añadir las variab
 
 ### Para Bash (~/.bashrc)
 ```bash
-echo 'export N8N_DEV_API_KEY="tu_api_key_aqui"' >> ~/.bashrc
-echo 'export N8N_DEV_URL="http://localhost:5678"' >> ~/.bashrc
+echo 'export N8N_API_KEY_DEV="tu_api_key_aqui"' >> ~/.bashrc
+echo 'export N8N_URL_DEV="http://localhost:5678"' >> ~/.bashrc
 source ~/.bashrc
 ```
 
 ### Para Zsh (~/.zshrc)
 ```bash
-echo 'export N8N_DEV_API_KEY="tu_api_key_aqui"' >> ~/.zshrc
-echo 'export N8N_DEV_URL="http://localhost:5678"' >> ~/.zshrc
+echo 'export N8N_API_KEY_DEV="tu_api_key_aqui"' >> ~/.zshrc
+echo 'export N8N_URL_DEV="http://localhost:5678"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
@@ -54,8 +54,8 @@ Para verificar que las variables están configuradas correctamente:
 
 ```bash
 # Verificar variables de API
-echo "DEV API KEY: $N8N_DEV_API_KEY"
-echo "DEV URL: $N8N_DEV_URL"
+echo "DEV API KEY: $N8N_API_KEY_DEV"
+echo "DEV URL: $N8N_URL_DEV"
 
 # Verificar todas las variables de n8n
 env | grep N8N_
@@ -67,16 +67,16 @@ Para el funcionamiento básico necesitas:
 
 ```bash
 # Desarrollo
-export N8N_DEV_API_KEY="tu_api_key_de_desarrollo"
-export N8N_DEV_URL="http://localhost:5678"
+export N8N_API_KEY_DEV="tu_api_key_de_desarrollo"
+export N8N_URL_DEV="http://localhost:5678"
 
 # Staging (opcional)
-export N8N_STAGING_API_KEY="tu_api_key_de_staging"
-export N8N_STAGING_URL="https://n8n-staging.example.com"
+export N8N_API_KEY_STAGING="tu_api_key_de_staging"
+export N8N_URL_STAGING="https://n8n-staging.example.com"
 
 # Producción (opcional)
-export N8N_PROD_API_KEY="tu_api_key_de_produccion"
-export N8N_PROD_URL="https://n8n-prod.example.com"
+export N8N_API_KEY_PROD="tu_api_key_de_produccion"
+export N8N_URL_PROD="https://n8n-prod.example.com"
 ```
 
 ## Compatibilidad de Nombres
@@ -85,9 +85,9 @@ n8n-ops es compatible con múltiples formatos de nombres de variables:
 
 | Formato Corto | Formato Largo | Uso |
 |---------------|---------------|-----|
-| `N8N_DEV_API_KEY` | `N8N_DEVELOPMENT_API_KEY` | Desarrollo |
-| `N8N_STAGING_API_KEY` | `N8N_STAGING_API_KEY` | Staging |
-| `N8N_PROD_API_KEY` | `N8N_PRODUCTION_API_KEY` | Producción |
+| `N8N_API_KEY_DEV` | `N8N_DEVELOPMENT_API_KEY` | Desarrollo |
+| `N8N_API_KEY_STAGING` | `N8N_API_KEY_STAGING` | Staging |
+| `N8N_API_KEY_PROD` | `N8N_PRODUCTION_API_KEY` | Producción |
 
 ## Variables para pruebas
 
@@ -100,14 +100,14 @@ duración de Go (`5s`, `1m`, ...). Si no se especifica, se usa `5s`.
 ### Error: "API key not found"
 1. Verifica que el archivo `.env` existe en el directorio actual
 2. Ejecuta `source .env` antes de usar n8n-ops
-3. Verifica que la variable existe: `echo $N8N_DEV_API_KEY`
+3. Verifica que la variable existe: `echo $N8N_API_KEY_DEV`
 
 ### Error: "Connection failed"
 1. Verifica que n8n está corriendo: `curl http://localhost:5678/`
 2. Verifica que la URL es correcta en tu `.env`
 3. Prueba la API manualmente:
    ```bash
-   curl -H "X-N8N-API-KEY: $N8N_DEV_API_KEY" http://localhost:5678/api/v1/workflows
+   curl -H "X-N8N-API-KEY: $N8N_API_KEY_DEV" http://localhost:5678/api/v1/workflows
    ```
 
 ### Error: "Invalid API key"
@@ -120,15 +120,15 @@ duración de Go (`5s`, `1m`, ...). Si no se especifica, se usa `5s`.
 ```bash
 # 1. Crear archivo .env
 cat > .env << 'EOF'
-N8N_DEV_API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-N8N_DEV_URL="http://localhost:5678"
+N8N_API_KEY_DEV="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+N8N_URL_DEV="http://localhost:5678"
 EOF
 
 # 2. Cargar variables
 source .env
 
 # 3. Verificar
-echo $N8N_DEV_API_KEY
+echo $N8N_API_KEY_DEV
 
 # 4. Usar n8n-ops
 ./n8n-ops onboard

@@ -12,6 +12,15 @@ This project contains n8n workflows managed with the n8n-ops tool for collaborat
 5. *(Optional)* Adjust `MOCK_SERVER_TIMEOUT` to increase the wait time when
    starting the mock server for tests.
 
+### Environment Variable Naming
+
+Use the format `N8N_API_KEY_<ENV>` and `N8N_URL_<ENV>` for all credentials. For example:
+
+```bash
+export N8N_API_KEY_DEV=your_dev_key
+export N8N_URL_DEV=https://n8n-dev.example.com
+```
+
 ## Commands
 
 - `n8n-ops sync` - Sync workflows from n8n instance

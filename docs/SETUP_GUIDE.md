@@ -13,16 +13,16 @@ Create a `.env` file in the same directory as `n8n-ops`:
 
 ```bash
 # Development Environment
-N8N_DEV_URL=https://your-dev-n8n.com
-N8N_DEV_API_KEY=your-dev-api-key
+N8N_URL_DEV=https://your-dev-n8n.com
+N8N_API_KEY_DEV=your-dev-api-key
 
 # Staging Environment  
-N8N_STAGING_URL=https://your-staging-n8n.com
-N8N_STAGING_API_KEY=your-staging-api-key
+N8N_URL_STAGING=https://your-staging-n8n.com
+N8N_API_KEY_STAGING=your-staging-api-key
 
 # Production Environment
-N8N_PROD_URL=https://your-prod-n8n.com
-N8N_PROD_API_KEY=your-prod-api-key
+N8N_URL_PROD=https://your-prod-n8n.com
+N8N_API_KEY_PROD=your-prod-api-key
 
 # GitLab Integration (optional)
 GITLAB_TOKEN=your-gitlab-token
@@ -74,8 +74,8 @@ logging:
 Set variables directly in your shell:
 
 ```bash
-export N8N_DEV_URL="https://your-dev-n8n.com"
-export N8N_DEV_API_KEY="your-dev-api-key"
+export N8N_URL_DEV="https://your-dev-n8n.com"
+export N8N_API_KEY_DEV="your-dev-api-key"
 
 ./n8n-ops sync --env development
 ```

@@ -118,13 +118,13 @@ func createConfigFiles(projectDir string) error {
 environments:
   development:
     url: https://n8n-dev.example.com
-    api_key_env: N8N_DEV_API_KEY
+    api_key_env: N8N_API_KEY_DEV
   staging:
     url: https://n8n-staging.example.com
-    api_key_env: N8N_STAGING_API_KEY
+    api_key_env: N8N_API_KEY_STAGING
   production:
     url: https://n8n-prod.example.com
-    api_key_env: N8N_PROD_API_KEY
+    api_key_env: N8N_API_KEY_PROD
 
 # Default settings
 defaults:
@@ -154,16 +154,16 @@ logging:
 # Copy this file to .env and fill in your actual values
 
 # Development environment
-N8N_DEV_API_KEY=your_dev_api_key_here
-N8N_DEV_URL=https://n8n-dev.example.com
+N8N_API_KEY_DEV=your_dev_api_key_here
+N8N_URL_DEV=https://n8n-dev.example.com
 
 # Staging environment
-N8N_STAGING_API_KEY=your_staging_api_key_here
-N8N_STAGING_URL=https://n8n-staging.example.com
+N8N_API_KEY_STAGING=your_staging_api_key_here
+N8N_URL_STAGING=https://n8n-staging.example.com
 
 # Production environment
-N8N_PROD_API_KEY=your_prod_api_key_here
-N8N_PROD_URL=https://n8n-prod.example.com
+N8N_API_KEY_PROD=your_prod_api_key_here
+N8N_URL_PROD=https://n8n-prod.example.com
 
 # GitLab CI/CD variables (set in GitLab project settings)
 # GITLAB_USER_EMAIL=user@example.com

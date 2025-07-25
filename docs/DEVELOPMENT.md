@@ -45,17 +45,17 @@ default_environment: development
 environments:
   development:
     url: "https://n8n-dev.yourcompany.com"
-    api_key: "${N8N_DEV_API_KEY}"
+    api_key: "${N8N_API_KEY_DEV}"
     timeout: 30
     
   staging:
     url: "https://n8n-staging.yourcompany.com"
-    api_key: "${N8N_STAGING_API_KEY}"
+    api_key: "${N8N_API_KEY_STAGING}"
     timeout: 30
     
   production:
     url: "https://n8n-prod.yourcompany.com"
-    api_key: "${N8N_PROD_API_KEY}"
+    api_key: "${N8N_API_KEY_PROD}"
     timeout: 60
 
 # Git branch to environment mapping
@@ -81,9 +81,9 @@ Set the following environment variables in your shell:
 
 ```bash
 # n8n API Keys (get these from your n8n instance admins)
-export N8N_DEV_API_KEY="n8n_api_dev_your_key_here"
-export N8N_STAGING_API_KEY="n8n_api_staging_your_key_here" 
-export N8N_PROD_API_KEY="n8n_api_prod_your_key_here"
+export N8N_API_KEY_DEV="n8n_api_dev_your_key_here"
+export N8N_API_KEY_STAGING="n8n_api_staging_your_key_here" 
+export N8N_API_KEY_PROD="n8n_api_prod_your_key_here"
 
 # GitLab Configuration (for CI/CD)
 export GITLAB_TOKEN="glpat-your_gitlab_token_here"
@@ -121,12 +121,12 @@ In your GitLab project, go to **Settings → CI/CD → Variables** and add:
 
 | Variable | Value | Protected | Masked |
 |----------|-------|-----------|---------|
-| `N8N_DEV_API_KEY` | Your dev n8n API key | No | Yes |
-| `N8N_STAGING_API_KEY` | Your staging n8n API key | No | Yes |
-| `N8N_PROD_API_KEY` | Your prod n8n API key | Yes | Yes |
-| `N8N_DEV_URL` | https://n8n-dev.yourcompany.com | No | No |
-| `N8N_STAGING_URL` | https://n8n-staging.yourcompany.com | No | No |
-| `N8N_PROD_URL` | https://n8n-prod.yourcompany.com | Yes | No |
+| `N8N_API_KEY_DEV` | Your dev n8n API key | No | Yes |
+| `N8N_API_KEY_STAGING` | Your staging n8n API key | No | Yes |
+| `N8N_API_KEY_PROD` | Your prod n8n API key | Yes | Yes |
+| `N8N_URL_DEV` | https://n8n-dev.yourcompany.com | No | No |
+| `N8N_URL_STAGING` | https://n8n-staging.yourcompany.com | No | No |
+| `N8N_URL_PROD` | https://n8n-prod.yourcompany.com | Yes | No |
 
 ### 2. GitLab CI/CD Pipeline (`.gitlab-ci.yml`)
 
@@ -189,8 +189,8 @@ deploy-development:
   extends: .deploy_template
   stage: deploy-dev
   variables:
-    N8N_API_KEY: ${N8N_DEV_API_KEY}
-    N8N_URL: ${N8N_DEV_URL}
+    N8N_API_KEY: ${N8N_API_KEY_DEV}
+    N8N_URL: ${N8N_URL_DEV}
   environment:
     name: development
   rules:
@@ -201,8 +201,8 @@ deploy-staging:
   extends: .deploy_template
   stage: deploy-staging
   variables:
-    N8N_API_KEY: ${N8N_STAGING_API_KEY}
-    N8N_URL: ${N8N_STAGING_URL}
+    N8N_API_KEY: ${N8N_API_KEY_STAGING}
+    N8N_URL: ${N8N_URL_STAGING}
   environment:
     name: staging
   when: manual
@@ -214,8 +214,8 @@ deploy-production:
   extends: .deploy_template
   stage: deploy-production
   variables:
-    N8N_API_KEY: ${N8N_PROD_API_KEY}
-    N8N_URL: ${N8N_PROD_URL}
+    N8N_API_KEY: ${N8N_API_KEY_PROD}
+    N8N_URL: ${N8N_URL_PROD}
   environment:
     name: production
   when: manual

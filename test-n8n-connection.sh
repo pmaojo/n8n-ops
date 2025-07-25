@@ -4,8 +4,8 @@
 source .env
 
 # Exportar variables para el comando sync
-export N8N_URL=$N8N_DEV_URL
-export N8N_API_KEY=$N8N_DEV_API_KEY
+export N8N_URL=$N8N_URL_DEV
+export N8N_API_KEY=$N8N_API_KEY_DEV
 
 echo "Testing n8n connection..."
 echo "N8N_URL: $N8N_URL"

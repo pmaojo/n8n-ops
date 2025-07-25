@@ -11,7 +11,7 @@ environments:
     url: "https://n8n-dev.yourcompany.com"
     
     # API key (use environment variable for security)
-    api_key: "${N8N_DEV_API_KEY}"
+    api_key: "${N8N_API_KEY_DEV}"
     
     # Request timeout in seconds
     timeout: 30
@@ -24,14 +24,14 @@ environments:
     
   staging:
     url: "https://n8n-staging.yourcompany.com"
-    api_key: "${N8N_STAGING_API_KEY}"
+    api_key: "${N8N_API_KEY_STAGING}"
     timeout: 30
     workflow_dir: "./workflows/staging"
     verify_ssl: true
     
   production:
     url: "https://n8n-prod.yourcompany.com"
-    api_key: "${N8N_PROD_API_KEY}"
+    api_key: "${N8N_API_KEY_PROD}"
     timeout: 60
     workflow_dir: "./workflows/production"
     verify_ssl: true

@@ -233,9 +233,9 @@ scheduled-sync-check:
 2. **Configurar variables CI/CD**
    ```bash
    GitLab → Settings → CI/CD → Variables:
-   N8N_DEV_API_KEY = "your-dev-api-key"
-   N8N_STAGING_API_KEY = "your-staging-api-key"  
-   N8N_PROD_API_KEY = "your-production-api-key"
+   N8N_API_KEY_DEV = "your-dev-api-key"
+   N8N_API_KEY_STAGING = "your-staging-api-key"  
+   N8N_API_KEY_PROD = "your-production-api-key"
    ```
 
 3. **Testing del pipeline**

@@ -99,14 +99,14 @@ chmod +x n8n-ops-server
 sudo nano /etc/environment
 
 # Agregar variables de n8n
-N8N_URL_DEVELOPMENT=http://localhost:5678
-N8N_API_KEY_DEVELOPMENT=tu_api_key_dev
+N8N_URL_DEV=http://localhost:5678
+N8N_API_KEY_DEV=tu_api_key_dev
 
 N8N_URL_STAGING=https://n8n-staging.empresa.com
 N8N_API_KEY_STAGING=tu_api_key_staging
 
-N8N_URL_PRODUCTION=https://n8n.empresa.com
-N8N_API_KEY_PRODUCTION=tu_api_key_prod
+N8N_URL_PROD=https://n8n.empresa.com
+N8N_API_KEY_PROD=tu_api_key_prod
 
 # Variables de credenciales por ambiente
 SMTP_HOST_DEVELOPMENT=smtp.mailtrap.io

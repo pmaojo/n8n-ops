@@ -49,21 +49,21 @@ cp config.example.yaml ~/.n8n-ops.yaml
 environments:
   development:
     url: "https://n8n-dev.yourcompany.com"
-    api_key: "${N8N_DEV_API_KEY}"
+    api_key: "${N8N_API_KEY_DEV}"
   staging:
     url: "https://n8n-staging.yourcompany.com"  
-    api_key: "${N8N_STAGING_API_KEY}"
+    api_key: "${N8N_API_KEY_STAGING}"
   production:
     url: "https://n8n-prod.yourcompany.com"
-    api_key: "${N8N_PROD_API_KEY}"
+    api_key: "${N8N_API_KEY_PROD}"
 ```
 
 ### Set environment variables:
 ```bash
 # Add to your ~/.bashrc or ~/.zshrc
-export N8N_DEV_API_KEY="n8n_api_your_dev_key_here"
-export N8N_STAGING_API_KEY="n8n_api_your_staging_key_here"
-export N8N_PROD_API_KEY="n8n_api_your_prod_key_here"
+export N8N_API_KEY_DEV="n8n_api_your_dev_key_here"
+export N8N_API_KEY_STAGING="n8n_api_your_staging_key_here"
+export N8N_API_KEY_PROD="n8n_api_your_prod_key_here"
 
 # Reload your shell
 source ~/.bashrc  # or ~/.zshrc
@@ -103,12 +103,12 @@ In GitLab project → **Settings → CI/CD → Variables**:
 
 | Variable Name | Value | Masked |
 |---------------|--------|---------|
-| `N8N_DEV_API_KEY` | Your dev API key | ✅ |
-| `N8N_STAGING_API_KEY` | Your staging API key | ✅ |  
-| `N8N_PROD_API_KEY` | Your prod API key | ✅ |
-| `N8N_DEV_URL` | https://n8n-dev.yourcompany.com | ❌ |
-| `N8N_STAGING_URL` | https://n8n-staging.yourcompany.com | ❌ |
-| `N8N_PROD_URL` | https://n8n-prod.yourcompany.com | ❌ |
+| `N8N_API_KEY_DEV` | Your dev API key | ✅ |
+| `N8N_API_KEY_STAGING` | Your staging API key | ✅ |  
+| `N8N_API_KEY_PROD` | Your prod API key | ✅ |
+| `N8N_URL_DEV` | https://n8n-dev.yourcompany.com | ❌ |
+| `N8N_URL_STAGING` | https://n8n-staging.yourcompany.com | ❌ |
+| `N8N_URL_PROD` | https://n8n-prod.yourcompany.com | ❌ |
 
 ### Step 2: Commit Pipeline
 
@@ -202,7 +202,7 @@ go build -o n8n-ops main.go
 cat ~/.n8n-ops.yaml
 
 # Check environment variables
-echo $N8N_DEV_API_KEY
+echo $N8N_API_KEY_DEV
 ```
 
 ## Next Steps
