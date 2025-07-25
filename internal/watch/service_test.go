@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pmaojo/n8n-ops/internal/credentials"
 	isync "github.com/pmaojo/n8n-ops/internal/sync"
 	"github.com/pmaojo/n8n-ops/internal/workflow"
 	"github.com/sirupsen/logrus"
@@ -35,6 +36,22 @@ func (m *mockClient) GetExecution(ctx context.Context, id string) (*workflow.Exe
 func (m *mockClient) GetExecutions(ctx context.Context, workflowID, status string, limit int) ([]*workflow.ExecutionResult, error) {
 	return nil, nil
 }
+func (m *mockClient) GetCredentials(ctx context.Context) ([]*credentials.N8nCredential, error) {
+	return nil, nil
+}
+func (m *mockClient) GetCredential(ctx context.Context, id string) (*credentials.N8nCredential, error) {
+	return nil, nil
+}
+func (m *mockClient) GetCredentialSchema(ctx context.Context, typ string) (map[string]interface{}, error) {
+	return nil, nil
+}
+func (m *mockClient) CreateCredential(ctx context.Context, cred *credentials.N8nCredential) (*credentials.N8nCredential, error) {
+	return nil, nil
+}
+func (m *mockClient) UpdateCredential(ctx context.Context, id string, cred *credentials.N8nCredential) (*credentials.N8nCredential, error) {
+	return nil, nil
+}
+func (m *mockClient) DeleteCredential(ctx context.Context, id string) error { return nil }
 
 type fakeGitChecker struct{ calls int }
 
