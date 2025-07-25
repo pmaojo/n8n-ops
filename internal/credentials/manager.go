@@ -16,6 +16,19 @@ type CredentialManager struct {
 	Environment string
 }
 
+// newViper returns a Viper instance configured for credential operations.
+// It does not read the configuration file, allowing callers to decide when
+// loading should occur.
+func newViper(configPath string) *viper.Viper {
+	v := viper.New()
+	v.SetConfigFile(configPath)
+	v.SetConfigType("yaml")
+	v.AutomaticEnv()
+	v.SetEnvPrefix("N8N_OPS")
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	return v
+}
+
 // EnvironmentCredentials holds all credentials for a specific environment
 type EnvironmentCredentials struct {
 	N8nURL      string            `json:"n8n_url" yaml:"n8n_url"`
@@ -51,14 +64,7 @@ func NewCredentialManager(environment string) *CredentialManager {
 // loadConfig creates a new Viper instance and reads the configuration file.
 // It sets environment variable handling consistent with other credential methods.
 func (cm *CredentialManager) loadConfig() (*viper.Viper, error) {
-	v := viper.New()
-	v.SetConfigFile(cm.ConfigPath)
-	v.SetConfigType("yaml")
-
-	v.AutomaticEnv()
-	v.SetEnvPrefix("N8N_OPS")
-	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-
+	v := newViper(cm.ConfigPath)
 	if err := v.ReadInConfig(); err != nil {
 		return v, err
 	}
@@ -67,17 +73,10 @@ func (cm *CredentialManager) loadConfig() (*viper.Viper, error) {
 
 // GetEnvironmentCredentials retrieves credentials for the current environment
 func (cm *CredentialManager) GetEnvironmentCredentials() (*EnvironmentCredentials, error) {
-	viper.SetConfigFile(cm.ConfigPath)
-	viper.SetConfigType("yaml")
-
-	// Set environment variable precedence
-	viper.AutomaticEnv()
-	viper.SetEnvPrefix("N8N_OPS")
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-
-	if err := viper.ReadInConfig(); err != nil {
+	v := newViper(cm.ConfigPath)
+	if err := v.ReadInConfig(); err != nil {
 		if os.IsNotExist(err) {
-			return cm.getFromEnvironmentVariables(), nil
+			return cm.getFromEnvironmentVariables(nil), nil
 		}
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
@@ -89,14 +88,14 @@ func (cm *CredentialManager) GetEnvironmentCredentials() (*EnvironmentCredential
 	}
 
 	// Get credentials with environment variable fallback
-	creds.N8nURL = cm.getCredential(envKey+".n8n_url", "N8N_URL")
-	creds.N8nAPIKey = cm.getCredential(envKey+".n8n_api_key", "N8N_API_KEY")
-	creds.GitLabToken = cm.getCredential(envKey+".gitlab_token", "GITLAB_TOKEN")
+	creds.N8nURL = cm.getCredential(v, envKey+".n8n_url", "N8N_URL")
+	creds.N8nAPIKey = cm.getCredential(v, envKey+".n8n_api_key", "N8N_API_KEY")
+	creds.GitLabToken = cm.getCredential(v, envKey+".gitlab_token", "GITLAB_TOKEN")
 
 	// Get custom credentials
 	customCredsKey := envKey + ".custom_credentials"
-	if viper.IsSet(customCredsKey) {
-		customCreds := viper.GetStringMapString(customCredsKey)
+	if v.IsSet(customCredsKey) {
+		customCreds := v.GetStringMapString(customCredsKey)
 		for key, value := range customCreds {
 			creds.CustomCreds[key] = value
 		}
@@ -106,10 +105,10 @@ func (cm *CredentialManager) GetEnvironmentCredentials() (*EnvironmentCredential
 }
 
 // getCredential tries config file first, then environment variables
-func (cm *CredentialManager) getCredential(configKey, envKey string) string {
-	// Try config file first
-	if viper.IsSet(configKey) {
-		return viper.GetString(configKey)
+func (cm *CredentialManager) getCredential(v *viper.Viper, configKey, envKey string) string {
+	// Try config file first when available
+	if v != nil && configKey != "" && v.IsSet(configKey) {
+		return v.GetString(configKey)
 	}
 
 	// Fallback to environment variable
@@ -124,11 +123,11 @@ func (cm *CredentialManager) getCredential(configKey, envKey string) string {
 }
 
 // getFromEnvironmentVariables creates credentials from env vars when no config file exists
-func (cm *CredentialManager) getFromEnvironmentVariables() *EnvironmentCredentials {
+func (cm *CredentialManager) getFromEnvironmentVariables(v *viper.Viper) *EnvironmentCredentials {
 	return &EnvironmentCredentials{
-		N8nURL:      cm.getCredential("", "N8N_URL"),
-		N8nAPIKey:   cm.getCredential("", "N8N_API_KEY"),
-		GitLabToken: cm.getCredential("", "GITLAB_TOKEN"),
+		N8nURL:      cm.getCredential(v, "", "N8N_URL"),
+		N8nAPIKey:   cm.getCredential(v, "", "N8N_API_KEY"),
+		GitLabToken: cm.getCredential(v, "", "GITLAB_TOKEN"),
 		CustomCreds: make(map[string]string),
 	}
 }
@@ -163,20 +162,19 @@ func (cm *CredentialManager) GetN8nCredentials() (string, string, error) {
 
 // SetCredential stores a credential for the current environment
 func (cm *CredentialManager) SetCredential(key, value string) error {
-	viper.SetConfigFile(cm.ConfigPath)
-	viper.SetConfigType("yaml")
+	v := newViper(cm.ConfigPath)
 
 	// Read existing config or create new
-	if err := viper.ReadInConfig(); err != nil {
+	if err := v.ReadInConfig(); err != nil {
 		if !os.IsNotExist(err) {
 			return fmt.Errorf("failed to read config: %w", err)
 		}
 	}
 
 	envKey := fmt.Sprintf("environments.%s.%s", cm.Environment, key)
-	viper.Set(envKey, value)
+	v.Set(envKey, value)
 
-	return viper.WriteConfig()
+	return v.WriteConfig()
 }
 
 // ListCredentials shows available credential sources
@@ -186,27 +184,29 @@ func (cm *CredentialManager) ListCredentials() (map[string]string, error) {
 		return nil, err
 	}
 
+	cfg, _ := cm.loadConfig()
+
 	sources := make(map[string]string)
 
 	// Check sources for each credential
-	sources["n8n_url"] = cm.getCredentialSource("n8n_url", creds.N8nURL)
-	sources["n8n_api_key"] = cm.getCredentialSource("n8n_api_key", creds.N8nAPIKey)
-	sources["gitlab_token"] = cm.getCredentialSource("gitlab_token", creds.GitLabToken)
+	sources["n8n_url"] = cm.getCredentialSource(cfg, "n8n_url", creds.N8nURL)
+	sources["n8n_api_key"] = cm.getCredentialSource(cfg, "n8n_api_key", creds.N8nAPIKey)
+	sources["gitlab_token"] = cm.getCredentialSource(cfg, "gitlab_token", creds.GitLabToken)
 
 	for key := range creds.CustomCreds {
-		sources[key] = cm.getCredentialSource(key, creds.CustomCreds[key])
+		sources[key] = cm.getCredentialSource(cfg, key, creds.CustomCreds[key])
 	}
 
 	return sources, nil
 }
 
-func (cm *CredentialManager) getCredentialSource(key, value string) string {
+func (cm *CredentialManager) getCredentialSource(v *viper.Viper, key, value string) string {
 	if value == "" {
 		return "not_set"
 	}
 
 	envKey := fmt.Sprintf("environments.%s.%s", cm.Environment, key)
-	if viper.IsSet(envKey) {
+	if v != nil && v.IsSet(envKey) {
 		return "config_file"
 	}
 
