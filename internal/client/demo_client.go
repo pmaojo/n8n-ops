@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pmaojo/n8n-ops/internal/credentials"
 	"github.com/pmaojo/n8n-ops/internal/workflow"
 )
 
@@ -12,7 +13,9 @@ import (
 // for demos and tests. It avoids any network calls and stores workflows in a
 // map keyed by workflow ID.
 type DemoN8nClient struct {
-	workflows map[string]*workflow.Workflow
+	workflows   map[string]*workflow.Workflow
+	credentials map[string]*credentials.N8nCredential
+	credCounter int
 }
 
 // NewDemoN8nClient creates a DemoN8nClient pre-populated with example
@@ -144,7 +147,7 @@ func NewDemoN8nClient() *DemoN8nClient {
 		},
 	}
 
-	return &DemoN8nClient{workflows: workflows}
+	return &DemoN8nClient{workflows: workflows, credentials: make(map[string]*credentials.N8nCredential)}
 }
 
 // GetMe returns static user information representing the currently authenticated
@@ -271,4 +274,57 @@ func (c *DemoN8nClient) GetExecution(ctx context.Context, id string) (*workflow.
 // GetExecutions is not implemented for the demo client.
 func (c *DemoN8nClient) GetExecutions(ctx context.Context, workflowID string, status string, limit int) ([]*workflow.ExecutionResult, error) {
 	return nil, fmt.Errorf("GetExecutions not implemented in demo client")
+}
+
+// GetCredentials returns stored credentials
+func (c *DemoN8nClient) GetCredentials(ctx context.Context) ([]*credentials.N8nCredential, error) {
+	var list []*credentials.N8nCredential
+	for _, cred := range c.credentials {
+		copy := *cred
+		list = append(list, &copy)
+	}
+	return list, nil
+}
+
+// GetCredential retrieves a credential by ID
+func (c *DemoN8nClient) GetCredential(ctx context.Context, id string) (*credentials.N8nCredential, error) {
+	cred, ok := c.credentials[id]
+	if !ok {
+		return nil, fmt.Errorf("credential not found: %s", id)
+	}
+	copy := *cred
+	return &copy, nil
+}
+
+// CreateCredential stores a new credential
+func (c *DemoN8nClient) CreateCredential(ctx context.Context, cred *credentials.N8nCredential) (*credentials.N8nCredential, error) {
+	c.credCounter++
+	if cred.ID == "" {
+		cred.ID = fmt.Sprintf("cred-%d", c.credCounter)
+	}
+	c.credentials[cred.ID] = cred
+	copy := *cred
+	return &copy, nil
+}
+
+// UpdateCredential replaces a credential
+func (c *DemoN8nClient) UpdateCredential(ctx context.Context, id string, cred *credentials.N8nCredential) (*credentials.N8nCredential, error) {
+	if cred == nil {
+		return nil, fmt.Errorf("nil credential")
+	}
+	cred.ID = id
+	c.credentials[id] = cred
+	copy := *cred
+	return &copy, nil
+}
+
+// DeleteCredential removes a credential
+func (c *DemoN8nClient) DeleteCredential(ctx context.Context, id string) error {
+	delete(c.credentials, id)
+	return nil
+}
+
+// GetCredentialSchema returns a placeholder schema
+func (c *DemoN8nClient) GetCredentialSchema(ctx context.Context, typ string) (map[string]interface{}, error) {
+	return map[string]interface{}{"name": typ}, nil
 }

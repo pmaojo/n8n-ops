@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
 
+	"github.com/pmaojo/n8n-ops/internal/cliutils"
 	"github.com/pmaojo/n8n-ops/internal/credentials"
 	"github.com/spf13/cobra"
 )
@@ -55,9 +57,30 @@ var credentialsTemplateCmd = &cobra.Command{
 	RunE:  runCredentialsTemplate,
 }
 
+var credentialsCreateCmd = &cobra.Command{
+	Use:   "create",
+	Short: "Create a credential from a JSON file",
+	RunE:  runCredentialsCreate,
+}
+
+var credentialsUpdateCmd = &cobra.Command{
+	Use:   "update [id]",
+	Short: "Update a credential using a JSON file",
+	Args:  cobra.ExactArgs(1),
+	RunE:  runCredentialsUpdate,
+}
+
+var credentialsDeleteCmd = &cobra.Command{
+	Use:   "delete [id]",
+	Short: "Delete a credential",
+	Args:  cobra.ExactArgs(1),
+	RunE:  runCredentialsDelete,
+}
+
 var (
 	workflowID string
 	showValues bool
+	credFile   string
 )
 
 func init() {
@@ -66,9 +89,14 @@ func init() {
 	credentialsCmd.AddCommand(credentialsValidateCmd)
 	credentialsCmd.AddCommand(credentialsMapCmd)
 	credentialsCmd.AddCommand(credentialsTemplateCmd)
+	credentialsCmd.AddCommand(credentialsCreateCmd)
+	credentialsCmd.AddCommand(credentialsUpdateCmd)
+	credentialsCmd.AddCommand(credentialsDeleteCmd)
 
 	credentialsMapCmd.Flags().StringVar(&workflowID, "workflow-id", "", "specific workflow ID to map")
 	credentialsListCmd.Flags().BoolVar(&showValues, "show-values", false, "show credential values (use carefully)")
+	credentialsCreateCmd.Flags().StringVar(&credFile, "file", "", "path to credential JSON file")
+	credentialsUpdateCmd.Flags().StringVar(&credFile, "file", "", "path to credential JSON file")
 }
 
 func runCredentialsList(cmd *cobra.Command, args []string) error {
@@ -223,6 +251,68 @@ func runCredentialsTemplate(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("💡 Tip: Save this to .env.%s (never commit to Git!)\n", environment)
 
+	return nil
+}
+
+func runCredentialsCreate(cmd *cobra.Command, args []string) error {
+	if credFile == "" {
+		return fmt.Errorf("--file is required")
+	}
+	data, err := os.ReadFile(credFile)
+	if err != nil {
+		return fmt.Errorf("read credential file: %w", err)
+	}
+	var cred credentials.N8nCredential
+	if err := json.Unmarshal(data, &cred); err != nil {
+		return fmt.Errorf("parse credential: %w", err)
+	}
+	n8nClient, _, err := cliutils.SetupClient(environment, demoMode)
+	if err != nil {
+		return err
+	}
+	created, err := n8nClient.CreateCredential(cmd.Context(), &cred)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("✅ Created credential %s (%s)\n", created.ID, created.Name)
+	return nil
+}
+
+func runCredentialsUpdate(cmd *cobra.Command, args []string) error {
+	if credFile == "" {
+		return fmt.Errorf("--file is required")
+	}
+	id := args[0]
+	data, err := os.ReadFile(credFile)
+	if err != nil {
+		return fmt.Errorf("read credential file: %w", err)
+	}
+	var cred credentials.N8nCredential
+	if err := json.Unmarshal(data, &cred); err != nil {
+		return fmt.Errorf("parse credential: %w", err)
+	}
+	n8nClient, _, err := cliutils.SetupClient(environment, demoMode)
+	if err != nil {
+		return err
+	}
+	updated, err := n8nClient.UpdateCredential(cmd.Context(), id, &cred)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("✅ Updated credential %s (%s)\n", updated.ID, updated.Name)
+	return nil
+}
+
+func runCredentialsDelete(cmd *cobra.Command, args []string) error {
+	id := args[0]
+	n8nClient, _, err := cliutils.SetupClient(environment, demoMode)
+	if err != nil {
+		return err
+	}
+	if err := n8nClient.DeleteCredential(cmd.Context(), id); err != nil {
+		return err
+	}
+	fmt.Printf("✅ Deleted credential %s\n", id)
 	return nil
 }
 

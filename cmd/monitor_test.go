@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/pmaojo/n8n-ops/internal/client"
+	"github.com/pmaojo/n8n-ops/internal/credentials"
 	"github.com/pmaojo/n8n-ops/internal/workflow"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -36,6 +37,22 @@ func (f *fakeClient) GetExecution(context.Context, string) (*workflow.ExecutionR
 	return nil, nil
 }
 func (f *fakeClient) GetExecutions(context.Context, string, string, int) ([]*workflow.ExecutionResult, error) {
+	return nil, nil
+}
+func (f *fakeClient) GetCredentials(context.Context) ([]*credentials.N8nCredential, error) {
+	return nil, nil
+}
+func (f *fakeClient) GetCredential(context.Context, string) (*credentials.N8nCredential, error) {
+	return nil, nil
+}
+func (f *fakeClient) CreateCredential(context.Context, *credentials.N8nCredential) (*credentials.N8nCredential, error) {
+	return nil, nil
+}
+func (f *fakeClient) UpdateCredential(context.Context, string, *credentials.N8nCredential) (*credentials.N8nCredential, error) {
+	return nil, nil
+}
+func (f *fakeClient) DeleteCredential(context.Context, string) error { return nil }
+func (f *fakeClient) GetCredentialSchema(context.Context, string) (map[string]interface{}, error) {
 	return nil, nil
 }
 

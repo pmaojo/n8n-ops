@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/pmaojo/n8n-ops/internal/credentials"
 	"github.com/pmaojo/n8n-ops/internal/workflow"
 )
 
@@ -104,6 +105,69 @@ func TestCreateWorkflow(t *testing.T) {
 
 	if _, err := client.CreateWorkflow(context.Background(), nil); err == nil {
 		t.Error("expected error for nil workflow")
+	}
+}
+
+func TestCredentialOperations(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/rest/credentials", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			json.NewEncoder(w).Encode(map[string]any{"data": []credentials.N8nCredential{{ID: "1", Name: "c"}}})
+		case http.MethodPost:
+			var c credentials.N8nCredential
+			json.NewDecoder(r.Body).Decode(&c)
+			c.ID = "2"
+			json.NewEncoder(w).Encode(&c)
+		}
+	})
+	mux.HandleFunc("/rest/credentials/1", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			json.NewEncoder(w).Encode(&credentials.N8nCredential{ID: "1", Name: "c"})
+		case http.MethodPatch:
+			var c credentials.N8nCredential
+			json.NewDecoder(r.Body).Decode(&c)
+			c.ID = "1"
+			json.NewEncoder(w).Encode(&c)
+		case http.MethodDelete:
+			w.WriteHeader(http.StatusNoContent)
+		}
+	})
+	mux.HandleFunc("/rest/credentials/schema/smtp", func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(map[string]any{"type": "object"})
+	})
+
+	client, closeFn := newTestClient(t, mux.ServeHTTP)
+	defer closeFn()
+
+	creds, err := client.GetCredentials(context.Background())
+	if err != nil || len(creds) != 1 {
+		t.Fatalf("list creds failed: %v", err)
+	}
+
+	cred, err := client.GetCredential(context.Background(), "1")
+	if err != nil || cred.ID != "1" {
+		t.Fatalf("get cred failed: %v", err)
+	}
+
+	newC, err := client.CreateCredential(context.Background(), &credentials.N8nCredential{Name: "new"})
+	if err != nil || newC.ID != "2" {
+		t.Fatalf("create cred failed: %v", err)
+	}
+
+	upd, err := client.UpdateCredential(context.Background(), "1", &credentials.N8nCredential{Name: "upd"})
+	if err != nil || upd.Name != "upd" {
+		t.Fatalf("update cred failed: %v", err)
+	}
+
+	if err := client.DeleteCredential(context.Background(), "1"); err != nil {
+		t.Fatalf("delete cred failed: %v", err)
+	}
+
+	schema, err := client.GetCredentialSchema(context.Background(), "smtp")
+	if err != nil || schema["type"] != "object" {
+		t.Fatalf("schema failed: %v", err)
 	}
 }
 

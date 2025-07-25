@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/pmaojo/n8n-ops/internal/credentials"
 	"github.com/pmaojo/n8n-ops/internal/workflow"
 )
 
@@ -263,4 +264,81 @@ func (c *n8nClient) GetExecutions(ctx context.Context, workflowID string, status
 	}
 
 	return resp.Data, nil
+}
+
+// GetCredentials lists all credentials
+func (c *n8nClient) GetCredentials(ctx context.Context) ([]*credentials.N8nCredential, error) {
+	type credResponse struct {
+		Data []*credentials.N8nCredential `json:"data"`
+	}
+
+	resp, err := doRequest[credResponse](ctx, c, http.MethodGet, "/rest/credentials", nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get credentials: %w", err)
+	}
+	return resp.Data, nil
+}
+
+// GetCredential retrieves a credential by ID
+func (c *n8nClient) GetCredential(ctx context.Context, id string) (*credentials.N8nCredential, error) {
+	if id == "" {
+		return nil, ErrBadRequest
+	}
+	path := fmt.Sprintf("/rest/credentials/%s", id)
+	cred, err := doRequest[*credentials.N8nCredential](ctx, c, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get credential %s: %w", id, err)
+	}
+	return cred, nil
+}
+
+// CreateCredential creates a new credential
+func (c *n8nClient) CreateCredential(ctx context.Context, cred *credentials.N8nCredential) (*credentials.N8nCredential, error) {
+	if cred == nil {
+		return nil, ErrBadRequest
+	}
+	created, err := doRequest[*credentials.N8nCredential](ctx, c, http.MethodPost, "/rest/credentials", cred)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create credential: %w", err)
+	}
+	return created, nil
+}
+
+// UpdateCredential updates an existing credential
+func (c *n8nClient) UpdateCredential(ctx context.Context, id string, cred *credentials.N8nCredential) (*credentials.N8nCredential, error) {
+	if id == "" || cred == nil {
+		return nil, ErrBadRequest
+	}
+	path := fmt.Sprintf("/rest/credentials/%s", id)
+	updated, err := doRequest[*credentials.N8nCredential](ctx, c, http.MethodPatch, path, cred)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update credential %s: %w", id, err)
+	}
+	return updated, nil
+}
+
+// DeleteCredential removes a credential by ID
+func (c *n8nClient) DeleteCredential(ctx context.Context, id string) error {
+	if id == "" {
+		return ErrBadRequest
+	}
+	path := fmt.Sprintf("/rest/credentials/%s", id)
+	_, err := doRequest[interface{}](ctx, c, http.MethodDelete, path, nil)
+	if err != nil {
+		return fmt.Errorf("failed to delete credential %s: %w", id, err)
+	}
+	return nil
+}
+
+// GetCredentialSchema retrieves the JSON schema for a credential type
+func (c *n8nClient) GetCredentialSchema(ctx context.Context, typ string) (map[string]interface{}, error) {
+	if typ == "" {
+		return nil, ErrBadRequest
+	}
+	path := fmt.Sprintf("/rest/credentials/schema/%s", typ)
+	schema, err := doRequest[map[string]interface{}](ctx, c, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get credential schema %s: %w", typ, err)
+	}
+	return schema, nil
 }
