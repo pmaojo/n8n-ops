@@ -218,6 +218,19 @@ export POSTGRES_USER_PRODUCTION="prod_user"
 export POSTGRES_PASSWORD_PRODUCTION="your_db_password"
 ```
 
+### **Crear, Actualizar y Eliminar Credenciales**
+
+```bash
+# Crear
+n8n-ops credentials create --file cred.json --env development
+
+# Actualizar
+n8n-ops credentials update <id> --file cred.json --env development
+
+# Eliminar
+n8n-ops credentials delete <id> --env development
+```
+
 ## 🎯 Mapeo Automático de Credenciales
 
 ### **Algoritmo de Mapeo**

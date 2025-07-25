@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 
+	"github.com/pmaojo/n8n-ops/internal/credentials"
 	"github.com/pmaojo/n8n-ops/internal/workflow"
 )
 
@@ -27,11 +28,27 @@ type WorkflowExecutor interface {
 	GetExecutions(ctx context.Context, workflowID string, status string, limit int) ([]*workflow.ExecutionResult, error)
 }
 
+// CredentialReader defines read-only operations for credentials
+type CredentialReader interface {
+	GetCredentials(ctx context.Context) ([]*credentials.N8nCredential, error)
+	GetCredential(ctx context.Context, id string) (*credentials.N8nCredential, error)
+	GetCredentialSchema(ctx context.Context, typ string) (map[string]interface{}, error)
+}
+
+// CredentialWriter defines write operations for credentials
+type CredentialWriter interface {
+	CreateCredential(ctx context.Context, cred *credentials.N8nCredential) (*credentials.N8nCredential, error)
+	UpdateCredential(ctx context.Context, id string, cred *credentials.N8nCredential) (*credentials.N8nCredential, error)
+	DeleteCredential(ctx context.Context, id string) error
+}
+
 // Client combines all workflow operations
 type Client interface {
 	WorkflowReader
 	WorkflowWriter
 	WorkflowExecutor
+	CredentialReader
+	CredentialWriter
 }
 
 // HTTPTransport abstracts the HTTP client for testing

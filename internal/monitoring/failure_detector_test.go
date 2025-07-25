@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pmaojo/n8n-ops/internal/credentials"
 	"github.com/pmaojo/n8n-ops/internal/issues"
 	"github.com/pmaojo/n8n-ops/internal/workflow"
 	"github.com/sirupsen/logrus"
@@ -80,6 +81,22 @@ func (m *mockClient) GetExecution(ctx context.Context, id string) (*workflow.Exe
 	return nil, nil
 }
 func (m *mockClient) GetExecutions(ctx context.Context, workflowID, status string, limit int) ([]*workflow.ExecutionResult, error) {
+	return nil, nil
+}
+func (m *mockClient) GetCredentials(context.Context) ([]*credentials.N8nCredential, error) {
+	return nil, nil
+}
+func (m *mockClient) GetCredential(context.Context, string) (*credentials.N8nCredential, error) {
+	return nil, nil
+}
+func (m *mockClient) CreateCredential(context.Context, *credentials.N8nCredential) (*credentials.N8nCredential, error) {
+	return nil, nil
+}
+func (m *mockClient) UpdateCredential(context.Context, string, *credentials.N8nCredential) (*credentials.N8nCredential, error) {
+	return nil, nil
+}
+func (m *mockClient) DeleteCredential(context.Context, string) error { return nil }
+func (m *mockClient) GetCredentialSchema(context.Context, string) (map[string]interface{}, error) {
 	return nil, nil
 }
 

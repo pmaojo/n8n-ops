@@ -78,6 +78,27 @@ func TestStatusCommandExecute(t *testing.T) {
 	}
 }
 
+func TestCredentialsCommandsExecute(t *testing.T) {
+	dir := t.TempDir()
+	file := filepath.Join(dir, "cred.json")
+	os.WriteFile(file, []byte(`{"name":"demo","type":"smtp"}`), 0o644)
+
+	out, err := executeRoot("credentials", "create", "--demo", "--file", file)
+	if err != nil || !strings.Contains(out, "Created credential") {
+		t.Fatalf("create failed: %v", err)
+	}
+
+	out, err = executeRoot("credentials", "update", "123", "--demo", "--file", file)
+	if err != nil || !strings.Contains(out, "Updated credential") {
+		t.Fatalf("update failed: %v", err)
+	}
+
+	out, err = executeRoot("credentials", "delete", "123", "--demo")
+	if err != nil || !strings.Contains(out, "Deleted credential") {
+		t.Fatalf("delete failed: %v", err)
+	}
+}
+
 func TestExecuteInvalidConfig(t *testing.T) {
 	dir := t.TempDir()
 	cfgPath := filepath.Join(dir, "config.yaml")
