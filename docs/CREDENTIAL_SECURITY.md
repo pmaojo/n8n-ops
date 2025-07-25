@@ -2,6 +2,8 @@
 
 ## 🔒 Cómo Funciona la API de Credenciales de n8n
 
+> **Nota:** Las variables de entorno deben seguir el esquema `N8N_API_KEY_<ENV>` y `N8N_URL_<ENV>`. Por ejemplo `N8N_API_KEY_DEV` y `N8N_URL_DEV`.
+
 ### **Arquitectura de Seguridad de n8n**
 
 n8n maneja las credenciales de forma segura usando:
@@ -93,8 +95,8 @@ Ejemplos:
 
 ```bash
 # Configurar variables de entorno
-export N8N_URL_DEVELOPMENT="http://localhost:5678"
-export N8N_API_KEY_DEVELOPMENT="n8n_api_dev_key"
+export N8N_URL_DEV="http://localhost:5678"
+export N8N_API_KEY_DEV="n8n_api_dev_key"
 export SMTP_HOST_DEVELOPMENT="smtp.mailtrap.io"
 export SMTP_USER_DEVELOPMENT="dev_user"
 export SMTP_PASSWORD_DEVELOPMENT="dev_password"
@@ -123,8 +125,8 @@ n8n-ops sync --to-n8n --env staging
 
 ```bash
 # Variables de producción (en vault seguro)
-export N8N_URL_PRODUCTION="https://n8n.company.com"
-export N8N_API_KEY_PRODUCTION="n8n_api_prod_key"
+export N8N_URL_PROD="https://n8n.company.com"
+export N8N_API_KEY_PROD="n8n_api_prod_key"
 export SMTP_HOST_PRODUCTION="smtp.sendgrid.net"
 export SMTP_USER_PRODUCTION="apikey"  
 export SMTP_PASSWORD_PRODUCTION="SG.real_sendgrid_key"
@@ -148,8 +150,8 @@ Output:
 =====================================
 
 📋 N8N API Credentials:
-  N8N_URL_DEVELOPMENT = http://localhost:5678
-  N8N_API_KEY_DEVELOPMENT = n8n_***dev
+  N8N_URL_DEV = http://localhost:5678
+  N8N_API_KEY_DEV = n8n_***dev
 
 🔧 Workflow Node Credentials:
   SMTP:
@@ -200,8 +202,8 @@ Output:
 # Copy these variables to your environment
 
 # N8N API Configuration
-export N8N_URL_PRODUCTION="https://n8n.company.com"
-export N8N_API_KEY_PRODUCTION="your_production_api_key_here"
+export N8N_URL_PROD="https://n8n.company.com"
+export N8N_API_KEY_PROD="your_production_api_key_here"
 
 # Workflow Node Credentials
 # SMTP
@@ -252,7 +254,7 @@ func MapCredentialsForEnvironment(workflowJSON []byte, targetEnv string) {
 # .gitlab-ci.yml
 variables:
   # Development (masked variables)
-  N8N_URL_DEVELOPMENT: "http://localhost:5678"
+  N8N_URL_DEV: "http://localhost:5678"
   
 deploy_staging:
   stage: deploy
@@ -272,7 +274,7 @@ deploy_production:
     - n8n-ops sync --to-n8n --env production
   variables:
     # Production credentials (protected + masked)
-    N8N_URL_PRODUCTION: "https://n8n.company.com"
+    N8N_URL_PROD: "https://n8n.company.com"
   only:
     - production
   when: manual

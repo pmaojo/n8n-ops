@@ -157,15 +157,15 @@ go test ./...
 environments:
   development:
     url: "https://n8n-dev.yourcompany.com"
-    api_key: "${N8N_DEV_API_KEY}"
+    api_key: "${N8N_API_KEY_DEV}"
 ```
 
 ### GitLab CI/CD Variables
 | Variable | Description | Masked |
 |----------|-------------|---------|
-| `N8N_DEV_API_KEY` | Development n8n API key | ✅ |
-| `N8N_STAGING_API_KEY` | Staging n8n API key | ✅ |
-| `N8N_PROD_API_KEY` | Production n8n API key | ✅ |
+| `N8N_API_KEY_DEV` | Development n8n API key | ✅ |
+| `N8N_API_KEY_STAGING` | Staging n8n API key | ✅ |
+| `N8N_API_KEY_PROD` | Production n8n API key | ✅ |
 
 ## Troubleshooting
 

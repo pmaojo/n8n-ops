@@ -242,7 +242,7 @@ func createOnboardingConfigFiles(projectDir string, envConfig []EnvironmentConfi
 	for _, env := range envConfig {
 		configContent += fmt.Sprintf("  %s:\n", env.Name)
 		configContent += fmt.Sprintf("    url: %s\n", env.URL)
-		configContent += fmt.Sprintf("    api_key_env: N8N_%s_API_KEY\n", strings.ToUpper(env.Name))
+                configContent += fmt.Sprintf("    api_key_env: N8N_API_KEY_%s\n", strings.ToUpper(env.Name))
 	}
 
 	// Add default settings
@@ -274,10 +274,10 @@ logging:
 	envContent := "# n8n CLI Environment Variables\n# Copy this file to .env and fill in your actual values\n\n"
 
 	for _, env := range envConfig {
-		envVarName := fmt.Sprintf("N8N_%s_API_KEY", strings.ToUpper(env.Name))
+               envVarName := fmt.Sprintf("N8N_API_KEY_%s", strings.ToUpper(env.Name))
 		envContent += fmt.Sprintf("# %s environment\n", cases.Title(langpkg.Und, cases.NoLower).String(env.Name))
-		envContent += fmt.Sprintf("%s=your_%s_api_key_here\n", envVarName, env.Name)
-		envContent += fmt.Sprintf("N8N_%s_URL=%s\n\n", strings.ToUpper(env.Name), env.URL)
+               envContent += fmt.Sprintf("%s=your_%s_api_key_here\n", envVarName, env.Name)
+               envContent += fmt.Sprintf("N8N_URL_%s=%s\n\n", strings.ToUpper(env.Name), env.URL)
 	}
 
 	envContent += `# GitLab CI/CD variables (set in GitLab project settings)
@@ -299,17 +299,17 @@ logging:
 
 	// Add placeholders for environment variables
 	for _, env := range envConfig {
-		envVarName := fmt.Sprintf("N8N_%s_API_KEY", strings.ToUpper(env.Name))
+               envVarName := fmt.Sprintf("N8N_API_KEY_%s", strings.ToUpper(env.Name))
 		shortName := strings.ToUpper(strings.Replace(env.Name, "development", "DEV", 1))
 		shortName = strings.ToUpper(strings.Replace(shortName, "production", "PROD", 1))
-		shortVarName := fmt.Sprintf("N8N_%s_API_KEY", shortName)
+               shortVarName := fmt.Sprintf("N8N_API_KEY_%s", shortName)
 
-		envInstructions += fmt.Sprintf("# %s environment\n", cases.Title(langpkg.Und, cases.NoLower).String(env.Name))
-		envInstructions += fmt.Sprintf("# Use either %s or %s\n", envVarName, shortVarName)
-		envInstructions += fmt.Sprintf("%s=\n", envVarName)
+               envInstructions += fmt.Sprintf("# %s environment\n", cases.Title(langpkg.Und, cases.NoLower).String(env.Name))
+               envInstructions += fmt.Sprintf("# Use either %s or %s\n", envVarName, shortVarName)
+               envInstructions += fmt.Sprintf("%s=\n", envVarName)
 
-		urlVarName := fmt.Sprintf("N8N_%s_URL", strings.ToUpper(env.Name))
-		shortUrlVarName := fmt.Sprintf("N8N_%s_URL", shortName)
+               urlVarName := fmt.Sprintf("N8N_URL_%s", strings.ToUpper(env.Name))
+               shortUrlVarName := fmt.Sprintf("N8N_URL_%s", shortName)
 		envInstructions += fmt.Sprintf("# Use either %s or %s\n", urlVarName, shortUrlVarName)
 		envInstructions += fmt.Sprintf("%s=%s\n\n", urlVarName, env.URL)
 	}
@@ -378,21 +378,24 @@ func setupAPIKeys(projectDir string, envConfig []EnvironmentConfig) {
 	allSet := true
 	for _, env := range envConfig {
 		// Check both naming conventions
-		fullName := fmt.Sprintf("N8N_%s_API_KEY", strings.ToUpper(env.Name))
-		shortName := ""
+               fullName := fmt.Sprintf("N8N_API_KEY_%s", strings.ToUpper(env.Name))
+               shortName := ""
 
 		if env.Name == "development" {
-			shortName = "N8N_DEV_API_KEY"
+			shortName = "N8N_API_KEY_DEV"
 		} else if env.Name == "production" {
-			shortName = "N8N_PROD_API_KEY"
+			shortName = "N8N_API_KEY_PROD"
 		} else if env.Name == "staging" {
-			shortName = "N8N_STAGING_API_KEY"
+			shortName = "N8N_API_KEY_STAGING"
 		}
 
-		apiKey := os.Getenv(fullName)
-		if apiKey == "" && shortName != "" {
-			apiKey = os.Getenv(shortName)
-		}
+                apiKey := os.Getenv(fullName)
+                if apiKey == "" {
+                        apiKey = os.Getenv(fmt.Sprintf("N8N_%s_API_KEY", strings.ToUpper(env.Name)))
+                }
+                if apiKey == "" && shortName != "" {
+                        apiKey = os.Getenv(shortName)
+                }
 
 		if apiKey == "" {
 			fmt.Printf("❌ %s environment API key not set\n", cases.Title(langpkg.Und, cases.NoLower).String(env.Name))
@@ -418,38 +421,38 @@ func showEnvironmentVariableInstructions(envConfig []EnvironmentConfig) {
 	fmt.Println("\n```bash")
 
 	for _, env := range envConfig {
-		fullName := fmt.Sprintf("N8N_%s_API_KEY", strings.ToUpper(env.Name))
+               fullName := fmt.Sprintf("N8N_API_KEY_%s", strings.ToUpper(env.Name))
 		shortName := ""
 
 		if env.Name == "development" {
-			shortName = "N8N_DEV_API_KEY"
+			shortName = "N8N_API_KEY_DEV"
 		} else if env.Name == "production" {
-			shortName = "N8N_PROD_API_KEY"
+			shortName = "N8N_API_KEY_PROD"
 		} else if env.Name == "staging" {
-			shortName = "N8N_STAGING_API_KEY"
+			shortName = "N8N_API_KEY_STAGING"
 		}
 
-		if shortName != "" {
-			fmt.Printf("# %s environment - use either %s or %s\n",
-				cases.Title(langpkg.Und, cases.NoLower).String(env.Name), fullName, shortName)
-			fmt.Printf("export %s=\"your_%s_api_key_here\"\n\n",
-				shortName, env.Name)
-		} else {
-			fmt.Printf("# %s environment\n", cases.Title(langpkg.Und, cases.NoLower).String(env.Name))
-			fmt.Printf("export %s=\"your_%s_api_key_here\"\n\n",
-				fullName, env.Name)
-		}
+               if shortName != "" {
+                        fmt.Printf("# %s environment - use either %s or %s\n",
+                                cases.Title(langpkg.Und, cases.NoLower).String(env.Name), fullName, shortName)
+                        fmt.Printf("export %s=\"your_%s_api_key_here\"\n\n",
+                                shortName, env.Name)
+                } else {
+                        fmt.Printf("# %s environment\n", cases.Title(langpkg.Und, cases.NoLower).String(env.Name))
+                        fmt.Printf("export %s=\"your_%s_api_key_here\"\n\n",
+                                fullName, env.Name)
+                }
 
 		// Also show URL variables
-		fullUrlName := fmt.Sprintf("N8N_%s_URL", strings.ToUpper(env.Name))
+               fullUrlName := fmt.Sprintf("N8N_URL_%s", strings.ToUpper(env.Name))
 		shortUrlName := ""
 
 		if env.Name == "development" {
-			shortUrlName = "N8N_DEV_URL"
+			shortUrlName = "N8N_URL_DEV"
 		} else if env.Name == "production" {
-			shortUrlName = "N8N_PROD_URL"
+			shortUrlName = "N8N_URL_PROD"
 		} else if env.Name == "staging" {
-			shortUrlName = "N8N_STAGING_URL"
+			shortUrlName = "N8N_URL_STAGING"
 		}
 
 		if shortUrlName != "" {
@@ -482,16 +485,20 @@ func testConnection(envConfig []EnvironmentConfig) {
 			fmt.Println(ascii.LoadingSpinner(fmt.Sprintf("Testing connection to %s environment...", env.Name)))
 
 			// Try to get API key from environment variable - check both naming conventions
-			apiKeyEnvVar := fmt.Sprintf("N8N_%s_API_KEY", strings.ToUpper(env.Name))
-			apiKey := os.Getenv(apiKeyEnvVar)
+                        apiKeyEnvVar := fmt.Sprintf("N8N_API_KEY_%s", strings.ToUpper(env.Name))
+                        apiKey := os.Getenv(apiKeyEnvVar)
+                        if apiKey == "" {
+                                apiKeyEnvVar = fmt.Sprintf("N8N_%s_API_KEY", strings.ToUpper(env.Name))
+                                apiKey = os.Getenv(apiKeyEnvVar)
+                        }
 
-			// Also check for N8N_DEV_API_KEY which is commonly used
-			if apiKey == "" && env.Name == "development" {
-				apiKey = os.Getenv("N8N_DEV_API_KEY")
-				if apiKey != "" {
-					apiKeyEnvVar = "N8N_DEV_API_KEY"
-				}
-			}
+                        // Also check for N8N_API_KEY_DEV which is commonly used
+                        if apiKey == "" && env.Name == "development" {
+                                apiKey = os.Getenv("N8N_API_KEY_DEV")
+                                if apiKey != "" {
+                                        apiKeyEnvVar = "N8N_API_KEY_DEV"
+                                }
+                        }
 
 			if apiKey == "" {
 				fmt.Printf("%s\n", ascii.ErrorMessage(fmt.Sprintf("API key not found in environment variable %s", apiKeyEnvVar)))
@@ -500,12 +507,16 @@ func testConnection(envConfig []EnvironmentConfig) {
 			}
 
 			// Get URL from environment variable
-			urlEnvVar := fmt.Sprintf("N8N_%s_URL", strings.ToUpper(env.Name))
-			url := os.Getenv(urlEnvVar)
+                        urlEnvVar := fmt.Sprintf("N8N_URL_%s", strings.ToUpper(env.Name))
+                        url := os.Getenv(urlEnvVar)
+                        if url == "" {
+                                urlEnvVar = fmt.Sprintf("N8N_%s_URL", strings.ToUpper(env.Name))
+                                url = os.Getenv(urlEnvVar)
+                        }
 
-			// Also check for N8N_DEV_URL which is commonly used
+			// Also check for N8N_URL_DEV which is commonly used
 			if url == "" && env.Name == "development" {
-				url = os.Getenv("N8N_DEV_URL")
+				url = os.Getenv("N8N_URL_DEV")
 			}
 
 			// Use default if not set

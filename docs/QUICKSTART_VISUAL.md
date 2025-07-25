@@ -40,21 +40,21 @@ Create or edit `~/.n8n-ops.yaml`:
 environments:
   development:
     url: "http://localhost:5678"
-    api_key_env: "N8N_DEV_API_KEY"
+    api_key_env: "N8N_API_KEY_DEV"
   staging:
     url: "https://n8n-staging.example.com"
-    api_key_env: "N8N_STAGING_API_KEY"
+    api_key_env: "N8N_API_KEY_STAGING"
   production:
     url: "https://n8n-prod.example.com"
-    api_key_env: "N8N_PROD_API_KEY"
+    api_key_env: "N8N_API_KEY_PROD"
 ```
 
 Set your environment variables in `.env`:
 
 ```
-N8N_DEV_API_KEY=n8n_api_your_dev_key_here
-N8N_STAGING_API_KEY=n8n_api_your_staging_key_here
-N8N_PROD_API_KEY=n8n_api_your_prod_key_here
+N8N_API_KEY_DEV=n8n_api_your_dev_key_here
+N8N_API_KEY_STAGING=n8n_api_your_staging_key_here
+N8N_API_KEY_PROD=n8n_api_your_prod_key_here
 ```
 
 ## Step 4: Sync Workflows from n8n

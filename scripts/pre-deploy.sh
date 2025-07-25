@@ -48,23 +48,23 @@ echo -e "${YELLOW}🔑 Checking environment variables...${NC}"
 
 case $ENVIRONMENT in
     development)
-        if [ -z "$N8N_DEV_API_KEY" ] || [ -z "$N8N_DEV_URL" ]; then
+        if [ -z "$N8N_API_KEY_DEV" ] || [ -z "$N8N_URL_DEV" ]; then
             echo -e "${RED}❌ Missing development environment variables${NC}"
-            echo -e "Required: N8N_DEV_API_KEY, N8N_DEV_URL"
+            echo -e "Required: N8N_API_KEY_DEV, N8N_URL_DEV"
             exit 1
         fi
         ;;
     staging)
-        if [ -z "$N8N_STAGING_API_KEY" ] || [ -z "$N8N_STAGING_URL" ]; then
+        if [ -z "$N8N_API_KEY_STAGING" ] || [ -z "$N8N_URL_STAGING" ]; then
             echo -e "${RED}❌ Missing staging environment variables${NC}"
-            echo -e "Required: N8N_STAGING_API_KEY, N8N_STAGING_URL"
+            echo -e "Required: N8N_API_KEY_STAGING, N8N_URL_STAGING"
             exit 1
         fi
         ;;
     production)
-        if [ -z "$N8N_PROD_API_KEY" ] || [ -z "$N8N_PROD_URL" ]; then
+        if [ -z "$N8N_API_KEY_PROD" ] || [ -z "$N8N_URL_PROD" ]; then
             echo -e "${RED}❌ Missing production environment variables${NC}"
-            echo -e "Required: N8N_PROD_API_KEY, N8N_PROD_URL"
+            echo -e "Required: N8N_API_KEY_PROD, N8N_URL_PROD"
             exit 1
         fi
         ;;

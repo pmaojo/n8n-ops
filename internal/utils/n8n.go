@@ -7,19 +7,27 @@ import (
 
 // CheckN8nCredentials ensures that the base URL and API key for n8n are present
 // either as generic environment variables (N8N_URL, N8N_API_KEY) or as
-// environment-specific ones (N8N_<ENV>_URL, N8N_<ENV>_API_KEY).
+// environment-specific ones using the preferred `N8N_URL_<ENV>` and
+// `N8N_API_KEY_<ENV>` format. Legacy variables `N8N_<ENV>_URL` and
+// `N8N_<ENV>_API_KEY` are also supported for backwards compatibility.
 func CheckN8nCredentials(provider EnvProvider, environment string) error {
-	envSuffix := strings.ToUpper(environment)
+        envSuffix := strings.ToUpper(environment)
 
-	url := provider.Getenv(fmt.Sprintf("N8N_%s_URL", envSuffix))
-	if url == "" {
-		url = provider.Getenv("N8N_URL")
-	}
+        url := provider.Getenv(fmt.Sprintf("N8N_URL_%s", envSuffix))
+        if url == "" {
+                url = provider.Getenv(fmt.Sprintf("N8N_%s_URL", envSuffix))
+        }
+        if url == "" {
+                url = provider.Getenv("N8N_URL")
+        }
 
-	apiKey := provider.Getenv(fmt.Sprintf("N8N_%s_API_KEY", envSuffix))
-	if apiKey == "" {
-		apiKey = provider.Getenv("N8N_API_KEY")
-	}
+        apiKey := provider.Getenv(fmt.Sprintf("N8N_API_KEY_%s", envSuffix))
+        if apiKey == "" {
+                apiKey = provider.Getenv(fmt.Sprintf("N8N_%s_API_KEY", envSuffix))
+        }
+        if apiKey == "" {
+                apiKey = provider.Getenv("N8N_API_KEY")
+        }
 
 	missing := []string{}
 	if url == "" {

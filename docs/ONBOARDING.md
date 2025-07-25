@@ -36,13 +36,13 @@ Edit the `.n8n-ops.yaml` file to configure your environments:
 environments:
   development:
     url: "http://localhost:5678"
-    api_key_env: "N8N_DEV_API_KEY"
+    api_key_env: "N8N_API_KEY_DEV"
   staging:
     url: "https://n8n-staging.example.com"
-    api_key_env: "N8N_STAGING_API_KEY"
+    api_key_env: "N8N_API_KEY_STAGING"
   production:
     url: "https://n8n-prod.example.com"
-    api_key_env: "N8N_PROD_API_KEY"
+    api_key_env: "N8N_API_KEY_PROD"
 ```
 
 ### 3. Set Up API Keys
@@ -50,9 +50,9 @@ environments:
 Create a `.env` file with your API keys:
 
 ```
-N8N_DEV_API_KEY=your_dev_api_key_here
-N8N_STAGING_API_KEY=your_staging_api_key_here
-N8N_PROD_API_KEY=your_prod_api_key_here
+N8N_API_KEY_DEV=your_dev_api_key_here
+N8N_API_KEY_STAGING=your_staging_api_key_here
+N8N_API_KEY_PROD=your_prod_api_key_here
 ```
 
 ### 4. Test Your Connection

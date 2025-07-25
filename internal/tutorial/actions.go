@@ -354,21 +354,21 @@ func ShowMultiEnvTutorial() {
 	fmt.Printf("environments:\n")
 	fmt.Printf("  development:\n")
 	fmt.Printf("    url: \"https://n8n-dev.example.com\"\n")
-	fmt.Printf("    api_key_env: \"N8N_DEV_API_KEY\"\n")
+	fmt.Printf("    api_key_env: \"N8N_API_KEY_DEV\"\n")
 	fmt.Printf("  staging:\n")
 	fmt.Printf("    url: \"https://n8n-staging.example.com\"\n")
-	fmt.Printf("    api_key_env: \"N8N_STAGING_API_KEY\"\n")
+	fmt.Printf("    api_key_env: \"N8N_API_KEY_STAGING\"\n")
 	fmt.Printf("  production:\n")
 	fmt.Printf("    url: \"https://n8n-prod.example.com\"\n")
-	fmt.Printf("    api_key_env: \"N8N_PROD_API_KEY\"\n")
+	fmt.Printf("    api_key_env: \"N8N_API_KEY_PROD\"\n")
 	fmt.Printf("```\n\n")
 
 	fmt.Printf("%s%sEnvironment Variables:%s\n\n", ascii.Bold, ascii.Yellow, ascii.Reset)
 	fmt.Printf("In %s.env%s:\n\n", ascii.Cyan, ascii.Reset)
 	fmt.Printf("```\n")
-	fmt.Printf("N8N_DEV_API_KEY=n8n_api_your_dev_key_here\n")
-	fmt.Printf("N8N_STAGING_API_KEY=n8n_api_your_staging_key_here\n")
-	fmt.Printf("N8N_PROD_API_KEY=n8n_api_your_prod_key_here\n")
+	fmt.Printf("N8N_API_KEY_DEV=n8n_api_your_dev_key_here\n")
+	fmt.Printf("N8N_API_KEY_STAGING=n8n_api_your_staging_key_here\n")
+	fmt.Printf("N8N_API_KEY_PROD=n8n_api_your_prod_key_here\n")
 	fmt.Printf("```\n\n")
 
 	fmt.Printf("%s%sDirectory Structure:%s\n\n", ascii.Bold, ascii.Yellow, ascii.Reset)
@@ -463,27 +463,27 @@ func ShowCICDTutorial() {
 		description string
 	}{
 		{
-			name:        "N8N_DEV_API_KEY",
+			name:        "N8N_API_KEY_DEV",
 			description: "API key for development environment",
 		},
 		{
-			name:        "N8N_STAGING_API_KEY",
+			name:        "N8N_API_KEY_STAGING",
 			description: "API key for staging environment",
 		},
 		{
-			name:        "N8N_PROD_API_KEY",
+			name:        "N8N_API_KEY_PROD",
 			description: "API key for production environment",
 		},
 		{
-			name:        "N8N_DEV_URL",
+			name:        "N8N_URL_DEV",
 			description: "URL for development environment",
 		},
 		{
-			name:        "N8N_STAGING_URL",
+			name:        "N8N_URL_STAGING",
 			description: "URL for staging environment",
 		},
 		{
-			name:        "N8N_PROD_URL",
+			name:        "N8N_URL_PROD",
 			description: "URL for production environment",
 		},
 	}

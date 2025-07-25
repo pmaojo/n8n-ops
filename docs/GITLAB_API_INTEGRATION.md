@@ -36,8 +36,8 @@ validate-workflows:
 ```yaml
 deploy-production:
   before_script:
-    - export N8N_API_KEY="${N8N_PROD_API_KEY}"
-    - export N8N_URL="${N8N_PROD_URL}"
+    - export N8N_API_KEY="${N8N_API_KEY_PROD}"
+    - export N8N_URL="${N8N_URL_PROD}"
   script:
     - ./n8n-ops deploy --env production --verbose
 ```
@@ -100,16 +100,16 @@ En GitLab → Project → Settings → CI/CD → Variables:
 
 ```bash
 # Development
-N8N_DEV_URL = https://n8n-dev.tuempresa.com
-N8N_DEV_API_KEY = n8n_api_dev_xxxxxxxxxxxxxxxxx
+N8N_URL_DEV = https://n8n-dev.tuempresa.com
+N8N_API_KEY_DEV = n8n_api_dev_xxxxxxxxxxxxxxxxx
 
 # Staging  
-N8N_STAGING_URL = https://n8n-staging.tuempresa.com
-N8N_STAGING_API_KEY = n8n_api_staging_yyyyyyyyyyy
+N8N_URL_STAGING = https://n8n-staging.tuempresa.com
+N8N_API_KEY_STAGING = n8n_api_staging_yyyyyyyyyyy
 
 # Production (Protected)
-N8N_PROD_URL = https://n8n-prod.tuempresa.com  
-N8N_PROD_API_KEY = n8n_api_prod_zzzzzzzzzzzzz
+N8N_URL_PROD = https://n8n-prod.tuempresa.com  
+N8N_API_KEY_PROD = n8n_api_prod_zzzzzzzzzzzzz
 ```
 
 ### Configuración por Ambiente
@@ -117,8 +117,8 @@ N8N_PROD_API_KEY = n8n_api_prod_zzzzzzzzzzzzz
 # Deploy Development (automático)
 deploy-development:
   before_script:
-    - export N8N_API_KEY="${N8N_DEV_API_KEY}"
-    - export N8N_URL="${N8N_DEV_URL}"
+    - export N8N_API_KEY="${N8N_API_KEY_DEV}"
+    - export N8N_URL="${N8N_URL_DEV}"
   script:
     - ./n8n-ops deploy --env development --verbose
     # API calls a https://n8n-dev.tuempresa.com
@@ -128,8 +128,8 @@ deploy-development:
 # Deploy Production (manual)
 deploy-production:
   before_script:
-    - export N8N_API_KEY="${N8N_PROD_API_KEY}"  
-    - export N8N_URL="${N8N_PROD_URL}"
+    - export N8N_API_KEY="${N8N_API_KEY_PROD}"  
+    - export N8N_URL="${N8N_URL_PROD}"
   script:
     - ./n8n-ops deploy --env production --verbose
     # API calls a https://n8n-prod.tuempresa.com  
@@ -180,7 +180,7 @@ deploy-production:
 ### Variables Protegidas
 ```yaml
 # En GitLab CI/CD Variables:
-N8N_PROD_API_KEY:
+N8N_API_KEY_PROD:
   - Protected: ✓ (solo branches protegidas) 
   - Masked: ✓ (ocultar en logs)
   - Environment scope: production

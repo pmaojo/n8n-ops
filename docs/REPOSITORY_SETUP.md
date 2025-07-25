@@ -56,16 +56,16 @@ git push -u origin main
 #### n8n API Configuration
 | Variable | Value | Protected | Masked | Environment |
 |----------|-------|-----------|---------|-------------|
-| `N8N_DEV_API_KEY` | `n8n_api_dev_xxx` | No | Yes | All |
-| `N8N_STAGING_API_KEY` | `n8n_api_staging_xxx` | No | Yes | All |
-| `N8N_PROD_API_KEY` | `n8n_api_prod_xxx` | Yes | Yes | Production |
+| `N8N_API_KEY_DEV` | `n8n_api_dev_xxx` | No | Yes | All |
+| `N8N_API_KEY_STAGING` | `n8n_api_staging_xxx` | No | Yes | All |
+| `N8N_API_KEY_PROD` | `n8n_api_prod_xxx` | Yes | Yes | Production |
 
 #### n8n Instance URLs
 | Variable | Value | Protected | Masked | Environment |
 |----------|-------|-----------|---------|-------------|
-| `N8N_DEV_URL` | `https://n8n-dev.company.com` | No | No | All |
-| `N8N_STAGING_URL` | `https://n8n-staging.company.com` | No | No | All |
-| `N8N_PROD_URL` | `https://n8n-prod.company.com` | Yes | No | Production |
+| `N8N_URL_DEV` | `https://n8n-dev.company.com` | No | No | All |
+| `N8N_URL_STAGING` | `https://n8n-staging.company.com` | No | No | All |
+| `N8N_URL_PROD` | `https://n8n-prod.company.com` | Yes | No | Production |
 
 #### Optional Notification Variables
 | Variable | Value | Protected | Masked | Environment |
@@ -81,19 +81,19 @@ Create these environments:
 
 #### Development Environment
 - **Name**: `development`
-- **External URL**: `$N8N_DEV_URL`
+- **External URL**: `$N8N_URL_DEV`
 - **Auto-stop**: No
 - **Protected**: No
 
 #### Staging Environment  
 - **Name**: `staging`
-- **External URL**: `$N8N_STAGING_URL`
+- **External URL**: `$N8N_URL_STAGING`
 - **Auto-stop**: No
 - **Protected**: No
 
 #### Production Environment
 - **Name**: `production`
-- **External URL**: `$N8N_PROD_URL` 
+- **External URL**: `$N8N_URL_PROD` 
 - **Auto-stop**: No
 - **Protected**: Yes
 - **Allowed to deploy**: Maintainers only

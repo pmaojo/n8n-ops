@@ -74,16 +74,16 @@ Necesitas configurar las credenciales para cada ambiente:
 
 ```bash
 # Development
-export N8N_DEV_URL="https://n8n-dev.tuempresa.com"
-export N8N_DEV_API_KEY="tu_api_key_development"
+export N8N_URL_DEV="https://n8n-dev.tuempresa.com"
+export N8N_API_KEY_DEV="tu_api_key_development"
 
 # Staging  
-export N8N_STAGING_URL="https://n8n-staging.tuempresa.com"
-export N8N_STAGING_API_KEY="tu_api_key_staging"
+export N8N_URL_STAGING="https://n8n-staging.tuempresa.com"
+export N8N_API_KEY_STAGING="tu_api_key_staging"
 
 # Production
-export N8N_PROD_URL="https://n8n-prod.tuempresa.com" 
-export N8N_PROD_API_KEY="tu_api_key_production"
+export N8N_URL_PROD="https://n8n-prod.tuempresa.com" 
+export N8N_API_KEY_PROD="tu_api_key_production"
 ```
 
 ### En GitLab CI/CD

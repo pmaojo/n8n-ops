@@ -70,22 +70,22 @@ build-cli:           # ✅ Compila n8n-ops binary
 validate-workflows:  # ✅ Valida archivos JSON
 test-cli-functions: # ✅ Tests básicos CLI
 unit-tests:        # ✅ Pruebas unitarias Go (cache GOMODCACHE)
-deploy-development: # ⚠️ Preparado, requiere N8N_DEV_API_KEY
-deploy-staging:     # ⚠️ Preparado, requiere N8N_STAGING_API_KEY
-deploy-production:  # ⚠️ Preparado, requiere N8N_PROD_API_KEY
+deploy-development: # ⚠️ Preparado, requiere N8N_API_KEY_DEV
+deploy-staging:     # ⚠️ Preparado, requiere N8N_API_KEY_STAGING
+deploy-production:  # ⚠️ Preparado, requiere N8N_API_KEY_PROD
 ```
 
 ### ⚠️ Variables Requeridas para Pipeline Completo
 ```bash
 # En GitLab → Settings → CI/CD → Variables:
-N8N_DEV_URL = "https://n8n-dev.company.com"
-N8N_DEV_API_KEY = "n8n_api_xxxxxxxx"
+N8N_URL_DEV = "https://n8n-dev.company.com"
+N8N_API_KEY_DEV = "n8n_api_xxxxxxxx"
 
-N8N_STAGING_URL = "https://n8n-staging.company.com"  
-N8N_STAGING_API_KEY = "n8n_api_yyyyyyyy"
+N8N_URL_STAGING = "https://n8n-staging.company.com"  
+N8N_API_KEY_STAGING = "n8n_api_yyyyyyyy"
 
-N8N_PROD_URL = "https://n8n-prod.company.com"
-N8N_PROD_API_KEY = "n8n_api_zzzzzzzz"
+N8N_URL_PROD = "https://n8n-prod.company.com"
+N8N_API_KEY_PROD = "n8n_api_zzzzzzzz"
 ```
 
 ## 📂 Estructura de Archivos Actual

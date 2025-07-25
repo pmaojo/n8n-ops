@@ -58,14 +58,14 @@ if [ ! -f .env ]; then
     echo -e "${BLUE}🔧 Creating .env template...${NC}"
     cat > .env << 'EOF'
 # n8n API Keys (get these from your n8n instance admins)
-N8N_DEV_API_KEY=your_development_api_key_here
-N8N_STAGING_API_KEY=your_staging_api_key_here
-N8N_PROD_API_KEY=your_production_api_key_here
+N8N_API_KEY_DEV=your_development_api_key_here
+N8N_API_KEY_STAGING=your_staging_api_key_here
+N8N_API_KEY_PROD=your_production_api_key_here
 
 # n8n Instance URLs
-N8N_DEV_URL=https://n8n-dev.yourcompany.com
-N8N_STAGING_URL=https://n8n-staging.yourcompany.com
-N8N_PROD_URL=https://n8n-prod.yourcompany.com
+N8N_URL_DEV=https://n8n-dev.yourcompany.com
+N8N_URL_STAGING=https://n8n-staging.yourcompany.com
+N8N_URL_PROD=https://n8n-prod.yourcompany.com
 
 # GitLab Configuration
 GITLAB_TOKEN=glpat-your_gitlab_token_here

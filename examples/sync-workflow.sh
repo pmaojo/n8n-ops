@@ -15,8 +15,8 @@ fi
 # Verificar variables de entorno
 check_env_vars() {
     local env=$1
-    local url_var="N8N_${env^^}_URL"
-    local key_var="N8N_${env^^}_API_KEY"
+    local url_var="N8N_URL_${env^^}"
+    local key_var="N8N_API_KEY_${env^^}"
     
     if [[ -z "${!url_var}" || -z "${!key_var}" ]]; then
         echo "❌ Missing environment variables for $env:"
@@ -120,9 +120,9 @@ if [[ "$1" == "--help" || "$1" == "-h" ]]; then
     echo "  $0 development       # Sync only development"
     echo ""
     echo "Required Environment Variables:"
-    echo "  N8N_DEV_URL, N8N_DEV_API_KEY          # For development"
-    echo "  N8N_STAGING_URL, N8N_STAGING_API_KEY  # For staging"
-    echo "  N8N_PROD_URL, N8N_PROD_API_KEY        # For production"
+    echo "  N8N_URL_DEV, N8N_API_KEY_DEV          # For development"
+    echo "  N8N_URL_STAGING, N8N_API_KEY_STAGING  # For staging"
+    echo "  N8N_URL_PROD, N8N_API_KEY_PROD        # For production"
     exit 0
 fi
 
