@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/pmaojo/n8n-ops/internal/credentials"
-
 	"github.com/pmaojo/n8n-ops/internal/git"
+	"github.com/pmaojo/n8n-ops/internal/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -193,7 +193,7 @@ func runStatusHuman(env string) error {
 	fmt.Printf("\n🌍 Environment Status\n")
 	fmt.Printf("===================\n")
 
-	cm := credentials.NewCredentialManager(env)
+	cm := credentials.NewCredentialManager(env, utils.OSProvider{})
 	n8nURL, n8nAPIKey, _ := cm.GetN8nCredentials()
 
 	if n8nURL != "" {

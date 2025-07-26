@@ -8,12 +8,15 @@ import (
 	"strings"
 
 	"github.com/spf13/viper"
+
+	"github.com/pmaojo/n8n-ops/internal/utils"
 )
 
 // CredentialManager handles environment-specific credentials
 type CredentialManager struct {
 	ConfigPath  string
 	Environment string
+	Env         utils.EnvProvider
 }
 
 // newViper returns a Viper instance configured for credential operations.
@@ -49,15 +52,20 @@ type WorkflowCredentials struct {
 // NewCredentialManager initializes a CredentialManager for the given
 // environment. The configuration file path is resolved from the environment and
 // no filesystem operations are performed during construction.
-func NewCredentialManager(environment string) *CredentialManager {
-	configPath := os.Getenv("N8N_OPS_CONFIG")
+func NewCredentialManager(environment string, provider utils.EnvProvider) *CredentialManager {
+	if provider == nil {
+		provider = utils.OSProvider{}
+	}
+
+	configPath := provider.Getenv("N8N_OPS_CONFIG")
 	if configPath == "" {
-		configPath = filepath.Join(os.Getenv("HOME"), ".n8n-ops.yaml")
+		configPath = filepath.Join(provider.Getenv("HOME"), ".n8n-ops.yaml")
 	}
 
 	return &CredentialManager{
 		ConfigPath:  configPath,
 		Environment: environment,
+		Env:         provider,
 	}
 }
 
@@ -111,15 +119,20 @@ func (cm *CredentialManager) getCredential(v *viper.Viper, configKey, envKey str
 		return v.GetString(configKey)
 	}
 
+	provider := cm.Env
+	if provider == nil {
+		provider = utils.OSProvider{}
+	}
+
 	// Fallback to environment variable
-	envValue := os.Getenv(envKey)
+	envValue := provider.Getenv(envKey)
 	if envValue != "" {
 		return envValue
 	}
 
 	// Try environment-specific environment variable
 	envSpecificKey := fmt.Sprintf("%s_%s", envKey, strings.ToUpper(cm.Environment))
-	return os.Getenv(envSpecificKey)
+	return provider.Getenv(envSpecificKey)
 }
 
 // getFromEnvironmentVariables creates credentials from env vars when no config file exists
@@ -210,13 +223,18 @@ func (cm *CredentialManager) getCredentialSource(v *viper.Viper, key, value stri
 		return "config_file"
 	}
 
+	provider := cm.Env
+	if provider == nil {
+		provider = utils.OSProvider{}
+	}
+
 	envVarKey := fmt.Sprintf("N8N_%s", strings.ToUpper(key))
-	if os.Getenv(envVarKey) != "" {
+	if provider.Getenv(envVarKey) != "" {
 		return "environment_variable"
 	}
 
 	envSpecificKey := fmt.Sprintf("%s_%s", envVarKey, strings.ToUpper(cm.Environment))
-	if os.Getenv(envSpecificKey) != "" {
+	if provider.Getenv(envSpecificKey) != "" {
 		return "env_specific_variable"
 	}
 

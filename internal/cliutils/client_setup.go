@@ -6,6 +6,7 @@ import (
 
 	"github.com/pmaojo/n8n-ops/internal/client"
 	"github.com/pmaojo/n8n-ops/internal/credentials"
+	"github.com/pmaojo/n8n-ops/internal/utils"
 )
 
 // MissingCredentialError indicates required credentials are not configured.
@@ -25,7 +26,7 @@ var ErrMissingCredentials = errors.New("missing n8n credentials")
 // environment. Demo mode returns an in-memory client. The credential manager is
 // returned for further use by callers.
 func SetupClient(env string, demo bool) (client.Client, *credentials.CredentialManager, error) {
-	cm := credentials.NewCredentialManager(env)
+	cm := credentials.NewCredentialManager(env, utils.OSProvider{})
 
 	if demo {
 		return client.NewDemoN8nClient(), cm, nil
