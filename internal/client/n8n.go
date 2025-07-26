@@ -65,10 +65,6 @@ func doRequest[T any](ctx context.Context, c *n8nClient, method, path string, bo
 		Headers: make(map[string]string),
 	}
 
-	if body != nil {
-		req.Headers["Content-Type"] = "application/json"
-	}
-
 	// Execute request
 	resp, err := c.transport.DoWithContext(ctx, req)
 	if err != nil {
