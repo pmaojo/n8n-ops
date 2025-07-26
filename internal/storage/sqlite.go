@@ -7,6 +7,8 @@ import (
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+
+	"github.com/pmaojo/n8n-ops/internal/utils"
 )
 
 var ErrRecordNotFound = errors.New("record not found")
@@ -46,9 +48,21 @@ type DeploymentRecord struct {
 	UpdatedAt     time.Time `db:"updated_at"`
 }
 
-// NewSQLiteDB creates a new SQLite database connection
-func NewSQLiteDB() (*SQLiteDB, error) {
-	db, err := sql.Open("sqlite3", ".n8n-ops.db")
+// DefaultSQLiteDBPath is the default file used when no path is provided.
+const DefaultSQLiteDBPath = ".n8n-ops.db"
+
+// EnvSQLiteDBPath defines the environment variable that can override the
+// database file location when using NewSQLiteDBFromEnv.
+const EnvSQLiteDBPath = "N8N_OPS_DB_PATH"
+
+// NewSQLiteDB creates a new SQLite database connection using the provided path.
+// If path is empty, DefaultSQLiteDBPath is used.
+func NewSQLiteDB(path string) (*SQLiteDB, error) {
+	if path == "" {
+		path = DefaultSQLiteDBPath
+	}
+
+	db, err := sql.Open("sqlite3", path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
@@ -61,6 +75,16 @@ func NewSQLiteDB() (*SQLiteDB, error) {
 	}
 
 	return sqliteDB, nil
+}
+
+// NewSQLiteDBFromEnv creates a new SQLite database using the environment
+// variable defined by EnvSQLiteDBPath. If the variable is not set, the default
+// path is used.
+func NewSQLiteDBFromEnv(provider utils.EnvProvider) (*SQLiteDB, error) {
+	if provider == nil {
+		provider = utils.OSProvider{}
+	}
+	return NewSQLiteDB(provider.Getenv(EnvSQLiteDBPath))
 }
 
 // Close closes the database connection
