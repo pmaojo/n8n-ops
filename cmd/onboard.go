@@ -489,39 +489,28 @@ func testConnection(envConfig []EnvironmentConfig) {
 		if env.Name == "development" {
 			fmt.Println(ascii.LoadingSpinner(fmt.Sprintf("Testing connection to %s environment...", env.Name)))
 
-			// Try to get API key from environment variable - check both naming conventions
-			apiKeyEnvVar := fmt.Sprintf("N8N_API_KEY_%s", strings.ToUpper(env.Name))
-			apiKey := os.Getenv(apiKeyEnvVar)
-			if apiKey == "" {
-				apiKeyEnvVar = fmt.Sprintf("N8N_%s_API_KEY", strings.ToUpper(env.Name))
-				apiKey = os.Getenv(apiKeyEnvVar)
-			}
-
-			// Also check for N8N_API_KEY_DEV which is commonly used
-			if apiKey == "" && env.Name == "development" {
-				apiKey = os.Getenv("N8N_API_KEY_DEV")
+			vars := utils.BuildEnvVarNames(env.Name)
+			var apiKey string
+			for _, k := range vars.APIKey {
+				apiKey = os.Getenv(k)
 				if apiKey != "" {
-					apiKeyEnvVar = "N8N_API_KEY_DEV"
+					break
 				}
 			}
 
 			if apiKey == "" {
-				fmt.Printf("%s\n", ascii.ErrorMessage(fmt.Sprintf("API key not found in environment variable %s", apiKeyEnvVar)))
+				fmt.Printf("%s\n", ascii.ErrorMessage(fmt.Sprintf("API key not found. Please set one of %s", strings.Join(vars.APIKey, ", "))))
 				fmt.Printf("Please set your API key in the .env file or environment variables.\n")
 				return
 			}
 
 			// Get URL from environment variable
-			urlEnvVar := fmt.Sprintf("N8N_URL_%s", strings.ToUpper(env.Name))
-			url := os.Getenv(urlEnvVar)
-			if url == "" {
-				urlEnvVar = fmt.Sprintf("N8N_%s_URL", strings.ToUpper(env.Name))
-				url = os.Getenv(urlEnvVar)
-			}
-
-			// Also check for N8N_URL_DEV which is commonly used
-			if url == "" && env.Name == "development" {
-				url = os.Getenv("N8N_URL_DEV")
+			var url string
+			for _, k := range vars.URL {
+				url = os.Getenv(k)
+				if url != "" {
+					break
+				}
 			}
 
 			// Use default if not set
