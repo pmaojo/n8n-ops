@@ -10,6 +10,7 @@ import (
 	"github.com/pmaojo/n8n-ops/internal/credentials"
 
 	"github.com/pmaojo/n8n-ops/internal/git"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -193,7 +194,7 @@ func runStatusHuman(env string) error {
 	fmt.Printf("\n🌍 Environment Status\n")
 	fmt.Printf("===================\n")
 
-	cm := credentials.NewCredentialManager(env)
+	cm := credentials.NewCredentialManager(env, logrus.New())
 	n8nURL, n8nAPIKey, _ := cm.GetN8nCredentials()
 
 	if n8nURL != "" {

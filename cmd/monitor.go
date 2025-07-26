@@ -105,7 +105,7 @@ func getN8nClient(ctx context.Context, env string, demo bool) (client.Client, er
 		n8nURL = "http://localhost:3001"
 		apiKey = "n8n_api_mock_development"
 	} else {
-		cm := credentials.NewCredentialManager(env)
+		cm := credentials.NewCredentialManager(env, logrus.New())
 		var err error
 		n8nURL, apiKey, err = cm.GetN8nCredentials()
 		if err != nil {

@@ -133,7 +133,7 @@ func serveDashboard(w http.ResponseWriter, r *http.Request) {
 	data := DashboardData{
 		Environment: environment,
 		N8nURL: func() string {
-			cm := credentials.NewCredentialManager(environment)
+			cm := credentials.NewCredentialManager(environment, logrus.New())
 			url, _, _ := cm.GetN8nCredentials()
 			if url == "" {
 				return "http://localhost:5678"
@@ -169,7 +169,7 @@ func serveDashboard(w http.ResponseWriter, r *http.Request) {
 
 func serveAPIData(w http.ResponseWriter, r *http.Request) {
 	// Connect to n8n to get real data
-	n8nClient, _, err := cliutils.SetupClient(environment, demoMode)
+	n8nClient, _, err := cliutils.SetupClient(environment, demoMode, logrus.New())
 	if err == nil {
 		ctx := context.Background()
 		if workflows, err := n8nClient.GetWorkflows(ctx); err == nil {
