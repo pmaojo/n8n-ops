@@ -60,9 +60,18 @@ func TestWorkflowFailureData(t *testing.T) {
 }
 
 // mockClient implements client.Client with only the methods needed for tests.
-type mockClient struct{ wf *workflow.Workflow }
+type mockClient struct {
+	wf        *workflow.Workflow
+	workflows []*workflow.Workflow
+	execs     map[string][]*workflow.ExecutionResult
+}
 
-func (m *mockClient) GetWorkflows(ctx context.Context) ([]*workflow.Workflow, error) { return nil, nil }
+func (m *mockClient) GetWorkflows(ctx context.Context) ([]*workflow.Workflow, error) {
+	if m.workflows != nil {
+		return m.workflows, nil
+	}
+	return nil, nil
+}
 func (m *mockClient) GetWorkflow(ctx context.Context, id string) (*workflow.Workflow, error) {
 	return m.wf, nil
 }
@@ -81,6 +90,9 @@ func (m *mockClient) GetExecution(ctx context.Context, id string) (*workflow.Exe
 	return nil, nil
 }
 func (m *mockClient) GetExecutions(ctx context.Context, workflowID, status string, limit int) ([]*workflow.ExecutionResult, error) {
+	if m.execs != nil {
+		return m.execs[workflowID], nil
+	}
 	return nil, nil
 }
 func (m *mockClient) GetCredentials(context.Context) ([]*credentials.N8nCredential, error) {
@@ -153,5 +165,53 @@ func TestHandleWorkflowRecoveryLogs(t *testing.T) {
 	expected := fmt.Sprintf("✅ Workflow %s recovered - updated %d issues", wf.ID, 1)
 	if last == nil || last.Message != expected {
 		t.Fatalf("expected log %q, got %v", expected, last)
+	}
+}
+
+func TestCheckForFailuresSince(t *testing.T) {
+	wf := &workflow.Workflow{ID: "2001", Name: "WF", Active: true}
+	execTime := time.Now()
+	client := &mockClient{
+		workflows: []*workflow.Workflow{wf},
+		execs: map[string][]*workflow.ExecutionResult{
+			wf.ID: {{ID: "e1", Status: "error", StartedAt: execTime}},
+		},
+	}
+
+	mgr := &mockIssueManager{}
+	fd := NewFailureDetector(client, mgr, logrus.New())
+
+	counts := make(map[string]int)
+	since := execTime.Add(-time.Minute)
+	if err := fd.checkForFailures(context.Background(), counts, since); err != nil {
+		t.Fatalf("checkForFailures returned error: %v", err)
+	}
+
+	if counts[wf.ID] != 1 {
+		t.Fatalf("expected failure count 1, got %d", counts[wf.ID])
+	}
+}
+
+func TestCheckForFailuresIgnoresOld(t *testing.T) {
+	wf := &workflow.Workflow{ID: "2002", Name: "WF", Active: true}
+	execTime := time.Now().Add(-2 * time.Minute)
+	client := &mockClient{
+		workflows: []*workflow.Workflow{wf},
+		execs: map[string][]*workflow.ExecutionResult{
+			wf.ID: {{ID: "e1", Status: "error", StartedAt: execTime}},
+		},
+	}
+
+	mgr := &mockIssueManager{}
+	fd := NewFailureDetector(client, mgr, logrus.New())
+
+	counts := make(map[string]int)
+	since := time.Now().Add(-time.Minute)
+	if err := fd.checkForFailures(context.Background(), counts, since); err != nil {
+		t.Fatalf("checkForFailures returned error: %v", err)
+	}
+
+	if counts[wf.ID] != 0 {
+		t.Fatalf("expected failure count 0, got %d", counts[wf.ID])
 	}
 }
