@@ -76,7 +76,7 @@ func runUncommittedCheck(env string) error {
 	fmt.Printf("🔍 Checking for Uncommitted Workflow Changes\n")
 	fmt.Printf("===========================================\n\n")
 
-	checker := git.NewGitStatusChecker(".", nil)
+	checker := git.NewGitStatusChecker(".", nil, nil)
 
 	// Show warning if uncommitted changes exist
 	warning, err := checker.WarnIfUncommittedChanges()
@@ -100,7 +100,7 @@ func runUncommittedCheck(env string) error {
 }
 
 func runStatusJSON(env string) error {
-	checker := git.NewGitStatusChecker(".", nil)
+	checker := git.NewGitStatusChecker(".", nil, nil)
 	gitStatus, err := checker.GetStatus()
 	if err != nil {
 		return fmt.Errorf("failed to get Git status: %w", err)
@@ -151,7 +151,7 @@ func runStatusHuman(env string) error {
 	fmt.Printf("📊 Git Repository Status\n")
 	fmt.Printf("========================\n")
 
-	checker := git.NewGitStatusChecker(".", nil)
+	checker := git.NewGitStatusChecker(".", nil, nil)
 	gitStatus, err := checker.GetStatus()
 	if err != nil {
 		return fmt.Errorf("failed to get Git status: %w", err)

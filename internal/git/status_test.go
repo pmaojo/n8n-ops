@@ -65,7 +65,7 @@ func TestGetUncommittedWorkflowSummary_NoChanges(t *testing.T) {
 	runGit(t, repo, "add", ".")
 	runGit(t, repo, "commit", "-m", "init")
 
-	checker := NewGitStatusChecker(repo, NewExecutor(repo))
+	checker := NewGitStatusChecker(repo, NewExecutor(repo), nil)
 	summary, err := checker.GetUncommittedWorkflowSummary()
 	require.NoError(t, err)
 	assert.Equal(t, "All workflows are committed", summary)
@@ -82,7 +82,7 @@ func TestGetStatusDetectsWorkflowChanges(t *testing.T) {
 	writeWorkflow(t, repo, "workflows/development/original.json", `{"name":"changed"}`)
 	writeWorkflow(t, repo, "workflows/development/new.json", `{"name":"new"}`)
 
-	checker := NewGitStatusChecker(repo, NewExecutor(repo))
+	checker := NewGitStatusChecker(repo, NewExecutor(repo), nil)
 	status, err := checker.GetStatus()
 	require.NoError(t, err)
 
@@ -123,7 +123,7 @@ func TestGetStatusWithMockExecutor(t *testing.T) {
 		Last:         "abc123 init",
 	}
 
-	checker := NewGitStatusChecker("", exec)
+	checker := NewGitStatusChecker("", exec, nil)
 
 	status, err := checker.GetStatus()
 	require.NoError(t, err)
@@ -158,7 +158,7 @@ func TestGetUncommittedWorkflowSummaryWithMockExecutor(t *testing.T) {
 		StatusOutput: " M workflows/development/a.json\n?? workflows/development/b.json\n",
 	}
 
-	checker := NewGitStatusChecker("", exec)
+	checker := NewGitStatusChecker("", exec, nil)
 	summary, err := checker.GetUncommittedWorkflowSummary()
 	require.NoError(t, err)
 	assert.Contains(t, summary, "2 uncommitted workflow changes")
@@ -171,7 +171,7 @@ func TestCheckBeforeSyncWarns(t *testing.T) {
 		MockExecutor: &MockExecutor{CurrentBranchFunc: func() (string, error) { return "dev", nil }},
 		StatusOutput: " M workflows/development/mod.json\n",
 	}
-	checker := NewGitStatusChecker("", exec)
+	checker := NewGitStatusChecker("", exec, nil)
 	out, err := checker.CheckBeforeSync()
 	assert.Error(t, err)
 	assert.Contains(t, out, "uncommitted workflow changes")
@@ -182,7 +182,7 @@ func TestAutoCommitWorkflows(t *testing.T) {
 		MockExecutor: &MockExecutor{CurrentBranchFunc: func() (string, error) { return "dev", nil }},
 		StatusOutput: " M workflows/development/mod.json\n?? workflows/development/new.json\n",
 	}
-	checker := NewGitStatusChecker("", exec)
+	checker := NewGitStatusChecker("", exec, nil)
 	msg, err := checker.AutoCommitWorkflows(context.Background(), "commit msg")
 	require.NoError(t, err)
 	assert.Contains(t, msg, "Auto-committed")

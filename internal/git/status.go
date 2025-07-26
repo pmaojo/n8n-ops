@@ -10,11 +10,10 @@ import (
 	"time"
 
 	"github.com/pmaojo/n8n-ops/internal/utils"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
-
-var logger = utils.NewLogger()
 
 // GitStatus represents the status of files in Git
 type GitStatus struct {
@@ -42,21 +41,26 @@ type WorkflowChange struct {
 type GitStatusChecker struct {
 	WorkingDir string
 	executor   Executor
+	Logger     logrus.FieldLogger
 }
 
 // NewGitStatusChecker creates a GitStatusChecker using the provided working
 // directory and executor. A default executor is used when nil is passed. The
 // function does not access the filesystem, enabling easier testing.
-func NewGitStatusChecker(workingDir string, exec Executor) *GitStatusChecker {
+func NewGitStatusChecker(workingDir string, exec Executor, log logrus.FieldLogger) *GitStatusChecker {
 	if workingDir == "" {
 		workingDir = "."
 	}
 	if exec == nil {
 		exec = NewExecutor(workingDir)
 	}
+	if log == nil {
+		log = utils.NewLogger()
+	}
 	return &GitStatusChecker{
 		WorkingDir: workingDir,
 		executor:   exec,
+		Logger:     log,
 	}
 }
 
@@ -112,7 +116,7 @@ func (gsc *GitStatusChecker) GetStatus() (*GitStatus, error) {
 			info, statErr := os.Stat(absPath)
 			var modTime time.Time
 			if statErr != nil {
-				logger.WithError(statErr).WithField("file", absPath).
+				gsc.Logger.WithError(statErr).WithField("file", absPath).
 					Warn("failed to retrieve modification time")
 			} else {
 				modTime = info.ModTime()
