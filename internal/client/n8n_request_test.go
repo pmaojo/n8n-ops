@@ -172,3 +172,31 @@ func TestCreateWorkflowMock(t *testing.T) {
 		t.Errorf("expected bad request error, got %v", err)
 	}
 }
+
+func TestTransportSetsContentTypeHeader(t *testing.T) {
+	rt := &mockDoer{roundTrip: func(req *http.Request) (*http.Response, error) {
+		if ct := req.Header.Get("Content-Type"); ct != "application/json" {
+			t.Errorf("unexpected content-type %q", ct)
+		}
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("{}"))}, nil
+	}}
+	c := newMockClient(t, rt)
+	_, err := doRequest[struct{}](context.Background(), c, http.MethodPost, "/hdr", map[string]string{"a": "b"})
+	if err != nil {
+		t.Fatalf("doRequest error: %v", err)
+	}
+}
+
+func TestTransportOmitsContentTypeWithoutBody(t *testing.T) {
+	rt := &mockDoer{roundTrip: func(req *http.Request) (*http.Response, error) {
+		if ct := req.Header.Get("Content-Type"); ct != "" {
+			t.Errorf("expected no content-type, got %q", ct)
+		}
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("{}"))}, nil
+	}}
+	c := newMockClient(t, rt)
+	_, err := doRequest[struct{}](context.Background(), c, http.MethodGet, "/hdr", nil)
+	if err != nil {
+		t.Fatalf("doRequest error: %v", err)
+	}
+}
