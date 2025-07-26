@@ -221,27 +221,6 @@ type GitStatus struct {
 	LastCommitDate time.Time `json:"lastCommitDate"`
 }
 
-// Custom JSON marshaling for time fields
-func (w *Workflow) MarshalJSON() ([]byte, error) {
-	type Alias Workflow
-	return json.Marshal(&struct {
-		*Alias
-	}{
-		Alias: (*Alias)(w),
-	})
-}
-
-// UnmarshalJSON implements custom JSON unmarshaling
-func (w *Workflow) UnmarshalJSON(data []byte) error {
-	type Alias Workflow
-	aux := &struct {
-		*Alias
-	}{
-		Alias: (*Alias)(w),
-	}
-	return json.Unmarshal(data, &aux)
-}
-
 // Clone creates a deep copy of the workflow
 func (w *Workflow) Clone() *Workflow {
 	data, _ := json.Marshal(w)
