@@ -101,18 +101,17 @@ func (g *GrafanaIntegration) testConnection() error {
 
 // SendWorkflowMetrics sends workflow execution metrics
 func (g *GrafanaIntegration) SendWorkflowMetrics(workflowID, environment string, success bool, duration time.Duration) {
+	failure := 0.0
+	if !success {
+		failure = 1.0
+	}
+
 	metrics := GrafanaMetrics{
 		WorkflowExecutions: 1,
-		FailureRate: func() float64 {
-			if success {
-				return 0.0
-			} else {
-				return 1.0
-			}
-		}(),
-		ResponseTime: float64(duration.Milliseconds()),
-		Environment:  environment,
-		Timestamp:    time.Now().Unix(),
+		FailureRate:        failure,
+		ResponseTime:       float64(duration.Milliseconds()),
+		Environment:        environment,
+		Timestamp:          time.Now().Unix(),
 	}
 
 	select {
