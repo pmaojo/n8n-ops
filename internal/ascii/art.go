@@ -7,6 +7,12 @@ import (
 	"time"
 )
 
+// spinnerRand provides a pseudorandom generator for animations.
+// It's seeded once at package initialization to avoid repeated
+// seeding across calls and to support deterministic testing when
+// needed.
+var spinnerRand = rand.New(rand.NewSource(time.Now().UnixNano()))
+
 // Colors for terminal output
 const (
 	Reset     = "\033[0m"
@@ -105,8 +111,7 @@ func ErrorMessage(err string) string {
 // LoadingSpinner creates animated loading text
 func LoadingSpinner(message string) string {
 	spinners := []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
-	rand.Seed(time.Now().UnixNano())
-	spinner := spinners[rand.Intn(len(spinners))]
+	spinner := spinners[spinnerRand.Intn(len(spinners))]
 
 	return fmt.Sprintf(`%s%s%s %s%s%s`, Cyan, Bold, spinner, message, Dim, Reset)
 }
@@ -162,7 +167,7 @@ func MatrixEffect() string {
 
 	for i := 0; i < 5; i++ {
 		for j := 0; j < 50; j++ {
-			char := chars[rand.Intn(len(chars))]
+			char := chars[spinnerRand.Intn(len(chars))]
 			matrix.WriteString(fmt.Sprintf("%s%s", Green, char))
 		}
 		matrix.WriteString(fmt.Sprintf("%s\n", Reset))
