@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/pmaojo/n8n-ops/internal/credentials"
 	"github.com/pmaojo/n8n-ops/internal/workflow"
@@ -36,14 +37,18 @@ func TestNewValidation(t *testing.T) {
 
 func TestHealthCheck(t *testing.T) {
 	handler := func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/api/v1/workflows" {
+		if r.URL.Path != "/health" {
 			http.NotFound(w, r)
 			return
 		}
 		if r.Header.Get("X-N8N-API-KEY") != "token" {
 			t.Errorf("missing api key header")
 		}
-		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+		json.NewEncoder(w).Encode(map[string]any{
+			"status":    "ok",
+			"timestamp": time.Now(),
+			"version":   "1",
+		})
 	}
 
 	client, closeFn := newTestClient(t, handler)
@@ -51,6 +56,24 @@ func TestHealthCheck(t *testing.T) {
 
 	if err := client.HealthCheck(context.Background()); err != nil {
 		t.Fatalf("health check failed: %v", err)
+	}
+}
+
+func TestHealthCheckNonOK(t *testing.T) {
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/health" {
+			http.NotFound(w, r)
+			return
+		}
+		w.WriteHeader(http.StatusServiceUnavailable)
+		json.NewEncoder(w).Encode(map[string]any{"status": "fail"})
+	}
+
+	client, closeFn := newTestClient(t, handler)
+	defer closeFn()
+
+	if err := client.HealthCheck(context.Background()); err == nil {
+		t.Fatal("expected error for non-ok health response")
 	}
 }
 

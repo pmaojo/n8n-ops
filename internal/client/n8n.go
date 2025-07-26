@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/pmaojo/n8n-ops/internal/credentials"
 	"github.com/pmaojo/n8n-ops/internal/workflow"
@@ -93,17 +94,18 @@ func doRequest[T any](ctx context.Context, c *n8nClient, method, path string, bo
 // HealthCheck implements WorkflowReader interface
 func (c *n8nClient) HealthCheck(ctx context.Context) error {
 	type healthResponse struct {
-		Status string `json:"status"`
+		Status    string    `json:"status"`
+		Timestamp time.Time `json:"timestamp"`
+		Version   string    `json:"version"`
 	}
 
-	health, err := doRequest[healthResponse](ctx, c, http.MethodGet, "/api/v1/workflows", nil)
+	health, err := doRequest[healthResponse](ctx, c, http.MethodGet, "/health", nil)
 	if err != nil {
 		return fmt.Errorf("health check failed: %w", err)
 	}
 
-	// Basic health validation
-	if health.Status == "" {
-		return nil // No error, just empty response is OK
+	if strings.ToLower(health.Status) != "ok" {
+		return fmt.Errorf("unexpected health status: %s", health.Status)
 	}
 
 	return nil
