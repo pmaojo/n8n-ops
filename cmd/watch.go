@@ -58,7 +58,7 @@ func runWatch(cmd *cobra.Command, args []string, cli *CLI) error {
 		return err
 	}
 
-	gitChecker := git.NewGitStatusChecker(".", nil)
+	gitChecker := git.NewGitStatusChecker(".", nil, logEntry)
 	syncSvc := isync.NewService(n8nClient, cm, gitChecker, logEntry, cli.Environment)
 	svc := iwatch.NewService(n8nClient, cm, gitChecker, syncSvc, logEntry, cli.Environment)
 

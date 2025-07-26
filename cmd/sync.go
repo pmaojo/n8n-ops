@@ -79,7 +79,7 @@ func runSync(cmd *cobra.Command, args []string, cli *CLI) error {
 		return err
 	}
 
-	checker := git.NewGitStatusChecker(".", nil)
+	checker := git.NewGitStatusChecker(".", nil, cli.Logger)
 	svc := isync.NewService(n8nClient, cm, checker, cli.Logger, cli.Environment)
 
 	return svc.Sync(ctx, isync.Options{
