@@ -70,8 +70,8 @@ func (fd *FailureDetector) checkForFailures(ctx context.Context, failureCounts m
 			continue
 		}
 
-		// Check recent executions for this workflow using n8n API
-		hasFailure, err := fd.checkRecentExecutions(ctx, workflow.ID)
+		// Check executions that happened since the last check
+		hasFailure, err := fd.checkRecentExecutions(ctx, workflow.ID, since)
 		if err != nil {
 			fd.logger.WithFields(logrus.Fields{
 				"workflowId":   workflow.ID,
@@ -108,7 +108,7 @@ func (fd *FailureDetector) checkForFailures(ctx context.Context, failureCounts m
 }
 
 // checkRecentExecutions checks recent executions for failures using n8n API
-func (fd *FailureDetector) checkRecentExecutions(ctx context.Context, workflowID string) (bool, error) {
+func (fd *FailureDetector) checkRecentExecutions(ctx context.Context, workflowID string, since time.Time) (bool, error) {
 	// Get recent executions for this workflow (last 10)
 	executions, err := fd.n8nClient.GetExecutions(ctx, workflowID, "", 10)
 	if err != nil {
@@ -119,15 +119,15 @@ func (fd *FailureDetector) checkRecentExecutions(ctx context.Context, workflowID
 		return false, nil // No executions, assume healthy
 	}
 
-	// Check last execution for failure
-	lastExecution := executions[0]
-	if lastExecution.Status == "error" {
-		fd.logger.WithFields(logrus.Fields{
-			"workflowId":  workflowID,
-			"executionId": lastExecution.ID,
-			"error":       lastExecution.Error,
-		}).Warn("Workflow execution failure detected")
-		return true, nil
+	for _, exec := range executions {
+		if exec.StartedAt.After(since) && exec.Status == "error" {
+			fd.logger.WithFields(logrus.Fields{
+				"workflowId":  workflowID,
+				"executionId": exec.ID,
+				"error":       exec.Error,
+			}).Warn("Workflow execution failure detected")
+			return true, nil
+		}
 	}
 
 	return false, nil
