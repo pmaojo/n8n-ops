@@ -133,3 +133,37 @@ func TestValidateFilePath(t *testing.T) {
 		t.Fatal("expected error for path outside base directory")
 	}
 }
+
+func TestBuildEnvVarNames(t *testing.T) {
+	cases := []struct {
+		env     string
+		apiVars []string
+		urlVars []string
+	}{
+		{
+			env:     "development",
+			apiVars: []string{"N8N_API_KEY_DEVELOPMENT", "N8N_DEVELOPMENT_API_KEY", "N8N_API_KEY_DEV"},
+			urlVars: []string{"N8N_URL_DEVELOPMENT", "N8N_DEVELOPMENT_URL", "N8N_URL_DEV"},
+		},
+		{
+			env:     "staging",
+			apiVars: []string{"N8N_API_KEY_STAGING", "N8N_STAGING_API_KEY"},
+			urlVars: []string{"N8N_URL_STAGING", "N8N_STAGING_URL"},
+		},
+		{
+			env:     "production",
+			apiVars: []string{"N8N_API_KEY_PRODUCTION", "N8N_PRODUCTION_API_KEY", "N8N_API_KEY_PROD"},
+			urlVars: []string{"N8N_URL_PRODUCTION", "N8N_PRODUCTION_URL", "N8N_URL_PROD"},
+		},
+	}
+
+	for _, c := range cases {
+		names := BuildEnvVarNames(c.env)
+		if !reflect.DeepEqual(names.APIKey, c.apiVars) {
+			t.Errorf("API vars for %s mismatch: %v", c.env, names.APIKey)
+		}
+		if !reflect.DeepEqual(names.URL, c.urlVars) {
+			t.Errorf("URL vars for %s mismatch: %v", c.env, names.URL)
+		}
+	}
+}
