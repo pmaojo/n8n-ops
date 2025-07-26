@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/pmaojo/n8n-ops/internal/utils"
 	"github.com/spf13/viper"
 )
 
@@ -14,6 +15,7 @@ import (
 type CredentialManager struct {
 	ConfigPath  string
 	Environment string
+	provider    utils.EnvProvider
 }
 
 // newViper returns a Viper instance configured for credential operations.
@@ -47,17 +49,23 @@ type WorkflowCredentials struct {
 }
 
 // NewCredentialManager initializes a CredentialManager for the given
-// environment. The configuration file path is resolved from the environment and
-// no filesystem operations are performed during construction.
-func NewCredentialManager(environment string) *CredentialManager {
-	configPath := os.Getenv("N8N_OPS_CONFIG")
+// environment using the supplied EnvProvider for environment lookups.
+// The configuration file path is resolved from the provider and no
+// filesystem operations are performed during construction.
+func NewCredentialManager(provider utils.EnvProvider, environment string) *CredentialManager {
+	if provider == nil {
+		provider = utils.OSProvider{}
+	}
+
+	configPath := provider.Getenv("N8N_OPS_CONFIG")
 	if configPath == "" {
-		configPath = filepath.Join(os.Getenv("HOME"), ".n8n-ops.yaml")
+		configPath = filepath.Join(provider.Getenv("HOME"), ".n8n-ops.yaml")
 	}
 
 	return &CredentialManager{
 		ConfigPath:  configPath,
 		Environment: environment,
+		provider:    provider,
 	}
 }
 
@@ -112,14 +120,14 @@ func (cm *CredentialManager) getCredential(v *viper.Viper, configKey, envKey str
 	}
 
 	// Fallback to environment variable
-	envValue := os.Getenv(envKey)
+	envValue := cm.provider.Getenv(envKey)
 	if envValue != "" {
 		return envValue
 	}
 
 	// Try environment-specific environment variable
 	envSpecificKey := fmt.Sprintf("%s_%s", envKey, strings.ToUpper(cm.Environment))
-	return os.Getenv(envSpecificKey)
+	return cm.provider.Getenv(envSpecificKey)
 }
 
 // getFromEnvironmentVariables creates credentials from env vars when no config file exists
@@ -211,12 +219,12 @@ func (cm *CredentialManager) getCredentialSource(v *viper.Viper, key, value stri
 	}
 
 	envVarKey := fmt.Sprintf("N8N_%s", strings.ToUpper(key))
-	if os.Getenv(envVarKey) != "" {
+	if cm.provider.Getenv(envVarKey) != "" {
 		return "environment_variable"
 	}
 
 	envSpecificKey := fmt.Sprintf("%s_%s", envVarKey, strings.ToUpper(cm.Environment))
-	if os.Getenv(envSpecificKey) != "" {
+	if cm.provider.Getenv(envSpecificKey) != "" {
 		return "env_specific_variable"
 	}
 

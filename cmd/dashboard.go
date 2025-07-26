@@ -133,7 +133,7 @@ func serveDashboard(w http.ResponseWriter, r *http.Request) {
 	data := DashboardData{
 		Environment: environment,
 		N8nURL: func() string {
-			cm := credentials.NewCredentialManager(environment)
+			cm := credentials.NewCredentialManager(utils.OSProvider{}, environment)
 			url, _, _ := cm.GetN8nCredentials()
 			if url == "" {
 				return "http://localhost:5678"
