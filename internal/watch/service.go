@@ -61,6 +61,10 @@ func (s *Service) Watch(ctx context.Context, opts Options) error {
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	defer func() {
+		signal.Stop(sigChan)
+		close(sigChan)
+	}()
 
 	ticker := time.NewTicker(opts.Interval)
 	defer ticker.Stop()
