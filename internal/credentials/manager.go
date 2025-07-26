@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -14,6 +15,7 @@ import (
 type CredentialManager struct {
 	ConfigPath  string
 	Environment string
+	Logger      logrus.FieldLogger
 }
 
 // newViper returns a Viper instance configured for credential operations.
@@ -49,15 +51,20 @@ type WorkflowCredentials struct {
 // NewCredentialManager initializes a CredentialManager for the given
 // environment. The configuration file path is resolved from the environment and
 // no filesystem operations are performed during construction.
-func NewCredentialManager(environment string) *CredentialManager {
+func NewCredentialManager(environment string, logger logrus.FieldLogger) *CredentialManager {
 	configPath := os.Getenv("N8N_OPS_CONFIG")
 	if configPath == "" {
 		configPath = filepath.Join(os.Getenv("HOME"), ".n8n-ops.yaml")
 	}
 
+	if logger == nil {
+		logger = logrus.New()
+	}
+
 	return &CredentialManager{
 		ConfigPath:  configPath,
 		Environment: environment,
+		Logger:      logger,
 	}
 }
 
@@ -256,11 +263,16 @@ func (cm *CredentialManager) SyncCredentialsToN8n() error {
 		return err
 	}
 
-	fmt.Printf("📋 Found %d workflow credentials for %s environment\n",
-		len(workflowCreds), cm.Environment)
+	cm.Logger.WithFields(logrus.Fields{
+		"count":       len(workflowCreds),
+		"environment": cm.Environment,
+	}).Info("found workflow credentials")
 
 	for _, cred := range workflowCreds {
-		fmt.Printf("  • %s (%s)\n", cred.Name, cred.Type)
+		cm.Logger.WithFields(logrus.Fields{
+			"name": cred.Name,
+			"type": cred.Type,
+		}).Info("workflow credential")
 	}
 
 	return nil

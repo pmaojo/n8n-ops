@@ -6,6 +6,7 @@ import (
 
 	"github.com/pmaojo/n8n-ops/internal/client"
 	"github.com/pmaojo/n8n-ops/internal/credentials"
+	"github.com/sirupsen/logrus"
 )
 
 // MissingCredentialError indicates required credentials are not configured.
@@ -24,8 +25,8 @@ var ErrMissingCredentials = errors.New("missing n8n credentials")
 // SetupClient creates a n8n client using the credential manager for the given
 // environment. Demo mode returns an in-memory client. The credential manager is
 // returned for further use by callers.
-func SetupClient(env string, demo bool) (client.Client, *credentials.CredentialManager, error) {
-	cm := credentials.NewCredentialManager(env)
+func SetupClient(env string, demo bool, logger logrus.FieldLogger) (client.Client, *credentials.CredentialManager, error) {
+	cm := credentials.NewCredentialManager(env, logger)
 
 	if demo {
 		return client.NewDemoN8nClient(), cm, nil

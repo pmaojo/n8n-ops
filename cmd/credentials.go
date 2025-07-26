@@ -8,6 +8,7 @@ import (
 
 	"github.com/pmaojo/n8n-ops/internal/cliutils"
 	"github.com/pmaojo/n8n-ops/internal/credentials"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -266,7 +267,7 @@ func runCredentialsCreate(cmd *cobra.Command, args []string) error {
 	if err := json.Unmarshal(data, &cred); err != nil {
 		return fmt.Errorf("parse credential: %w", err)
 	}
-	n8nClient, _, err := cliutils.SetupClient(environment, demoMode)
+	n8nClient, _, err := cliutils.SetupClient(environment, demoMode, logrus.New())
 	if err != nil {
 		return err
 	}
@@ -291,7 +292,7 @@ func runCredentialsUpdate(cmd *cobra.Command, args []string) error {
 	if err := json.Unmarshal(data, &cred); err != nil {
 		return fmt.Errorf("parse credential: %w", err)
 	}
-	n8nClient, _, err := cliutils.SetupClient(environment, demoMode)
+	n8nClient, _, err := cliutils.SetupClient(environment, demoMode, logrus.New())
 	if err != nil {
 		return err
 	}
@@ -305,7 +306,7 @@ func runCredentialsUpdate(cmd *cobra.Command, args []string) error {
 
 func runCredentialsDelete(cmd *cobra.Command, args []string) error {
 	id := args[0]
-	n8nClient, _, err := cliutils.SetupClient(environment, demoMode)
+	n8nClient, _, err := cliutils.SetupClient(environment, demoMode, logrus.New())
 	if err != nil {
 		return err
 	}

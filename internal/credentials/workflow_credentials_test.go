@@ -4,6 +4,8 @@ import (
 	"gopkg.in/yaml.v3"
 	"os"
 	"testing"
+
+	"github.com/sirupsen/logrus"
 )
 
 func TestGetWorkflowCredentialsFromConfig(t *testing.T) {
@@ -40,7 +42,7 @@ func TestGetWorkflowCredentialsFromConfig(t *testing.T) {
 	os.Setenv("N8N_OPS_CONFIG", tmpFile.Name())
 	defer os.Unsetenv("N8N_OPS_CONFIG")
 
-	cm := NewCredentialManager("testenv")
+	cm := NewCredentialManager("testenv", logrus.New())
 	creds, err := cm.GetWorkflowCredentials()
 	if err != nil {
 		t.Fatalf("GetWorkflowCredentials error: %v", err)

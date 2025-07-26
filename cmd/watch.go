@@ -53,7 +53,7 @@ func runWatch(cmd *cobra.Command, args []string, cli *CLI) error {
 		"env":     cli.Environment,
 	})
 
-	n8nClient, cm, err := cliutils.SetupClient(cli.Environment, demoMode)
+	n8nClient, cm, err := cliutils.SetupClient(cli.Environment, demoMode, logEntry)
 	if err != nil {
 		return err
 	}

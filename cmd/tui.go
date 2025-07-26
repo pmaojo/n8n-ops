@@ -45,7 +45,7 @@ func init() {
 }
 
 func runTUI(cmd *cobra.Command, args []string, cli *CLI) error {
-	n8nClient, _, err := cliutils.SetupClient(cli.Environment, demoMode)
+	n8nClient, _, err := cliutils.SetupClient(cli.Environment, demoMode, cli.Logger)
 	if err != nil {
 		var missing cliutils.MissingCredentialError
 		if errors.As(err, &missing) {

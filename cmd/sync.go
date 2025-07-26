@@ -65,7 +65,7 @@ func init() {
 func runSync(cmd *cobra.Command, args []string, cli *CLI) error {
 	ctx := context.Background()
 
-	n8nClient, cm, err := cliutils.SetupClient(cli.Environment, demoMode)
+	n8nClient, cm, err := cliutils.SetupClient(cli.Environment, demoMode, cli.Logger)
 	if err != nil {
 		var missing cliutils.MissingCredentialError
 		if errors.As(err, &missing) {
