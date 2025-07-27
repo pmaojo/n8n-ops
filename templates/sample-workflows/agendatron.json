@@ -1,0 +1,30 @@
+{
+  "name": "Ejemplo Agendatron",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "appointment",
+        "operation": "createAppointment",
+        "clientId": 1,
+        "motiveId": 1,
+        "resourceId": 1,
+        "time": "2024-05-01T09:00:00Z",
+        "status": "confirmed"
+      },
+      "name": "Agendatron",
+      "type": "n8n-nodes-agendatron.agendatron",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ],
+      "credentials": {
+        "agendatronApi": {
+          "id": "1",
+          "name": "Mi Agendatron API"
+        }
+      }
+    }
+  ],
+  "connections": {}
+}
