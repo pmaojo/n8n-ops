@@ -37,6 +37,7 @@ bin/
 
 # Node modules (if using npm scripts)
 node_modules/
+web/.next/
 
 # Test coverage reports
 coverage.out
