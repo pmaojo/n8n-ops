@@ -177,11 +177,10 @@ export GRAFANA_DASHBOARD="n8n-ops-prod"
 
 ## Advanced Usage
 
-### Custom Metrics Collection *(Planned)*
+### Custom Metrics Collection
 
-The current CLI does not expose a `send-metrics` subcommand. The following example outlines the intended usage for a future release:
+Use the `send-metrics` command to manually report workflow metrics:
 ```bash
-# Planned: send workflow metrics manually
 n8n-ops observability send-metrics \
   --workflow-id=1001 \
   --duration=250ms \

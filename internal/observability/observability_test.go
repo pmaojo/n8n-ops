@@ -172,3 +172,43 @@ func TestGrafanaMetricsCollectorStopsOnClose(t *testing.T) {
 		t.Error("metrics collector did not stop after Close()")
 	}
 }
+
+func TestGrafanaIntegrationSendWorkflowMetrics(t *testing.T) {
+	sent := make(chan struct{}, 1)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/health" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		if r.URL.Path == "/api/annotations" {
+			sent <- struct{}{}
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	cfg := GrafanaConfig{
+		URL:       server.URL,
+		APIKey:    "test-key",
+		OrgID:     1,
+		Dashboard: "n8n-ops-test",
+	}
+	logger := utils.NewLogger()
+	g := NewGrafanaIntegration(cfg, logger)
+	g.client = server.Client()
+
+	if err := g.Initialize(context.Background()); err != nil {
+		t.Fatalf("init failed: %v", err)
+	}
+
+	g.SendWorkflowMetrics("1001", "test", true, 250*time.Millisecond)
+	g.Close()
+
+	select {
+	case <-sent:
+	case <-time.After(200 * time.Millisecond):
+		t.Fatal("metrics not sent")
+	}
+}

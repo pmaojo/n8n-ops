@@ -1,9 +1,12 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/pmaojo/n8n-ops/internal/observability"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -17,7 +20,22 @@ var (
 	grafanaOrgID  int
 	enableSentry  bool
 	enableGrafana bool
+
+	metricsWorkflowID string
+	metricsDuration   time.Duration
+	metricsSuccess    bool
+	metricsEnv        string
 )
+
+type metricsSender interface {
+	Initialize(ctx context.Context) error
+	SendWorkflowMetrics(id, env string, success bool, duration time.Duration)
+	Close()
+}
+
+var metricsSenderFactory = func(cfg observability.GrafanaConfig, log *logrus.Logger) metricsSender {
+	return observability.NewGrafanaIntegration(cfg, log)
+}
 
 // observabilityCmd represents the observability command
 var observabilityCmd = &cobra.Command{
@@ -212,6 +230,12 @@ var createDashboardCmd = &cobra.Command{
 	},
 }
 
+var sendMetricsCmd = &cobra.Command{
+	Use:   "send-metrics",
+	Short: "Send custom workflow metrics to Grafana",
+	RunE:  runSendMetrics,
+}
+
 func init() {
 	rootCmd.AddCommand(observabilityCmd)
 
@@ -219,6 +243,7 @@ func init() {
 	observabilityCmd.AddCommand(setupObservabilityCmd)
 	observabilityCmd.AddCommand(testConnectionCmd)
 	observabilityCmd.AddCommand(createDashboardCmd)
+	observabilityCmd.AddCommand(sendMetricsCmd)
 
 	// Sentry flags
 	observabilityCmd.PersistentFlags().BoolVar(&enableSentry, "sentry", false, "enable Sentry integration")
@@ -231,6 +256,11 @@ func init() {
 	observabilityCmd.PersistentFlags().StringVar(&grafanaURL, "grafana-url", "", "Grafana URL")
 	observabilityCmd.PersistentFlags().StringVar(&grafanaAPIKey, "grafana-api-key", "", "Grafana API key")
 	observabilityCmd.PersistentFlags().IntVar(&grafanaOrgID, "grafana-org-id", 1, "Grafana organization ID")
+
+	sendMetricsCmd.Flags().StringVar(&metricsWorkflowID, "workflow-id", "", "workflow identifier")
+	sendMetricsCmd.Flags().DurationVar(&metricsDuration, "duration", 0, "workflow execution duration")
+	sendMetricsCmd.Flags().BoolVar(&metricsSuccess, "success", true, "execution success status")
+	sendMetricsCmd.Flags().StringVar(&metricsEnv, "environment", environment, "target environment")
 
 	// Bind flags and environment variables
 	viper.BindPFlag("sentry_dsn", observabilityCmd.PersistentFlags().Lookup("sentry-dsn"))
@@ -246,4 +276,32 @@ func init() {
 	viper.BindEnv("grafana_url", "GRAFANA_URL")
 	viper.BindEnv("grafana_api_key", "GRAFANA_API_KEY")
 	viper.BindEnv("grafana_org_id", "GRAFANA_ORG_ID")
+}
+
+func runSendMetrics(cmd *cobra.Command, args []string) error {
+	cfg := loadObservabilityConfig(viper.GetViper())
+	if cfg.GrafanaURL == "" || cfg.GrafanaAPIKey == "" {
+		return fmt.Errorf("grafana URL and API key are required")
+	}
+
+	senderCfg := observability.GrafanaConfig{
+		URL:       cfg.GrafanaURL,
+		APIKey:    cfg.GrafanaAPIKey,
+		OrgID:     cfg.GrafanaOrgID,
+		Dashboard: "n8n-ops-monitoring",
+	}
+
+	sender := metricsSenderFactory(senderCfg, logger)
+	if err := sender.Initialize(cmd.Context()); err != nil {
+		return fmt.Errorf("failed to initialize Grafana: %w", err)
+	}
+
+	if metricsEnv == "" {
+		metricsEnv = environment
+	}
+
+	sender.SendWorkflowMetrics(metricsWorkflowID, metricsEnv, metricsSuccess, metricsDuration)
+	sender.Close()
+	fmt.Println("✅ Metrics sent")
+	return nil
 }
