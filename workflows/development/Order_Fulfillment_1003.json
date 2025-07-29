@@ -1,9 +1,9 @@
 {
-  "active": false,
-  "connections": {},
-  "createdAt": "2025-07-22T11:00:09.996905477Z",
   "id": "1003",
   "name": "Order Fulfillment",
+  "active": false,
+  "createdAt": "2025-07-28T08:55:10.001292285Z",
+  "updatedAt": "2025-07-29T08:50:10.001292387Z",
   "nodes": [
     {
       "id": "trigger-1003",
@@ -19,16 +19,22 @@
       }
     }
   ],
-  "syncMetadata": {
-    "environment": "development",
-    "gitCommit": "",
-    "syncDate": "2025-07-23T11:00:10.053853803Z",
-    "syncedBy": "pelayo.mao@gmail.com"
-  },
+  "versionId": 8,
   "tags": [
-    "orders",
-    "fulfillment"
+    {
+      "name": "orders",
+      "createdAt": "0001-01-01T00:00:00Z",
+      "updatedAt": "0001-01-01T00:00:00Z"
+    },
+    {
+      "name": "fulfillment",
+      "createdAt": "0001-01-01T00:00:00Z",
+      "updatedAt": "0001-01-01T00:00:00Z"
+    }
   ],
-  "updatedAt": "2025-07-23T10:55:09.996905537Z",
-  "versionId": 8
+  "syncMetadata": {
+    "syncDate": "2025-07-29T08:55:10.029928589Z",
+    "environment": "development",
+    "syncedBy": "codex@openai.com"
+  }
 }

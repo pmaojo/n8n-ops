@@ -1,21 +1,9 @@
 {
-  "active": true,
-  "connections": {
-    "Payment Webhook": {
-      "main": [
-        [
-          {
-            "index": 0,
-            "node": "Process Payment",
-            "type": "main"
-          }
-        ]
-      ]
-    }
-  },
-  "createdAt": "2025-07-21T11:00:09.996900787Z",
   "id": "1002",
   "name": "Payment Processing",
+  "active": true,
+  "createdAt": "2025-07-27T08:55:10.001258374Z",
+  "updatedAt": "2025-07-29T08:45:10.001258463Z",
   "nodes": [
     {
       "id": "webhook-1002",
@@ -45,16 +33,35 @@
       }
     }
   ],
-  "syncMetadata": {
-    "environment": "development",
-    "gitCommit": "",
-    "syncDate": "2025-07-23T11:00:10.017031076Z",
-    "syncedBy": "pelayo.mao@gmail.com"
+  "connections": {
+    "Payment Webhook": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Process Payment",
+            "type": "main"
+          }
+        ]
+      ]
+    }
   },
+  "versionId": 23,
   "tags": [
-    "payment",
-    "stripe"
+    {
+      "name": "payment",
+      "createdAt": "0001-01-01T00:00:00Z",
+      "updatedAt": "0001-01-01T00:00:00Z"
+    },
+    {
+      "name": "stripe",
+      "createdAt": "0001-01-01T00:00:00Z",
+      "updatedAt": "0001-01-01T00:00:00Z"
+    }
   ],
-  "updatedAt": "2025-07-23T10:50:09.996900847Z",
-  "versionId": 23
+  "syncMetadata": {
+    "syncDate": "2025-07-29T08:55:10.016114146Z",
+    "environment": "development",
+    "syncedBy": "codex@openai.com"
+  }
 }

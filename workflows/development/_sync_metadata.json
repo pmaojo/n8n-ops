@@ -1,9 +1,7 @@
 {
   "environment": "development",
-  "gitCommit": "",
-  "lastSync": "2025-07-23T12:02:10.830172+01:00",
-  "n8nURL": "http://localhost:5678",
-  "syncedBy": "pelayo.mao@gmail.com",
-  "syncedWorkflows": 0,
-  "totalWorkflows": 0
+  "lastSync": "2025-07-29T08:55:10.04474041Z",
+  "syncedBy": "codex@openai.com",
+  "syncedWorkflows": 3,
+  "totalWorkflows": 3
 }
