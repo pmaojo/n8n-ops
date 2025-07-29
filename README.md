@@ -68,6 +68,19 @@ Command line example:
 n8n-ops tui --theme cyberpunk
 ```
 
+## Web Dashboard
+
+An experimental web dashboard built with Next.js is located in `web/`.
+Run it locally:
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+Visit `http://localhost:3000` to see metrics fetched from `n8n-ops` via `/api/status`.
+
 ## Need Help?
 
 Run `n8n-ops --help` for command information or check the documentation.

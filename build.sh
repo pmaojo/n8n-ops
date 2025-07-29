@@ -25,3 +25,7 @@ chmod +x n8n-ops
 
 echo "✅ Build complete: n8n-ops"
 echo "Run './n8n-ops version' to see version information"
+
+echo "Building web dashboard..."
+cd web && npm install && npm run build && cd ..
+echo "✅ Web build complete"

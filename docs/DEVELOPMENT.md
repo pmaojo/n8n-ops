@@ -31,6 +31,18 @@ chmod +x n8n-ops
 ./n8n-ops --help
 ```
 
+### Build the Web Dashboard
+
+The Next.js dashboard lives in the `web/` folder.
+
+```bash
+cd web
+npm install
+npm run build
+```
+
+Use `npm run dev` for development mode.
+
 ## ⚙️ Environment Configuration
 
 ### 1. Local Development Environment
