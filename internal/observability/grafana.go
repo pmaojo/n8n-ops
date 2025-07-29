@@ -37,6 +37,8 @@ type GrafanaIntegration struct {
 	client      *http.Client
 	logger      *logrus.Logger
 	metricsChan chan GrafanaMetrics
+	summary     GrafanaMetrics
+	mu          sync.Mutex
 	ctx         context.Context
 	cancel      context.CancelFunc
 	wg          sync.WaitGroup
@@ -196,9 +198,38 @@ func (g *GrafanaIntegration) sendMetricsBatch(metrics []GrafanaMetrics) {
 
 	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 		g.logger.WithField("count", len(metrics)).Debug("Metrics sent to Grafana")
+		g.updateSummary(metrics)
 	} else {
 		g.logger.WithField("status", resp.StatusCode).Error("Failed to send metrics")
 	}
+}
+
+// updateSummary aggregates metrics for later retrieval.
+func (g *GrafanaIntegration) updateSummary(metrics []GrafanaMetrics) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	for _, m := range metrics {
+		g.summary.WorkflowExecutions += m.WorkflowExecutions
+		if m.FailureRate > 0 {
+			g.summary.FailureRate = m.FailureRate
+		}
+		g.summary.SyncOperations += m.SyncOperations
+		if m.ActiveWorkflows > 0 {
+			g.summary.ActiveWorkflows = m.ActiveWorkflows
+		}
+		if m.ResponseTime > 0 {
+			g.summary.ResponseTime = m.ResponseTime
+		}
+		g.summary.Environment = m.Environment
+		g.summary.Timestamp = m.Timestamp
+	}
+}
+
+// LatestMetrics returns aggregated metrics recorded so far.
+func (g *GrafanaIntegration) LatestMetrics() GrafanaMetrics {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	return g.summary
 }
 
 // CreateDashboard creates a default n8n-ops dashboard

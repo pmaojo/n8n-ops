@@ -14,6 +14,7 @@ type Config struct {
 	Environments map[string]EnvironmentConfig `mapstructure:"environments"`
 	Defaults     DefaultConfig                `mapstructure:"defaults"`
 	Logging      LoggingConfig                `mapstructure:"logging"`
+	Server       ServerConfig                 `mapstructure:"server"`
 }
 
 // EnvironmentConfig defines connection information for a single environment.
@@ -61,6 +62,12 @@ type LoggingConfig struct {
 	File   string `mapstructure:"file"`
 }
 
+// ServerConfig defines settings for the optional REST server.
+type ServerConfig struct {
+	Enabled bool `mapstructure:"enabled"`
+	Port    int  `mapstructure:"port"`
+}
+
 // GetLoggingConfig returns the logging configuration from the Config instance.
 // It does not modify the state of the Config and adheres to the principle of
 // providing read-only access to configuration values.
@@ -87,6 +94,8 @@ func NewConfig(provider utils.EnvProvider) (*Config, error) {
 	viper.SetDefault("defaults.tui.theme", "default")
 	viper.SetDefault("logging.level", "info")
 	viper.SetDefault("logging.format", "text")
+	viper.SetDefault("server.enabled", false)
+	viper.SetDefault("server.port", 8081)
 
 	// Unmarshal configuration
 	if err := viper.Unmarshal(config); err != nil {
@@ -165,4 +174,12 @@ func (c *Config) GetTUITheme() string {
 		return c.Defaults.TUI.Theme
 	}
 	return "default"
+}
+
+// GetServerConfig returns the REST server configuration.
+func (c *Config) GetServerConfig() ServerConfig {
+	if c == nil {
+		return ServerConfig{}
+	}
+	return c.Server
 }
