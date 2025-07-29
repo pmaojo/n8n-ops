@@ -1,21 +1,9 @@
 {
-  "active": true,
-  "connections": {
-    "Webhook": {
-      "main": [
-        [
-          {
-            "index": 0,
-            "node": "Send Welcome Email",
-            "type": "main"
-          }
-        ]
-      ]
-    }
-  },
-  "createdAt": "2025-07-20T11:00:09.996897607Z",
   "id": "1001",
   "name": "Customer Onboarding",
+  "active": true,
+  "createdAt": "2025-07-26T08:55:10.001253831Z",
+  "updatedAt": "2025-07-29T08:25:10.001254588Z",
   "nodes": [
     {
       "id": "webhook-1001",
@@ -46,16 +34,35 @@
       }
     }
   ],
-  "syncMetadata": {
-    "environment": "development",
-    "gitCommit": "",
-    "syncDate": "2025-07-23T11:00:09.997091617Z",
-    "syncedBy": "pelayo.mao@gmail.com"
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Send Welcome Email",
+            "type": "main"
+          }
+        ]
+      ]
+    }
   },
+  "versionId": 15,
   "tags": [
-    "customer",
-    "onboarding"
+    {
+      "name": "customer",
+      "createdAt": "0001-01-01T00:00:00Z",
+      "updatedAt": "0001-01-01T00:00:00Z"
+    },
+    {
+      "name": "onboarding",
+      "createdAt": "0001-01-01T00:00:00Z",
+      "updatedAt": "0001-01-01T00:00:00Z"
+    }
   ],
-  "updatedAt": "2025-07-23T10:30:09.996897937Z",
-  "versionId": 15
+  "syncMetadata": {
+    "syncDate": "2025-07-29T08:55:10.00147267Z",
+    "environment": "development",
+    "syncedBy": "codex@openai.com"
+  }
 }

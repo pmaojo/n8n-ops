@@ -376,7 +376,7 @@ graph LR
 | Componente | Detalles |
 |------------|----------|
 | **📁 Archivos Go** | 47 archivos de producción |
-| **🧪 Tests** | 29 archivos de prueba (100% cobertura) |
+| **🧪 Tests** | 48 archivos de prueba (~29% cobertura) |
 | **⚡ Comandos CLI** | 15+ comandos disponibles |
 | **🌍 Ambientes** | 3 ambientes (dev, staging, prod) |
 | **🔧 Integraciones** | n8n, GitLab, Sentry, Grafana |
