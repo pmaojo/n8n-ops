@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -8,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pmaojo/n8n-ops/internal/client"
+	"github.com/pmaojo/n8n-ops/internal/cliutils"
 	"github.com/spf13/cobra"
 )
 
@@ -77,7 +80,12 @@ func runCheck(cmd *cobra.Command, args []string, cli *CLI) (int, error) {
 	}
 	cli.Logger.WithField("env", cli.Environment).Info("Checking workflow sync status")
 
-	result, err := checkWorkflowSync(cli.Environment)
+	n8nClient, _, err := cliutils.SetupClient(cli.Environment, demoMode, cli.Logger)
+	if err != nil {
+		return 1, fmt.Errorf("error configuring n8n client: %w", err)
+	}
+
+	result, err := checkWorkflowSync(cli.Environment, n8nClient)
 	if err != nil {
 		return 1, fmt.Errorf("error checking sync status: %w", err)
 	}
@@ -95,7 +103,7 @@ func runCheck(cmd *cobra.Command, args []string, cli *CLI) (int, error) {
 	return 0, nil
 }
 
-func checkWorkflowSync(env string) (*CheckResult, error) {
+func checkWorkflowSync(env string, workflowClient client.WorkflowReader) (*CheckResult, error) {
 	// Read local workflows
 	workflowDir := fmt.Sprintf("./workflows/%s", env)
 	localWorkflows, err := getLocalWorkflows(workflowDir)
@@ -103,19 +111,23 @@ func checkWorkflowSync(env string) (*CheckResult, error) {
 		return nil, fmt.Errorf("failed to read local workflows: %w", err)
 	}
 
-	// Use demo mode or real API
-	if len(localWorkflows) == 0 {
+	if demoMode {
 		return checkWorkflowSyncDemo(env, localWorkflows)
 	}
 
-	// Real API comparison (when implemented)
-	return checkWorkflowSyncReal(env, localWorkflows)
+	if workflowClient == nil {
+		return nil, fmt.Errorf("workflow client is not configured")
+	}
+
+	return checkWorkflowSyncReal(env, localWorkflows, workflowClient)
 }
 
 // WorkflowData represents a workflow from the filesystem
 type WorkflowData struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID        string    `json:"id"`
+	Name      string    `json:"name"`
+	VersionID int       `json:"versionId"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 // getLocalWorkflows reads workflow files from the specified directory
@@ -204,28 +216,97 @@ func checkWorkflowSyncDemo(env string, localWorkflows []WorkflowData) (*CheckRes
 	return result, nil
 }
 
-func checkWorkflowSyncReal(env string, localWorkflows []WorkflowData) (*CheckResult, error) {
-	// This would implement real n8n API comparison
+func checkWorkflowSyncReal(env string, localWorkflows []WorkflowData, workflowClient client.WorkflowReader) (*CheckResult, error) {
 	result := &CheckResult{
-		Environment:    env,
-		LastSync:       time.Now().Add(-15 * time.Minute),
-		TotalWorkflows: len(localWorkflows),
+		Environment: env,
+		LastSync:    time.Now(),
 		Workflows: WorkflowStatuses{
 			Synchronized: make([]WorkflowStatus, 0),
 			Modified:     make([]WorkflowStatus, 0),
 		},
 	}
 
-	// For now, mark all as synchronized until n8n API integration
-	for _, workflow := range localWorkflows {
-		status := WorkflowStatus{
-			ID:     workflow.ID,
-			Name:   workflow.Name,
-			Status: "sync",
-		}
-		result.Workflows.Synchronized = append(result.Workflows.Synchronized, status)
-		result.Synchronized++
+	if workflowClient == nil {
+		return result, fmt.Errorf("workflow client is not configured")
 	}
+
+	remoteWorkflows, err := workflowClient.GetWorkflows(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("fetch remote workflows: %w", err)
+	}
+
+	localByID := make(map[string]WorkflowData)
+	for _, wf := range localWorkflows {
+		if wf.ID == "" {
+			continue
+		}
+		localByID[wf.ID] = wf
+	}
+
+	seen := make(map[string]struct{})
+
+	for _, remote := range remoteWorkflows {
+		if remote == nil || remote.ID == "" {
+			continue
+		}
+		if _, processed := seen[remote.ID]; processed {
+			continue
+		}
+		seen[remote.ID] = struct{}{}
+
+		status := WorkflowStatus{
+			ID:            remote.ID,
+			Name:          remote.Name,
+			RemoteVersion: remote.VersionId,
+		}
+		if !remote.UpdatedAt.IsZero() {
+			status.LastModified = remote.UpdatedAt
+			status.TimeAgo = formatTimeAgo(remote.UpdatedAt)
+		}
+
+		if local, ok := localByID[remote.ID]; ok {
+			status.LocalVersion = local.VersionID
+
+			if local.VersionID == remote.VersionId {
+				status.Status = "sync"
+				result.Workflows.Synchronized = append(result.Workflows.Synchronized, status)
+				result.Synchronized++
+			} else {
+				status.Status = "modified"
+				result.Workflows.Modified = append(result.Workflows.Modified, status)
+				result.Modified++
+			}
+			continue
+		}
+
+		status.Status = "modified"
+		result.Workflows.Modified = append(result.Workflows.Modified, status)
+		result.Modified++
+	}
+
+	for id, local := range localByID {
+		if _, ok := seen[id]; ok {
+			continue
+		}
+
+		status := WorkflowStatus{
+			ID:            local.ID,
+			Name:          local.Name,
+			Status:        "modified",
+			LocalVersion:  local.VersionID,
+			RemoteVersion: 0,
+		}
+		if !local.UpdatedAt.IsZero() {
+			status.LastModified = local.UpdatedAt
+			status.TimeAgo = formatTimeAgo(local.UpdatedAt)
+		}
+
+		result.Workflows.Modified = append(result.Workflows.Modified, status)
+		result.Modified++
+		seen[id] = struct{}{}
+	}
+
+	result.TotalWorkflows = len(seen)
 
 	return result, nil
 }
