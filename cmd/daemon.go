@@ -13,6 +13,8 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/pmaojo/n8n-ops/internal/client"
+	"github.com/pmaojo/n8n-ops/internal/cliutils"
+	"github.com/pmaojo/n8n-ops/internal/credentials"
 	"github.com/pmaojo/n8n-ops/internal/i18n"
 	"github.com/pmaojo/n8n-ops/internal/workflow"
 	"github.com/sirupsen/logrus"
@@ -49,8 +51,8 @@ var daemonWatcherFactory = func() (fileWatcher, error) {
 	return &fsnotifyWatcher{w}, nil
 }
 
-var daemonClientFactory = func(url string) (client.Client, error) {
-	return client.New(url, "n8n_api_mock_development", nil)
+var daemonClientSetup = func(env string, demo bool, logger logrus.FieldLogger) (client.Client, *credentials.CredentialManager, error) {
+	return cliutils.SetupClient(env, demo, logger)
 }
 
 // runDaemonMode starts the file watcher and synchronizes workflow changes with n8n.
@@ -72,25 +74,7 @@ func runDaemonModeCtx(ctx context.Context, env string) {
 	i18n.PrintfKey("daemon_watching_files", env)
 	i18n.PrintlnKey("daemon_creating_backups")
 
-	// Create n8n client with proper URL for demo mode
-	var n8nURL string
-	if demoMode {
-		n8nURL = "http://localhost:3001"
-	} else {
-		// Use environment-specific URL from config
-		switch env {
-		case "development":
-			n8nURL = "http://localhost:5678"
-		case "staging":
-			n8nURL = "https://n8n-staging.example.com"
-		case "production":
-			n8nURL = "https://n8n-prod.example.com"
-		default:
-			n8nURL = "http://localhost:5678"
-		}
-	}
-
-	n8nClient, err := daemonClientFactory(n8nURL)
+	n8nClient, _, err := daemonClientSetup(env, demoMode, logEntry)
 	if err != nil {
 		logEntry.WithError(err).Fatal("Failed to create n8n client")
 		return

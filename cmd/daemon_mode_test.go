@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/pmaojo/n8n-ops/internal/client"
+	"github.com/pmaojo/n8n-ops/internal/cliutils"
 	"github.com/pmaojo/n8n-ops/internal/credentials"
 	"github.com/pmaojo/n8n-ops/internal/workflow"
 	"github.com/sirupsen/logrus"
@@ -86,8 +88,17 @@ func TestRunDaemonModeCtxProcessesEvent(t *testing.T) {
 	mw := &mockWatcher{events: make(chan fsnotify.Event, 1), errs: make(chan error)}
 	mc := &mockClient{}
 
+	originalWatcherFactory := daemonWatcherFactory
+	originalClientSetup := daemonClientSetup
+	t.Cleanup(func() {
+		daemonWatcherFactory = originalWatcherFactory
+		daemonClientSetup = originalClientSetup
+	})
+
 	daemonWatcherFactory = func() (fileWatcher, error) { return mw, nil }
-	daemonClientFactory = func(string) (client.Client, error) { return mc, nil }
+	daemonClientSetup = func(string, bool, logrus.FieldLogger) (client.Client, *credentials.CredentialManager, error) {
+		return mc, nil, nil
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	go runDaemonModeCtx(ctx, env)
@@ -98,4 +109,36 @@ func TestRunDaemonModeCtxProcessesEvent(t *testing.T) {
 
 	assert.True(t, mc.healthCalled)
 	assert.True(t, mc.updateCalled)
+}
+
+func TestRunDaemonModeCtxMissingCredentials(t *testing.T) {
+	logger = logrus.New()
+	exitCalled := false
+	logger.ExitFunc = func(int) { exitCalled = true }
+
+	originalDemoMode := demoMode
+	demoMode = false
+	t.Cleanup(func() { demoMode = originalDemoMode })
+
+	originalWatcherFactory := daemonWatcherFactory
+	originalClientSetup := daemonClientSetup
+	t.Cleanup(func() {
+		daemonWatcherFactory = originalWatcherFactory
+		daemonClientSetup = originalClientSetup
+	})
+
+	watcherInvoked := false
+	daemonWatcherFactory = func() (fileWatcher, error) {
+		watcherInvoked = true
+		return nil, errors.New("should not be called when credentials are missing")
+	}
+
+	daemonClientSetup = func(env string, demo bool, log logrus.FieldLogger) (client.Client, *credentials.CredentialManager, error) {
+		return nil, nil, cliutils.MissingCredentialError{Missing: []string{"n8n_url"}}
+	}
+
+	runDaemonModeCtx(context.Background(), "dev")
+
+	assert.True(t, exitCalled)
+	assert.False(t, watcherInvoked)
 }
